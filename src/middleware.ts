@@ -4,9 +4,9 @@ import { getSessionFromRequest } from "@/lib/session";
 const OWNER_PATHS = ["/dashboard", "/trips", "/expenses", "/clients", "/factures", "/flotte", "/reglages", "/abonnement"];
 const ADMIN_PATHS = ["/admin"];
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const session = getSessionFromRequest(req);
+  const session = await getSessionFromRequest(req);
 
   if (ADMIN_PATHS.some((p) => pathname.startsWith(p)) && pathname !== "/admin/login") {
     if (!session || session.role !== "PLATFORM_ADMIN") {

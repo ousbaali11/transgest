@@ -9,7 +9,7 @@ async function assertOwnership(organizationId: string, id: string) {
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     await assertOwnership(session.organizationId, params.id);
     const body = await req.json();
     if (body.date) body.date = new Date(body.date);
@@ -23,7 +23,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 // Supprimer un voyage supprime aussi ses dépenses liées et sa facture (onDelete: Cascade côté schéma).
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     await assertOwnership(session.organizationId, params.id);
     await prisma.trip.delete({ where: { id: params.id } });
     return NextResponse.json({ ok: true });

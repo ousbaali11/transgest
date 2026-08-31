@@ -9,7 +9,7 @@ async function assertOwnership(organizationId: string, id: string) {
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     await assertOwnership(session.organizationId, params.id);
     const driver = await prisma.driver.update({ where: { id: params.id }, data: await req.json() });
     return NextResponse.json(driver);
@@ -20,7 +20,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     await assertOwnership(session.organizationId, params.id);
     await prisma.driver.delete({ where: { id: params.id } });
     return NextResponse.json({ ok: true });

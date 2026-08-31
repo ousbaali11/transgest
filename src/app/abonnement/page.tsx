@@ -6,7 +6,7 @@ import { currencyForCountry, countryFromHeaders } from "@/lib/currency";
 import SubscribeForm from "./SubscribeForm";
 
 export default async function AbonnementPage({ searchParams }: { searchParams: { reason?: string } }) {
-  const session = getSession();
+  const session = await getSession();
   if (!session || (session.role !== "OWNER" && session.role !== "DRIVER")) redirect("/login");
 
   const org = await prisma.organization.findUnique({ where: { id: session.organizationId } });

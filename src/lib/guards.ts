@@ -10,8 +10,8 @@ export class HttpError extends Error {
 }
 
 /** À appeler en tête de chaque route API réservée aux propriétaires/chauffeurs. */
-export function requireOrgSession() {
-  const session = getSession();
+export async function requireOrgSession() {
+  const session = await getSession();
   if (!session || (session.role !== "OWNER" && session.role !== "DRIVER")) {
     throw new HttpError(401, "Non authentifié");
   }
@@ -19,8 +19,8 @@ export function requireOrgSession() {
 }
 
 /** À appeler en tête de chaque route API réservée à l'administrateur de la plateforme. */
-export function requireAdminSession() {
-  const session = getSession();
+export async function requireAdminSession() {
+  const session = await getSession();
   if (!session || session.role !== "PLATFORM_ADMIN") {
     throw new HttpError(401, "Non authentifié");
   }

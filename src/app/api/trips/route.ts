@@ -23,7 +23,7 @@ const createSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     const { searchParams } = new URL(req.url);
     const driverId = searchParams.get("driverId") || undefined;
 
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     const parsed = createSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 

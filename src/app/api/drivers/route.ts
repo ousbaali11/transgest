@@ -12,7 +12,7 @@ const createSchema = z.object({
 
 export async function GET() {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     const drivers = await prisma.driver.findMany({
       where: { organizationId: session.organizationId },
       orderBy: { createdAt: "desc" },
@@ -25,7 +25,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     const parsed = createSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
     const driver = await prisma.driver.create({ data: { ...parsed.data, organizationId: session.organizationId } });

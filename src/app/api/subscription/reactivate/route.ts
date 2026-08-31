@@ -4,7 +4,7 @@ import { requireOrgSession, handleApiError } from "@/lib/guards";
 
 export async function POST() {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     const updated = await prisma.organization.update({
       where: { id: session.organizationId },
       data: { cancelAtPeriodEnd: false, canceledAt: null, subscriptionStatus: "ACTIVE" },

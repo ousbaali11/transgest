@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Email ou mot de passe incorrect" }, { status: 401 });
   }
 
-  const token = signSession({ role: "PLATFORM_ADMIN", userId: admin.id, email: admin.email! });
+  const token = await signSession({ role: "PLATFORM_ADMIN", userId: admin.id, email: admin.email! });
   setSessionCookie(token);
 
   return NextResponse.json({ ok: true });

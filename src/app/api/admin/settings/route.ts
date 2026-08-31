@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   try {
-    requireAdminSession();
+    await requireAdminSession();
     const body = await req.json();
     const settings = await prisma.platformSettings.update({ where: { id: "singleton" }, data: body });
     return NextResponse.json(settings);

@@ -11,7 +11,7 @@ const bodySchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const session = requireAdminSession();
+    const session = await requireAdminSession();
     const parsed = bodySchema.safeParse(await req.json());
     if (!parsed.success) {
       return NextResponse.json({ error: "Le nouveau mot de passe doit contenir au moins 6 caractères." }, { status: 400 });

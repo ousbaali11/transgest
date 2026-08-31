@@ -4,7 +4,7 @@ import { requireAdminSession, handleApiError } from "@/lib/guards";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    requireAdminSession();
+    await requireAdminSession();
     const body = await req.json();
     const plan = await prisma.plan.update({ where: { id: params.id }, data: { visible: !!body.visible } });
     return NextResponse.json(plan);

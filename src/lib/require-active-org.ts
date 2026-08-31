@@ -12,7 +12,7 @@ import { getSession } from "./session";
  * fonction une seule fois.
  */
 export async function requireActiveOrg() {
-  const session = getSession();
+  const session = await getSession();
   if (!session || (session.role !== "OWNER" && session.role !== "DRIVER")) {
     redirect("/login");
   }

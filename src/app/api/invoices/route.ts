@@ -10,7 +10,7 @@ const createSchema = z.object({
 
 export async function GET() {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     const invoices = await prisma.invoice.findMany({
       where: { organizationId: session.organizationId },
       include: { trip: true, client: true },
@@ -24,7 +24,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     const parsed = createSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 

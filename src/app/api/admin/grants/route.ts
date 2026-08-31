@@ -11,7 +11,7 @@ const bodySchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    requireAdminSession();
+    await requireAdminSession();
     const parsed = bodySchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
     const { organizationId, planKey, durationDays } = parsed.data;
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    requireAdminSession();
+    await requireAdminSession();
     const { searchParams } = new URL(req.url);
     const organizationId = searchParams.get("organizationId");
     if (!organizationId) return NextResponse.json({ error: "organizationId manquant" }, { status: 400 });

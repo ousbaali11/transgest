@@ -11,7 +11,7 @@ const createSchema = z.object({
 
 export async function GET() {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     const fields = await prisma.customFieldDefinition.findMany({
       where: { organizationId: session.organizationId },
     });
@@ -23,7 +23,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     const parsed = createSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
     const field = await prisma.customFieldDefinition.create({
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "id manquant" }, { status: 400 });

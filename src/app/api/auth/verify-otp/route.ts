@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Compte sans organisation associée" }, { status: 500 });
   }
 
-  const token = signSession({
+  const token = await signSession({
     role: user.role === "DRIVER" ? "DRIVER" : "OWNER",
     userId: user.id,
     organizationId: user.organizationId,

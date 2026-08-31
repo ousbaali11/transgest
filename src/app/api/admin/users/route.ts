@@ -4,7 +4,7 @@ import { requireAdminSession, handleApiError } from "@/lib/guards";
 
 export async function GET() {
   try {
-    requireAdminSession();
+    await requireAdminSession();
     const organizations = await prisma.organization.findMany({
       include: {
         users: { where: { role: "OWNER" }, take: 1 },

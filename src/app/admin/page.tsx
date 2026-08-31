@@ -6,7 +6,7 @@ import AdminSettingsPanel from "./AdminSettingsPanel";
 import LogoutButton from "../LogoutButton";
 
 export default async function AdminPage() {
-  const session = getSession();
+  const session = await getSession();
   if (!session || session.role !== "PLATFORM_ADMIN") redirect("/admin/login");
 
   const organizations = await prisma.organization.findMany({

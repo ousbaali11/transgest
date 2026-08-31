@@ -16,7 +16,7 @@ const bodySchema = z.object({ planKey: z.string() });
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = requireOrgSession();
+    const session = await requireOrgSession();
     const parsed = bodySchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
 
