@@ -27,7 +27,7 @@ async function main() {
   // ⚠️ Changez ce mot de passe immédiatement après le premier déploiement,
   // depuis Réglages admin > Sécurité, ou en relançant ce script avec une autre
   // valeur pour ADMIN_PASSWORD.
-  const adminEmail = process.env.ADMIN_EMAIL || "admin@transgest.ma";
+  const adminEmail = (process.env.ADMIN_EMAIL || "admin@transgest.ma").trim().toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD || "admin2026";
   const passwordHash = await bcrypt.hash(adminPassword, 10);
 
