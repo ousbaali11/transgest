@@ -1,0 +1,292 @@
+// ---------------------------------------------------------------------------
+// TransGest — schéma de production (PostgreSQL / Prisma)
+// ---------------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model PlatformSettings {
+  id           String   @id @default("singleton")
+  appName      String   @default("TransGest")
+  logoType     String   @default("emoji") // "emoji" | "image"
+  logoEmoji    String   @default("🚛")
+  logoImage    String?  @db.Text // data URL ou URL de stockage (Supabase Storage recommandé en prod)
+  logoSize     Int      @default(40)
+  themePrimary String   @default("#16305B")
+  themeAccent  String   @default("#E8892E")
+  forcedPlanId String?
+  updatedAt    DateTime @updatedAt
+
+  forcedPlan Plan? @relation(fields: [forcedPlanId], references: [id])
+}
+
+model Plan {
+  id        String   @id @default(cuid())
+  key       String   @unique // "free" | "pro"
+  label     String
+  priceMAD  Int      @default(0)
+  visible   Boolean  @default(true)
+  tagline   String?
+  createdAt DateTime @default(now())
+
+  organizations    Organization[]
+  platformSettings PlatformSettings[]
+}
+
+enum SubscriptionStatus {
+  NONE
+  ACTIVE
+  CANCELING
+  EXPIRED
+}
+
+model Organization {
+  id     String @id @default(cuid())
+  name   String
+
+  // Abonnement — auto-service (paiement) OU offert par l'admin (grantedByAdmin)
+  planId              String?
+  subscriptionStatus  SubscriptionStatus @default(NONE)
+  currentPeriodEnd    DateTime?
+  cancelAtPeriodEnd   Boolean            @default(false)
+  canceledAt          DateTime?
+  grantedByAdmin      Boolean            @default(false)
+  countryCode         String? // pays déclaré à l'inscription, utilisé pour la devise affichée
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  plan         Plan?                   @relation(fields: [planId], references: [id])
+  users        User[]
+  trucks       Truck[]
+  drivers      Driver[]
+  clients      Client[]
+  trips        Trip[]
+  expenses     Expense[]
+  invoices     Invoice[]
+  customFields CustomFieldDefinition[]
+
+  @@index([planId])
+}
+
+enum UserRole {
+  PLATFORM_ADMIN
+  OWNER
+  DRIVER
+}
+
+model User {
+  id             String    @id @default(cuid())
+  role           UserRole
+  organizationId String?
+  driverId       String?   @unique
+
+  // Propriétaires / chauffeurs : authentification par téléphone (OTP)
+  phone          String?   @unique
+
+  // Admin plateforme uniquement : authentification par email + mot de passe
+  email          String?   @unique
+  passwordHash   String?
+
+  createdAt DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  driver       Driver?       @relation(fields: [driverId], references: [id])
+
+  createdTrips    Trip[]    @relation("TripCreatedBy")
+  createdExpenses Expense[] @relation("ExpenseCreatedBy")
+
+  @@index([organizationId])
+}
+
+// Codes de vérification à usage unique (connexion par téléphone)
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+}
+
+model Truck {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  immat                 String
+  marque                String?
+  modele                String?
+  capacite              String?
+  assuranceExpiry       DateTime?
+  visiteTechniqueExpiry DateTime?
+  vignetteExpiry        DateTime?
+  notes                 String?
+  createdAt             DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  drivers      Driver[]
+  trips        Trip[]
+  expenses     Expense[]
+
+  @@unique([organizationId, immat])
+  @@index([organizationId])
+}
+
+model Driver {
+  id             String   @id @default(cuid())
+  organizationId String
+  truckId        String?
+  name           String
+  phone          String?
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  truck        Truck?       @relation(fields: [truckId], references: [id])
+  user         User?
+  trips        Trip[]
+  expenses     Expense[]
+
+  @@index([organizationId])
+  @@index([truckId])
+}
+
+model Client {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  type           String   @default("Professionnel")
+  phone          String?
+  email          String?
+  address        String?
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  trips        Trip[]
+  invoices     Invoice[]
+
+  @@index([organizationId])
+}
+
+model Trip {
+  id              String   @id @default(cuid())
+  organizationId  String
+  truckId         String
+  driverId        String?
+  clientId        String?
+  date            DateTime
+  depart          String
+  arrivee         String
+  kmDepart        Int?
+  kmArrivee       Int?
+  marchandise     String?
+  quantite        Float?
+  unite           String?
+  prixTransport   Decimal  @default(0) @db.Decimal(12, 2)
+  avance          Decimal  @default(0) @db.Decimal(12, 2)
+  notes           String?
+  customFields    Json     @default("{}")
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  truck        Truck        @relation(fields: [truckId], references: [id])
+  driver       Driver?      @relation(fields: [driverId], references: [id])
+  client       Client?      @relation(fields: [clientId], references: [id])
+  createdBy    User?        @relation("TripCreatedBy", fields: [createdByUserId], references: [id])
+  expenses     Expense[]
+  invoice      Invoice?
+
+  @@index([organizationId, date])
+  @@index([truckId])
+  @@index([driverId])
+}
+
+enum ExpenseCategory {
+  CARBURANT
+  PEAGE
+  AUTRES
+}
+
+model Expense {
+  id              String          @id @default(cuid())
+  organizationId  String
+  tripId          String?
+  truckId         String?
+  driverId        String?
+  category        ExpenseCategory
+  date            DateTime
+  quantite        Float?
+  unite           String?
+  prixUnitaire    Decimal?        @db.Decimal(10, 2)
+  montant         Decimal         @default(0) @db.Decimal(12, 2)
+  notes           String?
+  customFields    Json            @default("{}")
+  createdByUserId String?
+  createdAt       DateTime        @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  trip         Trip?        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  truck        Truck?       @relation(fields: [truckId], references: [id])
+  driver       Driver?      @relation(fields: [driverId], references: [id])
+  createdBy    User?        @relation("ExpenseCreatedBy", fields: [createdByUserId], references: [id])
+
+  @@index([organizationId, date])
+  @@index([tripId])
+}
+
+enum InvoiceStatus {
+  EN_ATTENTE
+  PAYEE
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  organizationId String
+  tripId         String        @unique
+  clientId       String?
+  number         String
+  date           DateTime
+  status         InvoiceStatus @default(EN_ATTENTE)
+  createdAt      DateTime      @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  trip         Trip         @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  client       Client?      @relation(fields: [clientId], references: [id])
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+}
+
+enum CustomFieldTarget {
+  TRIP
+  EXPENSE
+}
+
+enum CustomFieldType {
+  TEXT
+  NUMBER
+}
+
+model CustomFieldDefinition {
+  id             String            @id @default(cuid())
+  organizationId String
+  target         CustomFieldTarget
+  label          String
+  type           CustomFieldType   @default(TEXT)
+  createdAt      DateTime          @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, target])
+}
