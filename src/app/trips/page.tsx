@@ -49,7 +49,7 @@ export default async function TripsPage() {
               truckLabel={t.truck.immat}
               driverLabel={t.driver?.name || "Non assigné"}
               clientLabel={t.client?.name || "Sans client"}
-              invoice={t.invoice ? { number: t.invoice.number, status: t.invoice.status } : null}
+              invoice={t.invoice ? { id: t.invoice.id, number: t.invoice.number, status: t.invoice.status } : null}
               trucks={trucksPlain}
               drivers={driversPlain}
               clients={clientsPlain}

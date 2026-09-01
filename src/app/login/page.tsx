@@ -29,10 +29,18 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: fullPhone }),
       });
-      const data = await res.json();
+      let data: { error?: string; devCode?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        setError("Réponse inattendue du serveur. Réessayez.");
+        return;
+      }
       if (!res.ok) { setError(data.error || "Erreur"); return; }
       setDevCode(data.devCode || null);
       setStep("otp");
+    } catch {
+      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
     } finally {
       setBusy(false);
     }
@@ -47,10 +55,18 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: fullPhone, code, countryCode }),
       });
-      const data = await res.json();
+      let data: { error?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        setError("Réponse inattendue du serveur. Réessayez.");
+        return;
+      }
       if (!res.ok) { setError(data.error || "Code incorrect"); return; }
       router.push("/dashboard");
       router.refresh();
+    } catch {
+      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
     } finally {
       setBusy(false);
     }

@@ -88,18 +88,22 @@ Ouvrez `http://localhost:3000` :
   l'espace admin
 - Tableau de bord : chiffre d'affaires, dépenses, bénéfice, classement des
   chauffeurs du mois, alertes véhicules
+- Facture PDF téléchargeable (`/api/invoices/[id]/pdf`), lien depuis
+  `/factures` et depuis chaque voyage facturé
+- Protection contre l'abus d'envoi de code : en plus du délai de 30s par
+  numéro, une même adresse IP est limitée à 5 demandes de code toutes les
+  15 minutes (`/api/auth/send-otp`)
 
 ## Ce qu'il reste à faire pour la parité complète avec le prototype
 
-- Génération de PDF pour les factures (actuellement juste un statut
-  payée/en attente, pas de document imprimable)
 - Regrouper `/dashboard`, `/trips`, `/expenses`, etc. sous
   `src/app/(app)/layout.tsx` pour factoriser l'appel à `requireActiveOrg()`
   au lieu de le répéter dans chaque page, et pour afficher un en-tête de
   marque (logo + nom) cohérent sur toutes les pages
-- Limite anti-abus sur l'envoi de code (`/api/auth/send-otp`) : actuellement
-  seul un délai de 30s par numéro protège contre le spam ; à renforcer
-  (limite par IP, captcha) avant une ouverture publique à grande échelle
+- La limite anti-abus par IP est un point de départ raisonnable, pas une
+  protection complète (un attaquant déterminé peut changer d'IP) — un vrai
+  captcha (Cloudflare Turnstile, hCaptcha) reste recommandé avant une
+  ouverture publique à grande échelle
 
 ## PWA — installable sur téléphone sans passer par les stores
 

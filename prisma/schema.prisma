@@ -113,9 +113,11 @@ model OtpCode {
   codeHash  String
   attempts  Int      @default(0)
   expiresAt DateTime
+  ip        String?
   createdAt DateTime @default(now())
 
   @@index([phone])
+  @@index([ip, createdAt])
 }
 
 model Truck {

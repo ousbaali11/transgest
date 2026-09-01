@@ -21,7 +21,7 @@ export default function TripCard({
   trucks, drivers, clients, customFields = [],
 }: {
   trip: Trip; benefice: number; truckLabel: string; driverLabel: string; clientLabel: string;
-  invoice: { number: string; status: string } | null;
+  invoice: { id: string; number: string; status: string } | null;
   trucks: Option[]; drivers: Option[]; clients: Option[]; customFields?: CustomFieldDef[];
 }) {
   const router = useRouter();
@@ -133,8 +133,11 @@ export default function TripCard({
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
         {invoice ? (
-          <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999, background: invoice.status === "PAYEE" ? "#E4F3EA" : "#FDF1DF", color: invoice.status === "PAYEE" ? "#2E7D53" : "#B5791C" }}>
-            Facture #{invoice.number} — {invoice.status === "PAYEE" ? "Payée" : "En attente"}
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999, background: invoice.status === "PAYEE" ? "#E4F3EA" : "#FDF1DF", color: invoice.status === "PAYEE" ? "#2E7D53" : "#B5791C" }}>
+              Facture #{invoice.number} — {invoice.status === "PAYEE" ? "Payée" : "En attente"}
+            </span>
+            <a href={`/api/invoices/${invoice.id}/pdf`} style={{ fontSize: 11 }}>PDF</a>
           </span>
         ) : (
           <button className="btn btn-ghost" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} disabled={busy} onClick={generateInvoice}>Générer une facture</button>

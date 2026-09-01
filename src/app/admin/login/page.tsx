@@ -20,10 +20,18 @@ export default function AdminLoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
+      let data: { error?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        setError("Réponse inattendue du serveur. Réessayez.");
+        return;
+      }
       if (!res.ok) { setError(data.error || "Erreur"); return; }
       router.push("/admin");
       router.refresh();
+    } catch {
+      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
     } finally {
       setBusy(false);
     }
