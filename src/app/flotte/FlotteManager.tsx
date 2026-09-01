@@ -2,23 +2,51 @@
 
 import { useState } from "react";
 
-type Truck = { id: string; immat: string; marque: string | null; modele: string | null; capacite: string | null };
+type Truck = {
+  id: string; immat: string; marque: string | null; modele: string | null; capacite: string | null;
+  assuranceExpiry: string | null; visiteTechniqueExpiry: string | null; vignetteExpiry: string | null;
+};
 type Driver = { id: string; name: string; phone: string | null; truckId: string | null };
+
+const emptyTruck = { immat: "", marque: "", modele: "", capacite: "", assuranceExpiry: "", visiteTechniqueExpiry: "", vignetteExpiry: "" };
+
+function docAlert(t: Truck): { label: string; days: number } | null {
+  const today = new Date();
+  const docs: [string | null, string][] = [
+    [t.assuranceExpiry, "Assurance"],
+    [t.visiteTechniqueExpiry, "Visite technique"],
+    [t.vignetteExpiry, "Vignette"],
+  ];
+  let worst: { label: string; days: number } | null = null;
+  for (const [date, label] of docs) {
+    if (!date) continue;
+    const days = Math.ceil((new Date(date).getTime() - today.getTime()) / 86400000);
+    if (days <= 30 && (!worst || days < worst.days)) worst = { label, days };
+  }
+  return worst;
+}
 
 export default function FlotteManager({ initialTrucks, initialDrivers }: { initialTrucks: Truck[]; initialDrivers: Driver[] }) {
   const [trucks, setTrucks] = useState(initialTrucks);
   const [drivers, setDrivers] = useState(initialDrivers);
-  const [newTruck, setNewTruck] = useState({ immat: "", marque: "", modele: "", capacite: "" });
+  const [newTruck, setNewTruck] = useState(emptyTruck);
   const [newDriver, setNewDriver] = useState({ name: "", phone: "", truckId: "" });
   const [busy, setBusy] = useState(false);
+  const [showDocs, setShowDocs] = useState(false);
 
   async function addTruck() {
     if (!newTruck.immat) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/trucks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newTruck) });
+      const payload = {
+        ...newTruck,
+        assuranceExpiry: newTruck.assuranceExpiry ? new Date(newTruck.assuranceExpiry).toISOString() : null,
+        visiteTechniqueExpiry: newTruck.visiteTechniqueExpiry ? new Date(newTruck.visiteTechniqueExpiry).toISOString() : null,
+        vignetteExpiry: newTruck.vignetteExpiry ? new Date(newTruck.vignetteExpiry).toISOString() : null,
+      };
+      const res = await fetch("/api/trucks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const t = await res.json();
-      if (res.ok) { setTrucks([t, ...trucks]); setNewTruck({ immat: "", marque: "", modele: "", capacite: "" }); }
+      if (res.ok) { setTrucks([t, ...trucks]); setNewTruck(emptyTruck); }
     } finally {
       setBusy(false);
     }
@@ -70,16 +98,43 @@ export default function FlotteManager({ initialTrucks, initialDrivers }: { initi
           <input placeholder="Modèle" value={newTruck.modele} onChange={(e) => setNewTruck({ ...newTruck, modele: e.target.value })} />
           <input placeholder="Capacité" value={newTruck.capacite} onChange={(e) => setNewTruck({ ...newTruck, capacite: e.target.value })} />
         </div>
-        <button className="btn" disabled={busy || !newTruck.immat} onClick={addTruck}>Ajouter le camion</button>
-        {trucks.map((t) => (
-          <div key={t.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 10 }}>
-            <div>
-              <div style={{ fontWeight: 600 }}>{t.immat}</div>
-              <div className="muted">{t.marque} {t.modele} {t.capacite ? `· ${t.capacite}` : ""}</div>
-            </div>
-            <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px" }} onClick={() => removeTruck(t.id)}>Supprimer</button>
+        <button type="button" onClick={() => setShowDocs((v) => !v)} className="muted" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, textDecoration: "underline", marginBottom: 8, padding: 0 }}>
+          {showDocs ? "Masquer les échéances documents" : "+ Échéances documents (assurance, visite technique...)"}
+        </button>
+        {showDocs && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
+            <label className="field" style={{ margin: 0 }}>
+              <span className="field-label">Assurance</span>
+              <input type="date" value={newTruck.assuranceExpiry} onChange={(e) => setNewTruck({ ...newTruck, assuranceExpiry: e.target.value })} />
+            </label>
+            <label className="field" style={{ margin: 0 }}>
+              <span className="field-label">Visite technique</span>
+              <input type="date" value={newTruck.visiteTechniqueExpiry} onChange={(e) => setNewTruck({ ...newTruck, visiteTechniqueExpiry: e.target.value })} />
+            </label>
+            <label className="field" style={{ margin: 0 }}>
+              <span className="field-label">Vignette</span>
+              <input type="date" value={newTruck.vignetteExpiry} onChange={(e) => setNewTruck({ ...newTruck, vignetteExpiry: e.target.value })} />
+            </label>
           </div>
-        ))}
+        )}
+        <button className="btn" disabled={busy || !newTruck.immat} onClick={addTruck}>Ajouter le camion</button>
+        {trucks.map((t) => {
+          const alert = docAlert(t);
+          return (
+            <div key={t.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 10 }}>
+              <div>
+                <div style={{ fontWeight: 600 }}>{t.immat}</div>
+                <div className="muted">{t.marque} {t.modele} {t.capacite ? `· ${t.capacite}` : ""}</div>
+                {alert && (
+                  <div style={{ fontSize: 11, fontWeight: 600, marginTop: 2, color: alert.days <= 0 ? "#C0392B" : "#B5791C" }}>
+                    {alert.label} {alert.days <= 0 ? "expirée" : `expire dans ${alert.days} j`}
+                  </div>
+                )}
+              </div>
+              <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px" }} onClick={() => removeTruck(t.id)}>Supprimer</button>
+            </div>
+          );
+        })}
       </div>
 
       <div className="card">

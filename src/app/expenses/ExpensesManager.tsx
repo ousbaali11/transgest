@@ -2,40 +2,72 @@
 
 import { useState } from "react";
 
-type Expense = { id: string; category: string; date: string; montant: number; quantite: number | null; unite: string | null; notes: string | null; truckId: string | null };
+type Expense = {
+  id: string; category: "CARBURANT" | "PEAGE" | "AUTRES"; date: string; montant: number;
+  quantite: number | null; unite: string | null; prixUnitaire: number | null; notes: string | null;
+  truckId: string | null; driverId: string | null; tripId: string | null; customFields: Record<string, string> | null;
+};
 type Option = { id: string; name?: string; immat?: string };
 type Trip = { id: string; date: string; depart: string; arrivee: string };
+type CustomFieldDef = { id: string; label: string; type: "TEXT" | "NUMBER" };
 
 function fmtDH(n: number) {
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DH";
 }
 
-export default function ExpensesManager({ initialExpenses, trucks, drivers, trips }: { initialExpenses: Expense[]; trucks: Option[]; drivers: Option[]; trips: Trip[] }) {
+const emptyForm = (trucks: Option[]) => ({ tripId: "", truckId: trucks[0]?.id || "", driverId: "", quantite: "", prixUnitaire: "", montant: "", notes: "" });
+
+export default function ExpensesManager({ initialExpenses, trucks, drivers, trips, customFields = [] }: { initialExpenses: Expense[]; trucks: Option[]; drivers: Option[]; trips: Trip[]; customFields?: CustomFieldDef[] }) {
   const [expenses, setExpenses] = useState(initialExpenses);
   const [category, setCategory] = useState<"CARBURANT" | "PEAGE" | "AUTRES">("CARBURANT");
-  const [f, setF] = useState({ tripId: "", truckId: trucks[0]?.id || "", driverId: "", quantite: "", prixUnitaire: "", montant: "", notes: "" });
+  const [f, setF] = useState(emptyForm(trucks));
+  const [custom, setCustom] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
 
   const auto = category === "CARBURANT" && f.quantite && f.prixUnitaire ? Number(f.quantite) * Number(f.prixUnitaire) : null;
 
-  async function add() {
+  function startEdit(e: Expense) {
+    setEditingId(e.id);
+    setCategory(e.category);
+    setF({
+      tripId: e.tripId || "", truckId: e.truckId || trucks[0]?.id || "", driverId: e.driverId || "",
+      quantite: e.quantite?.toString() || "", prixUnitaire: e.prixUnitaire?.toString() || "",
+      montant: e.montant.toString(), notes: e.notes || "",
+    });
+    setCustom(e.customFields || {});
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setF(emptyForm(trucks));
+    setCustom({});
+  }
+
+  async function save() {
     setBusy(true);
     try {
       const montant = category === "CARBURANT" ? (auto ?? Number(f.montant) ?? 0) : Number(f.montant) || 0;
-      const res = await fetch("/api/expenses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          category, date: new Date().toISOString(),
-          tripId: f.tripId || null, truckId: f.truckId || null, driverId: f.driverId || null,
-          quantite: f.quantite ? Number(f.quantite) : null,
-          unite: category === "CARBURANT" ? "L" : null,
-          prixUnitaire: f.prixUnitaire ? Number(f.prixUnitaire) : null,
-          montant, notes: f.notes,
-        }),
-      });
-      const e = await res.json();
-      if (res.ok) { setExpenses([e, ...expenses]); setF({ ...f, quantite: "", prixUnitaire: "", montant: "", notes: "" }); }
+      const payload = {
+        category, date: new Date().toISOString(),
+        tripId: f.tripId || null, truckId: f.truckId || null, driverId: f.driverId || null,
+        quantite: f.quantite ? Number(f.quantite) : null,
+        unite: category === "CARBURANT" ? "L" : null,
+        prixUnitaire: f.prixUnitaire ? Number(f.prixUnitaire) : null,
+        montant, notes: f.notes, customFields: custom,
+      };
+
+      if (editingId) {
+        const res = await fetch(`/api/expenses/${editingId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        const updated = await res.json();
+        if (res.ok) setExpenses(expenses.map((e) => (e.id === editingId ? updated : e)));
+      } else {
+        const res = await fetch("/api/expenses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        const created = await res.json();
+        if (res.ok) setExpenses([created, ...expenses]);
+      }
+      cancelEdit();
     } finally {
       setBusy(false);
     }
@@ -48,13 +80,15 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
       setExpenses(expenses.filter((e) => e.id !== id));
     } finally {
       setBusy(false);
+      setConfirmingDeleteId(null);
     }
   }
 
   return (
     <>
       <div className="card">
-        <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", border: "1px solid var(--line)", marginBottom: 12 }}>
+        <strong>{editingId ? "Modifier la dépense" : "Nouvelle dépense"}</strong>
+        <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", border: "1px solid var(--line)", marginTop: 10, marginBottom: 12 }}>
           {(["CARBURANT", "PEAGE", "AUTRES"] as const).map((c) => (
             <button
               key={c}
@@ -91,18 +125,37 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
         )}
         {auto !== null && <p className="muted" style={{ marginBottom: 8 }}>Dépense totale : {fmtDH(auto)}</p>}
         <input placeholder="Notes" value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} style={{ marginBottom: 8 }} />
-        <button className="btn" disabled={busy} onClick={add}>Enregistrer</button>
+
+        {customFields.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+            {customFields.map((cf) => (
+              <input key={cf.id} type={cf.type === "NUMBER" ? "number" : "text"} placeholder={cf.label} value={custom[cf.id] || ""} onChange={(e) => setCustom({ ...custom, [cf.id]: e.target.value })} />
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 8 }}>
+          {editingId && <button className="btn btn-ghost" onClick={cancelEdit}>Annuler</button>}
+          <button className="btn" disabled={busy} onClick={save}>{busy ? "…" : editingId ? "Enregistrer les modifications" : "Enregistrer"}</button>
+        </div>
       </div>
 
       {expenses.map((e) => (
-        <div key={e.id} className="card" style={{ display: "flex", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontWeight: 600 }}>{e.category}</div>
-            <div className="muted">{new Date(e.date).toLocaleDateString("fr-FR")}{e.quantite ? ` · ${e.quantite} ${e.unite}` : ""}</div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div key={e.id} className="card">
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontWeight: 600 }}>{e.category}</div>
+              <div className="muted">{new Date(e.date).toLocaleDateString("fr-FR")}{e.quantite ? ` · ${e.quantite} ${e.unite}` : ""}</div>
+            </div>
             <strong>{fmtDH(e.montant)}</strong>
-            <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px" }} onClick={() => remove(e.id)}>×</button>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginTop: 8 }}>
+            <button className="btn" style={{ width: "auto", padding: "4px 10px", fontSize: 12, background: "#F1F1EF", color: "var(--text)" }} onClick={() => startEdit(e)}>Modifier</button>
+            {confirmingDeleteId === e.id ? (
+              <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} disabled={busy} onClick={() => remove(e.id)}>Confirmer ?</button>
+            ) : (
+              <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} onClick={() => setConfirmingDeleteId(e.id)}>Supprimer</button>
+            )}
           </div>
         </div>
       ))}

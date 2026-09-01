@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest, signSession, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "@/lib/session";
 
-const OWNER_PATHS = ["/dashboard", "/trips", "/expenses", "/clients", "/factures", "/flotte", "/reglages", "/abonnement"];
+const OWNER_PATHS = ["/dashboard", "/trips", "/expenses", "/clients", "/factures", "/flotte", "/reglages", "/abonnement", "/colonnes"];
 const ADMIN_PATHS = ["/admin"];
 
 export async function middleware(req: NextRequest) {
@@ -41,5 +41,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/trips/:path*", "/expenses/:path*", "/clients/:path*", "/factures/:path*", "/flotte/:path*", "/reglages/:path*", "/abonnement/:path*", "/admin/:path*"],
+  matcher: ["/dashboard/:path*", "/trips/:path*", "/expenses/:path*", "/clients/:path*", "/factures/:path*", "/flotte/:path*", "/reglages/:path*", "/abonnement/:path*", "/colonnes/:path*", "/admin/:path*"],
 };

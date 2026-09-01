@@ -66,28 +66,40 @@ Ouvrez `http://localhost:3000` :
   et option "Autre" à indicatif libre
 - Connexion admin par email/mot de passe, changement de mot de passe avec
   bouton afficher/masquer
+- Session persistante façon WhatsApp (400 jours, renouvelée automatiquement
+  à chaque visite — voir `src/middleware.ts`)
 - Abonnement avec devise automatique (MAD/EUR/USD), résiliation avec accès
   jusqu'à la fin de la période payée, puis verrouillage automatique
 - Attribution gratuite d'un abonnement par l'admin à un utilisateur précis
   (voir `/admin`), avec durée ou accès illimité
-- CRUD complet : camions, chauffeurs, clients, voyages, dépenses, factures,
-  colonnes personnalisées — toutes les routes API dans `src/app/api/`
-- Tableau de bord et pages Voyages avec vraies requêtes base de données
+- CRUD complet avec modification et suppression : camions, chauffeurs,
+  clients, voyages, dépenses — toutes les routes API dans `src/app/api/`
+- Génération de facture depuis un voyage (`/trips`), statut payée/en attente
+  (`/factures`)
+- Colonnes personnalisées (`/colonnes`) : créez des champs propres à votre
+  activité, ils apparaissent automatiquement dans les formulaires de voyage
+  et de dépense, et dans l'export Excel
+- **Export Excel** (`/api/export`, lien depuis Réglages) : un onglet par
+  chauffeur avec formules Excel natives (solde, total dépenses, bénéfice),
+  un onglet Global avec les totaux par chauffeur et par camion
+- Alertes d'échéance des documents véhicules (assurance, visite technique,
+  vignette) : badge sur le camion concerné, bannière sur le tableau de bord
+- Logo de marque en emoji ou en image (upload + réglage de la taille) depuis
+  l'espace admin
+- Tableau de bord : chiffre d'affaires, dépenses, bénéfice, classement des
+  chauffeurs du mois, alertes véhicules
 
 ## Ce qu'il reste à faire pour la parité complète avec le prototype
 
-- Export Excel multi-onglets (portez `exportWorkbook()` du prototype tel
-  quel — c'est déjà une fonction pure `(workspace, admin) => fichier`, il
-  suffit de reconstruire l'objet `workspace` à partir d'un `fetch` groupé
-  vers `/api/trips`, `/api/expenses`, etc.)
-- Alertes d'échéance des documents véhicules (assurance, visite technique) —
-  les colonnes existent déjà dans `Truck`, il ne manque qu'un écran
-  d'affichage
 - Génération de PDF pour les factures (actuellement juste un statut
-  payée/en attente)
+  payée/en attente, pas de document imprimable)
 - Regrouper `/dashboard`, `/trips`, `/expenses`, etc. sous
   `src/app/(app)/layout.tsx` pour factoriser l'appel à `requireActiveOrg()`
-  au lieu de le répéter dans chaque page
+  au lieu de le répéter dans chaque page, et pour afficher un en-tête de
+  marque (logo + nom) cohérent sur toutes les pages
+- Limite anti-abus sur l'envoi de code (`/api/auth/send-otp`) : actuellement
+  seul un délai de 30s par numéro protège contre le spam ; à renforcer
+  (limite par IP, captcha) avant une ouverture publique à grande échelle
 
 ## PWA — installable sur téléphone sans passer par les stores
 

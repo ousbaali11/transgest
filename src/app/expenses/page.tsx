@@ -4,11 +4,12 @@ import ExpensesManager from "./ExpensesManager";
 
 export default async function ExpensesPage() {
   const { org } = await requireActiveOrg();
-  const [expenses, trucks, drivers, trips] = await Promise.all([
+  const [expenses, trucks, drivers, trips, customFields] = await Promise.all([
     prisma.expense.findMany({ where: { organizationId: org.id }, orderBy: { date: "desc" }, take: 100 }),
     prisma.truck.findMany({ where: { organizationId: org.id } }),
     prisma.driver.findMany({ where: { organizationId: org.id } }),
     prisma.trip.findMany({ where: { organizationId: org.id }, orderBy: { date: "desc" }, take: 50 }),
+    prisma.customFieldDefinition.findMany({ where: { organizationId: org.id, target: "EXPENSE" } }),
   ]);
 
   return (
@@ -19,6 +20,7 @@ export default async function ExpensesPage() {
         trucks={JSON.parse(JSON.stringify(trucks))}
         drivers={JSON.parse(JSON.stringify(drivers))}
         trips={JSON.parse(JSON.stringify(trips))}
+        customFields={JSON.parse(JSON.stringify(customFields))}
       />
     </div>
   );

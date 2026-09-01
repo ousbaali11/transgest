@@ -39,6 +39,8 @@ export default async function ReglagesPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
         <Link href="/flotte" className="card" style={{ display: "block", textDecoration: "none", color: "var(--text)" }}>Camions & chauffeurs</Link>
         <Link href="/clients" className="card" style={{ display: "block", textDecoration: "none", color: "var(--text)" }}>Clients</Link>
+        <Link href="/colonnes" className="card" style={{ display: "block", textDecoration: "none", color: "var(--text)" }}>Colonnes personnalisées</Link>
+        <a href="/api/export" className="card" style={{ display: "block", textDecoration: "none", color: "var(--text)" }}>Exporter en Excel</a>
       </div>
 
       <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

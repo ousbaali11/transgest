@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Settings = { appName: string; logoEmoji: string; logoType: string; themePrimary: string; themeAccent: string; forcedPlanId: string | null };
+type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; themePrimary: string; themeAccent: string; forcedPlanId: string | null };
 type Plan = { id: string; key: string; label: string; priceMAD: number; visible: boolean };
 
 const PRESETS = [
@@ -21,7 +21,10 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
   const [busy, setBusy] = useState(false);
   const [curPwd, setCurPwd] = useState("");
   const [newPwd, setNewPwd] = useState("");
+  const [showCurPwd, setShowCurPwd] = useState(false);
+  const [showNewPwd, setShowNewPwd] = useState(false);
   const [pwdMsg, setPwdMsg] = useState("");
+  const [logoMsg, setLogoMsg] = useState("");
 
   async function saveSettings(patch: Partial<Settings>) {
     setBusy(true);
@@ -40,6 +43,23 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
       body: JSON.stringify({ visible: !plan.visible }),
     });
     if (res.ok) setPlans(plans.map((p) => (p.id === plan.id ? { ...p, visible: !p.visible } : p)));
+  }
+
+  function onLogoFile(file: File | undefined) {
+    if (!file) return;
+    if (file.size > 900 * 1024) { setLogoMsg("Image trop lourde — choisissez un fichier de moins de 900 Ko."); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      saveSettings({ logoType: "image", logoImage: dataUrl } as Partial<Settings>);
+      setLogoMsg("Logo mis à jour.");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function adjustLogoSize(delta: number) {
+    const next = Math.max(24, Math.min(96, (settings.logoSize || 40) + delta));
+    saveSettings({ logoSize: next } as Partial<Settings>);
   }
 
   async function changePassword() {
@@ -62,10 +82,51 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
           <span className="field-label">Nom de l'application</span>
           <input value={settings.appName} onChange={(e) => setSettings({ ...settings, appName: e.target.value })} />
         </label>
-        <label className="field">
-          <span className="field-label">Logo (emoji)</span>
-          <input maxLength={2} value={settings.logoEmoji} onChange={(e) => setSettings({ ...settings, logoEmoji: e.target.value })} />
-        </label>
+
+        <span className="field-label" style={{ display: "block", marginBottom: 8 }}>Logo</span>
+        <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", border: "1px solid var(--line)", marginBottom: 12 }}>
+          {(["emoji", "image"] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => saveSettings({ logoType: v } as Partial<Settings>)}
+              style={{ flex: 1, padding: 8, border: "none", cursor: "pointer", background: settings.logoType === v ? "var(--primary)" : "#fff", color: settings.logoType === v ? "#fff" : "var(--text)" }}
+            >
+              {v === "emoji" ? "Icône" : "Image"}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 10, border: "1px solid var(--line)", background: "#F6F4EF", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+            {settings.logoType === "image" && settings.logoImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={settings.logoImage} alt="Logo" style={{ width: settings.logoSize || 40, height: settings.logoSize || 40, objectFit: "contain" }} />
+            ) : (
+              <span style={{ fontSize: settings.logoSize || 40, lineHeight: 1 }}>{settings.logoEmoji}</span>
+            )}
+          </div>
+          <div style={{ flex: 1 }}>
+            {settings.logoType === "emoji" ? (
+              <input maxLength={2} value={settings.logoEmoji} onChange={(e) => setSettings({ ...settings, logoEmoji: e.target.value })} placeholder="🚛" />
+            ) : (
+              <>
+                <input type="file" accept="image/*" onChange={(e) => onLogoFile(e.target.files?.[0])} style={{ fontSize: 12 }} />
+                {logoMsg && <p className="muted" style={{ fontSize: 11, marginTop: 4 }}>{logoMsg}</p>}
+              </>
+            )}
+          </div>
+        </div>
+
+        <span className="field-label" style={{ display: "block", marginBottom: 8 }}>Dimensions du logo ({settings.logoSize || 40}px)</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <button type="button" onClick={() => adjustLogoSize(-8)} style={{ width: 34, height: 34, borderRadius: 8, border: "1px solid var(--line)", background: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>−</button>
+          <div style={{ flex: 1, height: 6, borderRadius: 999, background: "var(--line)", position: "relative" }}>
+            <div style={{ height: 6, borderRadius: 999, background: "var(--primary)", width: `${(((settings.logoSize || 40) - 24) / (96 - 24)) * 100}%` }} />
+          </div>
+          <button type="button" onClick={() => adjustLogoSize(8)} style={{ width: 34, height: 34, borderRadius: 8, border: "1px solid var(--line)", background: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>+</button>
+        </div>
+
         <button className="btn" disabled={busy} onClick={() => saveSettings({ appName: settings.appName, logoEmoji: settings.logoEmoji })}>
           Enregistrer la marque
         </button>
@@ -116,11 +177,21 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
         <strong>Sécurité — changer le mot de passe</strong>
         <label className="field" style={{ marginTop: 10 }}>
           <span className="field-label">Mot de passe actuel</span>
-          <input type="password" autoComplete="current-password" value={curPwd} onChange={(e) => setCurPwd(e.target.value)} />
+          <div style={{ position: "relative" }}>
+            <input type={showCurPwd ? "text" : "password"} autoComplete="current-password" value={curPwd} onChange={(e) => setCurPwd(e.target.value)} style={{ paddingRight: 40 }} />
+            <button type="button" onClick={() => setShowCurPwd((v) => !v)} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", border: "none", background: "none", cursor: "pointer", fontSize: 12, color: "var(--muted)" }}>
+              {showCurPwd ? "Masquer" : "Afficher"}
+            </button>
+          </div>
         </label>
         <label className="field">
           <span className="field-label">Nouveau mot de passe</span>
-          <input type="password" autoComplete="new-password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} />
+          <div style={{ position: "relative" }}>
+            <input type={showNewPwd ? "text" : "password"} autoComplete="new-password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} style={{ paddingRight: 40 }} />
+            <button type="button" onClick={() => setShowNewPwd((v) => !v)} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", border: "none", background: "none", cursor: "pointer", fontSize: 12, color: "var(--muted)" }}>
+              {showNewPwd ? "Masquer" : "Afficher"}
+            </button>
+          </div>
         </label>
         <button className="btn" disabled={!curPwd || !newPwd} onClick={changePassword}>Mettre à jour le mot de passe</button>
         {pwdMsg && <p className={pwdMsg.startsWith("Mot de passe mis") ? "muted" : "error-text"} style={{ marginTop: 8 }}>{pwdMsg}</p>}
