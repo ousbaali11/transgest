@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOrgSession, handleApiError } from "@/lib/guards";
+import { requireOwnerSession, handleApiError } from "@/lib/guards";
 
 const bodySchema = z.object({ planKey: z.string() });
 
@@ -16,7 +16,7 @@ const bodySchema = z.object({ planKey: z.string() });
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await requireOrgSession();
+    const session = await requireOwnerSession();
     const parsed = bodySchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
 

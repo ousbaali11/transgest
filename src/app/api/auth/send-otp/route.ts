@@ -64,8 +64,14 @@ export async function POST(req: NextRequest) {
       await sendOtpSms(phone, code);
     } catch (smsError) {
       console.error("Échec d'envoi SMS :", smsError);
+      const isDevError = process.env.NODE_ENV !== "production";
+      const detail = smsError instanceof Error ? smsError.message : String(smsError);
       return NextResponse.json(
-        { error: "Impossible d'envoyer le SMS. Vérifiez vos identifiants Twilio, ou que ce numéro est bien vérifié dans votre compte d'essai." },
+        {
+          error: isDevError
+            ? `Échec d'envoi SMS : ${detail}`
+            : "Impossible d'envoyer le SMS. Réessayez dans quelques instants ou contactez le support.",
+        },
         { status: 502 }
       );
     }

@@ -44,9 +44,14 @@ export async function POST(req: NextRequest) {
     const parsed = createSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 
+    // Un chauffeur ne peut créer un voyage que sous son propre nom : on
+    // ignore toute autre valeur de driverId envoyée par le client.
+    const driverId = session.role === "DRIVER" ? session.driverId : parsed.data.driverId;
+
     const trip = await prisma.trip.create({
       data: {
         ...parsed.data,
+        driverId,
         date: new Date(parsed.data.date),
         customFields: parsed.data.customFields || {},
         organizationId: session.organizationId,

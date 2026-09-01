@@ -147,7 +147,7 @@ model Driver {
   organizationId String
   truckId        String?
   name           String
-  phone          String?
+  phone          String?  @unique
   notes          String?
   createdAt      DateTime @default(now())
 

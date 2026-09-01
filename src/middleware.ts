@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest, signSession, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "@/lib/session";
 
 const OWNER_PATHS = ["/dashboard", "/trips", "/expenses", "/clients", "/factures", "/flotte", "/reglages", "/abonnement", "/colonnes"];
+const OWNER_ONLY_PATHS = ["/flotte", "/colonnes", "/clients"]; // gestion réservée au propriétaire — un chauffeur est renvoyé au tableau de bord
 const ADMIN_PATHS = ["/admin"];
 
 export async function middleware(req: NextRequest) {
@@ -17,6 +18,9 @@ export async function middleware(req: NextRequest) {
   if (OWNER_PATHS.some((p) => pathname.startsWith(p))) {
     if (!session || (session.role !== "OWNER" && session.role !== "DRIVER")) {
       return NextResponse.redirect(new URL("/login", req.url));
+    }
+    if (session.role === "DRIVER" && OWNER_ONLY_PATHS.some((p) => pathname.startsWith(p))) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
   }
 

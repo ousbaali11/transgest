@@ -6,7 +6,7 @@ type Truck = {
   id: string; immat: string; marque: string | null; modele: string | null; capacite: string | null;
   assuranceExpiry: string | null; visiteTechniqueExpiry: string | null; vignetteExpiry: string | null;
 };
-type Driver = { id: string; name: string; phone: string | null; truckId: string | null };
+type Driver = { id: string; name: string; phone: string | null; truckId: string | null; accountActive?: boolean };
 
 const emptyTruck = { immat: "", marque: "", modele: "", capacite: "", assuranceExpiry: "", visiteTechniqueExpiry: "", vignetteExpiry: "" };
 
@@ -32,6 +32,7 @@ export default function FlotteManager({ initialTrucks, initialDrivers }: { initi
   const [newTruck, setNewTruck] = useState(emptyTruck);
   const [newDriver, setNewDriver] = useState({ name: "", phone: "", truckId: "" });
   const [busy, setBusy] = useState(false);
+  const [driverError, setDriverError] = useState("");
   const [showDocs, setShowDocs] = useState(false);
 
   async function addTruck() {
@@ -65,6 +66,7 @@ export default function FlotteManager({ initialTrucks, initialDrivers }: { initi
   async function addDriver() {
     if (!newDriver.name) return;
     setBusy(true);
+    setDriverError("");
     try {
       const res = await fetch("/api/drivers", {
         method: "POST",
@@ -72,7 +74,8 @@ export default function FlotteManager({ initialTrucks, initialDrivers }: { initi
         body: JSON.stringify({ ...newDriver, truckId: newDriver.truckId || null }),
       });
       const d = await res.json();
-      if (res.ok) { setDrivers([d, ...drivers]); setNewDriver({ name: "", phone: "", truckId: "" }); }
+      if (res.ok) { setDrivers([{ ...d, accountActive: false }, ...drivers]); setNewDriver({ name: "", phone: "", truckId: "" }); }
+      else setDriverError(d.error || "Erreur lors de l'ajout du chauffeur.");
     } finally {
       setBusy(false);
     }
@@ -139,20 +142,30 @@ export default function FlotteManager({ initialTrucks, initialDrivers }: { initi
 
       <div className="card">
         <strong>Chauffeurs</strong>
+        <p className="muted" style={{ fontSize: 12, marginTop: 6, marginBottom: 10 }}>
+          Renseignez le téléphone d&apos;un chauffeur pour qu&apos;il puisse se connecter avec ce numéro et
+          saisir lui-même ses voyages et dépenses.
+        </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, margin: "10px 0" }}>
           <input placeholder="Nom complet" value={newDriver.name} onChange={(e) => setNewDriver({ ...newDriver, name: e.target.value })} />
-          <input placeholder="Téléphone" value={newDriver.phone} onChange={(e) => setNewDriver({ ...newDriver, phone: e.target.value })} />
+          <input placeholder="Téléphone (+212...)" value={newDriver.phone} onChange={(e) => setNewDriver({ ...newDriver, phone: e.target.value })} />
           <select value={newDriver.truckId} onChange={(e) => setNewDriver({ ...newDriver, truckId: e.target.value })}>
             <option value="">Camion assigné</option>
             {trucks.map((t) => <option key={t.id} value={t.id}>{t.immat}</option>)}
           </select>
         </div>
+        {driverError && <p className="error-text" style={{ marginBottom: 8 }}>{driverError}</p>}
         <button className="btn" disabled={busy || !newDriver.name} onClick={addDriver}>Ajouter le chauffeur</button>
         {drivers.map((d) => (
           <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 10 }}>
             <div>
               <div style={{ fontWeight: 600 }}>{d.name}</div>
               <div className="muted">{trucks.find((t) => t.id === d.truckId)?.immat || "—"} {d.phone ? `· ${d.phone}` : ""}</div>
+              {d.phone && (
+                <div style={{ fontSize: 11, fontWeight: 600, marginTop: 2, color: d.accountActive ? "#2E7D53" : "#B5791C" }}>
+                  {d.accountActive ? "Compte activé" : "Pas encore connecté"}
+                </div>
+              )}
             </div>
             <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px" }} onClick={() => removeDriver(d.id)}>Supprimer</button>
           </div>

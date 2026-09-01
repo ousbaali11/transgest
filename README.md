@@ -96,6 +96,11 @@ Ouvrez `http://localhost:3000` :
 
 - Inscription/connexion par téléphone + code, avec indicatif auto-détecté
   et option "Autre" à indicatif libre
+- **Accès chauffeur séparé** : un chauffeur dont le téléphone est renseigné
+  dans Camions & chauffeurs peut se connecter avec ce numéro — il saisit
+  alors ses propres voyages/dépenses (auto-attribués à lui, non
+  modifiables par un collègue), sans accès à la flotte, aux clients, aux
+  colonnes personnalisées ni à l'abonnement (réservés au propriétaire)
 - Connexion admin par email/mot de passe, changement de mot de passe avec
   bouton afficher/masquer
 - Session persistante façon WhatsApp (400 jours, renouvelée automatiquement

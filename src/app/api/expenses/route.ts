@@ -39,9 +39,12 @@ export async function POST(req: NextRequest) {
     const parsed = createSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 
+    const driverId = session.role === "DRIVER" ? session.driverId : parsed.data.driverId;
+
     const expense = await prisma.expense.create({
       data: {
         ...parsed.data,
+        driverId,
         date: new Date(parsed.data.date),
         customFields: parsed.data.customFields || {},
         organizationId: session.organizationId,

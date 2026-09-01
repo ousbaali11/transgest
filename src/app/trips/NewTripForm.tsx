@@ -6,12 +6,12 @@ import { useRouter } from "next/navigation";
 type Option = { id: string; name?: string; immat?: string };
 type CustomFieldDef = { id: string; label: string; type: "TEXT" | "NUMBER" };
 
-export default function NewTripForm({ trucks, drivers, clients, customFields = [] }: { trucks: Option[]; drivers: Option[]; clients: Option[]; customFields?: CustomFieldDef[] }) {
+export default function NewTripForm({ trucks, drivers, clients, customFields = [], lockedDriverId = null }: { trucks: Option[]; drivers: Option[]; clients: Option[]; customFields?: CustomFieldDef[]; lockedDriverId?: string | null }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [f, setF] = useState({
-    truckId: trucks[0]?.id || "", driverId: "", clientId: "",
+    truckId: trucks[0]?.id || "", driverId: lockedDriverId || "", clientId: "",
     depart: "", arrivee: "", kmDepart: "", kmArrivee: "",
     prixTransport: "", avance: "", marchandise: "",
   });
@@ -40,7 +40,7 @@ export default function NewTripForm({ trucks, drivers, clients, customFields = [
       });
       if (res.ok) {
         setOpen(false);
-        setF({ truckId: trucks[0]?.id || "", driverId: "", clientId: "", depart: "", arrivee: "", kmDepart: "", kmArrivee: "", prixTransport: "", avance: "", marchandise: "" });
+        setF({ truckId: trucks[0]?.id || "", driverId: lockedDriverId || "", clientId: "", depart: "", arrivee: "", kmDepart: "", kmArrivee: "", prixTransport: "", avance: "", marchandise: "" });
         setCustom({});
         router.refresh();
       }
@@ -60,7 +60,7 @@ export default function NewTripForm({ trucks, drivers, clients, customFields = [
         <select value={f.truckId} onChange={(e) => setF({ ...f, truckId: e.target.value })}>
           {trucks.map((t) => <option key={t.id} value={t.id}>{t.immat}</option>)}
         </select>
-        <select value={f.driverId} onChange={(e) => setF({ ...f, driverId: e.target.value })}>
+        <select value={f.driverId} onChange={(e) => setF({ ...f, driverId: e.target.value })} disabled={!!lockedDriverId}>
           <option value="">Chauffeur</option>
           {drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>

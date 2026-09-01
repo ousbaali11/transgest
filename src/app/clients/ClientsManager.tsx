@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type Client = { id: string; name: string; phone: string | null; email: string | null; address: string | null };
 
@@ -45,7 +46,9 @@ export default function ClientsManager({ initialClients }: { initialClients: Cli
       {clients.map((c) => (
         <div key={c.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 10 }}>
           <div>
-            <div style={{ fontWeight: 600 }}>{c.name}</div>
+            <Link href={`/clients/${c.id}`} style={{ textDecoration: "none" }}>
+              <div style={{ fontWeight: 600, color: "var(--text)" }}>{c.name}</div>
+            </Link>
             <div className="muted">{[c.phone, c.email, c.address].filter(Boolean).join(" · ")}</div>
           </div>
           <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px" }} onClick={() => remove(c.id)}>Supprimer</button>

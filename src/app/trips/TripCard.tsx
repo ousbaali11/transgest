@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type Option = { id: string; name?: string; immat?: string };
 type CustomFieldDef = { id: string; label: string; type: "TEXT" | "NUMBER" };
@@ -18,13 +19,15 @@ function fmtDH(n: number) {
 
 export default function TripCard({
   trip, benefice, truckLabel, driverLabel, clientLabel, invoice,
-  trucks, drivers, clients, customFields = [],
+  trucks, drivers, clients, customFields = [], currentDriverId = null,
 }: {
   trip: Trip; benefice: number; truckLabel: string; driverLabel: string; clientLabel: string;
   invoice: { id: string; number: string; status: string } | null;
-  trucks: Option[]; drivers: Option[]; clients: Option[]; customFields?: CustomFieldDef[];
+  trucks: Option[]; drivers: Option[]; clients: Option[]; customFields?: CustomFieldDef[]; currentDriverId?: string | null;
 }) {
   const router = useRouter();
+  const isDriverViewer = currentDriverId !== null;
+  const canEdit = !isDriverViewer || trip.driverId === currentDriverId;
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -89,7 +92,7 @@ export default function TripCard({
           <select value={f.truckId} onChange={(e) => setF({ ...f, truckId: e.target.value })}>
             {trucks.map((t) => <option key={t.id} value={t.id}>{t.immat}</option>)}
           </select>
-          <select value={f.driverId} onChange={(e) => setF({ ...f, driverId: e.target.value })}>
+          <select value={f.driverId} onChange={(e) => setF({ ...f, driverId: e.target.value })} disabled={isDriverViewer}>
             <option value="">Chauffeur</option>
             {drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
@@ -123,7 +126,9 @@ export default function TripCard({
   return (
     <div className="card">
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <strong>{trip.depart} → {trip.arrivee}</strong>
+        <Link href={`/trips/${trip.id}`} style={{ textDecoration: "none" }}>
+          <strong style={{ color: "var(--text)" }}>{trip.depart} → {trip.arrivee}</strong>
+        </Link>
         <span className="muted">{new Date(trip.date).toLocaleDateString("fr-FR")}</span>
       </div>
       <div className="muted" style={{ margin: "4px 0" }}>{truckLabel} · {driverLabel} · {clientLabel}</div>
@@ -143,11 +148,15 @@ export default function TripCard({
           <button className="btn btn-ghost" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} disabled={busy} onClick={generateInvoice}>Générer une facture</button>
         )}
         <div style={{ display: "flex", gap: 6 }}>
-          <button className="btn" style={{ width: "auto", padding: "4px 10px", fontSize: 12, background: "#F1F1EF", color: "var(--text)" }} onClick={() => setEditing(true)}>Modifier</button>
-          {confirmingDelete ? (
-            <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} disabled={busy} onClick={remove}>Confirmer ?</button>
-          ) : (
-            <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} onClick={() => setConfirmingDelete(true)}>Supprimer</button>
+          {canEdit && (
+            <>
+              <button className="btn" style={{ width: "auto", padding: "4px 10px", fontSize: 12, background: "#F1F1EF", color: "var(--text)" }} onClick={() => setEditing(true)}>Modifier</button>
+              {confirmingDelete ? (
+                <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} disabled={busy} onClick={remove}>Confirmer ?</button>
+              ) : (
+                <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} onClick={() => setConfirmingDelete(true)}>Supprimer</button>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOrgSession, handleApiError, HttpError } from "@/lib/guards";
+import { requireOrgSession, requireOwnerSession, handleApiError, HttpError } from "@/lib/guards";
 
 const createSchema = z.object({
   target: z.enum(["TRIP", "EXPENSE"]),
@@ -23,7 +23,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await requireOrgSession();
+    const session = await requireOwnerSession();
     const parsed = createSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
     const field = await prisma.customFieldDefinition.create({
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await requireOrgSession();
+    const session = await requireOwnerSession();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "id manquant" }, { status: 400 });

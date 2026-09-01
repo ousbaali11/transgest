@@ -43,27 +43,38 @@ export async function POST(req: NextRequest) {
     let user = await prisma.user.findUnique({ where: { phone }, include: { organization: true } });
 
     if (!user) {
-      // Première connexion avec ce numéro : on crée l'organisation (l'entreprise
-      // du propriétaire) et son compte utilisateur.
-      const org = await prisma.organization.create({
-        data: { name: "Mon entreprise", countryCode: countryCode || null },
-      });
-      user = await prisma.user.create({
-        data: { phone, role: "OWNER", organizationId: org.id },
-        include: { organization: true },
-      });
+      // Première connexion avec ce numéro. Deux cas possibles :
+      // 1) Un propriétaire a déjà créé une fiche chauffeur avec ce numéro
+      //    (dans Camions & chauffeurs) : ce numéro devient un compte
+      //    CHAUFFEUR rattaché à l'organisation de ce propriétaire.
+      // 2) Sinon, c'est un nouveau propriétaire : on crée son organisation.
+      const existingDriver = await prisma.driver.findFirst({ where: { phone } });
+
+      if (existingDriver) {
+        user = await prisma.user.create({
+          data: { phone, role: "DRIVER", organizationId: existingDriver.organizationId, driverId: existingDriver.id },
+          include: { organization: true },
+        });
+      } else {
+        const org = await prisma.organization.create({
+          data: { name: "Mon entreprise", countryCode: countryCode || null },
+        });
+        user = await prisma.user.create({
+          data: { phone, role: "OWNER", organizationId: org.id },
+          include: { organization: true },
+        });
+      }
     }
 
     if (!user.organizationId) {
       return NextResponse.json({ error: "Compte sans organisation associée" }, { status: 500 });
     }
 
-    const token = await signSession({
-      role: user.role === "DRIVER" ? "DRIVER" : "OWNER",
-      userId: user.id,
-      organizationId: user.organizationId,
-      phone: user.phone!,
-    });
+    const token = await signSession(
+      user.role === "DRIVER"
+        ? { role: "DRIVER", userId: user.id, organizationId: user.organizationId, phone: user.phone!, driverId: user.driverId! }
+        : { role: "OWNER", userId: user.id, organizationId: user.organizationId, phone: user.phone! }
+    );
     setSessionCookie(token);
 
     return NextResponse.json({ ok: true });

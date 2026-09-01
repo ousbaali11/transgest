@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOrgSession, handleApiError } from "@/lib/guards";
+import { requireOrgSession, requireOwnerSession, handleApiError } from "@/lib/guards";
 
 const createSchema = z.object({
   name: z.string().min(1),
@@ -27,7 +27,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await requireOrgSession();
+    const session = await requireOwnerSession();
     const parsed = createSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
     const client = await prisma.client.create({ data: { ...parsed.data, organizationId: session.organizationId } });

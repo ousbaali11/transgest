@@ -3,7 +3,8 @@ import { requireActiveOrg } from "@/lib/require-active-org";
 import ExpensesManager from "./ExpensesManager";
 
 export default async function ExpensesPage() {
-  const { org } = await requireActiveOrg();
+  const { org, session } = await requireActiveOrg();
+  const currentDriverId = session.role === "DRIVER" ? session.driverId : null;
   const [expenses, trucks, drivers, trips, customFields] = await Promise.all([
     prisma.expense.findMany({ where: { organizationId: org.id }, orderBy: { date: "desc" }, take: 100 }),
     prisma.truck.findMany({ where: { organizationId: org.id } }),
@@ -21,6 +22,7 @@ export default async function ExpensesPage() {
         drivers={JSON.parse(JSON.stringify(drivers))}
         trips={JSON.parse(JSON.stringify(trips))}
         customFields={JSON.parse(JSON.stringify(customFields))}
+        currentDriverId={currentDriverId}
       />
     </div>
   );

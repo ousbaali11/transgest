@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "./session";
+import { getSession, SessionPayload } from "./session";
 
 export class HttpError extends Error {
   status: number;
@@ -9,13 +9,28 @@ export class HttpError extends Error {
   }
 }
 
-/** À appeler en tête de chaque route API réservée aux propriétaires/chauffeurs. */
+/** À appeler en tête de chaque route API réservée aux propriétaires/chauffeurs (lecture, ou écriture de leurs propres voyages/dépenses). */
 export async function requireOrgSession() {
   const session = await getSession();
   if (!session || (session.role !== "OWNER" && session.role !== "DRIVER")) {
     throw new HttpError(401, "Non authentifié");
   }
-  return session as { role: "OWNER" | "DRIVER"; userId: string; organizationId: string; phone: string };
+  return session as Extract<SessionPayload, { role: "OWNER" | "DRIVER" }>;
+}
+
+/**
+ * À appeler en tête de chaque route API réservée exclusivement au
+ * propriétaire (gestion de la flotte, des clients, des colonnes
+ * personnalisées, de l'abonnement...). Un chauffeur connecté reçoit une
+ * erreur 403, pas seulement 401, pour bien distinguer "non connecté" de
+ * "connecté mais pas autorisé".
+ */
+export async function requireOwnerSession() {
+  const session = await getSession();
+  if (!session || session.role !== "OWNER") {
+    throw new HttpError(session?.role === "DRIVER" ? 403 : 401, session?.role === "DRIVER" ? "Réservé au propriétaire" : "Non authentifié");
+  }
+  return session as Extract<SessionPayload, { role: "OWNER" }>;
 }
 
 /** À appeler en tête de chaque route API réservée à l'administrateur de la plateforme. */
@@ -24,7 +39,7 @@ export async function requireAdminSession() {
   if (!session || session.role !== "PLATFORM_ADMIN") {
     throw new HttpError(401, "Non authentifié");
   }
-  return session as { role: "PLATFORM_ADMIN"; userId: string; email: string };
+  return session as Extract<SessionPayload, { role: "PLATFORM_ADMIN" }>;
 }
 
 export function handleApiError(e: unknown) {

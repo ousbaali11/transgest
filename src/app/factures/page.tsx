@@ -7,10 +7,18 @@ function fmtDH(n: number) {
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DH";
 }
 
-export default async function FacturesPage() {
+const TABS = [
+  { key: "all", label: "Toutes" },
+  { key: "PAYEE", label: "Payées" },
+  { key: "EN_ATTENTE", label: "En attente" },
+] as const;
+
+export default async function FacturesPage({ searchParams }: { searchParams: { status?: string } }) {
   const { org } = await requireActiveOrg();
+  const activeTab = searchParams.status === "PAYEE" || searchParams.status === "EN_ATTENTE" ? searchParams.status : "all";
+
   const invoices = await prisma.invoice.findMany({
-    where: { organizationId: org.id },
+    where: { organizationId: org.id, ...(activeTab !== "all" ? { status: activeTab } : {}) },
     include: { trip: true, client: true },
     orderBy: { date: "desc" },
   });
@@ -21,6 +29,23 @@ export default async function FacturesPage() {
         <h1 style={{ fontSize: 20 }}>Factures</h1>
         <Link href="/dashboard" style={{ fontSize: 13 }}>Tableau de bord</Link>
       </div>
+
+      <div style={{ display: "flex", gap: 20, borderBottom: "1px solid var(--line)", marginBottom: 12 }}>
+        {TABS.map((t) => (
+          <Link
+            key={t.key}
+            href={t.key === "all" ? "/factures" : `/factures?status=${t.key}`}
+            style={{
+              textDecoration: "none", padding: "8px 0", fontWeight: 600, fontSize: 14,
+              color: activeTab === t.key ? "var(--primary)" : "var(--muted)",
+              borderBottom: activeTab === t.key ? "2px solid var(--primary)" : "2px solid transparent",
+            }}
+          >
+            {t.label}
+          </Link>
+        ))}
+      </div>
+
       {invoices.length === 0 ? (
         <p className="muted">Aucune facture. Générez-en une depuis le détail d'un voyage.</p>
       ) : (

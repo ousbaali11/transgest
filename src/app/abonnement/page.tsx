@@ -20,6 +20,20 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
   const detectedCountry = org.countryCode || countryFromHeaders(headers());
   const currency = currencyForCountry(detectedCountry);
 
+  if (session.role === "DRIVER") {
+    return (
+      <div className="container">
+        <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>Abonnement inactif</h1>
+        <div className="card" style={{ marginTop: 20, textAlign: "center" }}>
+          <p className="muted">
+            L&apos;abonnement de votre entreprise n&apos;est plus actif. Contactez le propriétaire de la
+            flotte pour qu&apos;il le renouvelle — l&apos;accès sera automatiquement rétabli.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container">
       <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>

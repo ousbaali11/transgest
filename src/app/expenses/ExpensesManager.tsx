@@ -15,12 +15,13 @@ function fmtDH(n: number) {
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DH";
 }
 
-const emptyForm = (trucks: Option[]) => ({ tripId: "", truckId: trucks[0]?.id || "", driverId: "", quantite: "", prixUnitaire: "", montant: "", notes: "" });
+const emptyForm = (trucks: Option[], lockedDriverId: string | null) => ({ tripId: "", truckId: trucks[0]?.id || "", driverId: lockedDriverId || "", quantite: "", prixUnitaire: "", montant: "", notes: "" });
 
-export default function ExpensesManager({ initialExpenses, trucks, drivers, trips, customFields = [] }: { initialExpenses: Expense[]; trucks: Option[]; drivers: Option[]; trips: Trip[]; customFields?: CustomFieldDef[] }) {
+export default function ExpensesManager({ initialExpenses, trucks, drivers, trips, customFields = [], currentDriverId = null }: { initialExpenses: Expense[]; trucks: Option[]; drivers: Option[]; trips: Trip[]; customFields?: CustomFieldDef[]; currentDriverId?: string | null }) {
+  const isDriverViewer = currentDriverId !== null;
   const [expenses, setExpenses] = useState(initialExpenses);
   const [category, setCategory] = useState<"CARBURANT" | "PEAGE" | "AUTRES">("CARBURANT");
-  const [f, setF] = useState(emptyForm(trucks));
+  const [f, setF] = useState(emptyForm(trucks, currentDriverId));
   const [custom, setCustom] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -41,7 +42,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
 
   function cancelEdit() {
     setEditingId(null);
-    setF(emptyForm(trucks));
+    setF(emptyForm(trucks, currentDriverId));
     setCustom({});
   }
 
@@ -109,7 +110,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
           <select value={f.truckId} onChange={(e) => setF({ ...f, truckId: e.target.value })}>
             {trucks.map((t) => <option key={t.id} value={t.id}>{t.immat}</option>)}
           </select>
-          <select value={f.driverId} onChange={(e) => setF({ ...f, driverId: e.target.value })}>
+          <select value={f.driverId} onChange={(e) => setF({ ...f, driverId: e.target.value })} disabled={isDriverViewer}>
             <option value="">Chauffeur</option>
             {drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
@@ -140,25 +141,30 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
         </div>
       </div>
 
-      {expenses.map((e) => (
-        <div key={e.id} className="card">
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontWeight: 600 }}>{e.category}</div>
-              <div className="muted">{new Date(e.date).toLocaleDateString("fr-FR")}{e.quantite ? ` · ${e.quantite} ${e.unite}` : ""}</div>
+      {expenses.map((e) => {
+        const canEdit = !isDriverViewer || e.driverId === currentDriverId;
+        return (
+          <div key={e.id} className="card">
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontWeight: 600 }}>{e.category}</div>
+                <div className="muted">{new Date(e.date).toLocaleDateString("fr-FR")}{e.quantite ? ` · ${e.quantite} ${e.unite}` : ""}</div>
+              </div>
+              <strong>{fmtDH(e.montant)}</strong>
             </div>
-            <strong>{fmtDH(e.montant)}</strong>
-          </div>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginTop: 8 }}>
-            <button className="btn" style={{ width: "auto", padding: "4px 10px", fontSize: 12, background: "#F1F1EF", color: "var(--text)" }} onClick={() => startEdit(e)}>Modifier</button>
-            {confirmingDeleteId === e.id ? (
-              <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} disabled={busy} onClick={() => remove(e.id)}>Confirmer ?</button>
-            ) : (
-              <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} onClick={() => setConfirmingDeleteId(e.id)}>Supprimer</button>
+            {canEdit && (
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginTop: 8 }}>
+                <button className="btn" style={{ width: "auto", padding: "4px 10px", fontSize: 12, background: "#F1F1EF", color: "var(--text)" }} onClick={() => startEdit(e)}>Modifier</button>
+                {confirmingDeleteId === e.id ? (
+                  <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} disabled={busy} onClick={() => remove(e.id)}>Confirmer ?</button>
+                ) : (
+                  <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} onClick={() => setConfirmingDeleteId(e.id)}>Supprimer</button>
+                )}
+              </div>
             )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }

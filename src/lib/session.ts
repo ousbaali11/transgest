@@ -16,7 +16,8 @@ export const SESSION_COOKIE_NAME = "transgest_session";
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 400;
 
 export type SessionPayload =
-  | { role: "OWNER" | "DRIVER"; userId: string; organizationId: string; phone: string }
+  | { role: "OWNER"; userId: string; organizationId: string; phone: string }
+  | { role: "DRIVER"; userId: string; organizationId: string; phone: string; driverId: string }
   | { role: "PLATFORM_ADMIN"; userId: string; email: string };
 
 export async function signSession(payload: SessionPayload): Promise<string> {

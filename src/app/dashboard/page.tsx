@@ -21,7 +21,8 @@ function docAlerts(trucks: { immat: string; assuranceExpiry: Date | null; visite
 }
 
 export default async function DashboardPage() {
-  const { org } = await requireActiveOrg();
+  const { org, session } = await requireActiveOrg();
+  const isOwner = session.role === "OWNER";
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -38,6 +39,7 @@ export default async function DashboardPage() {
   const ca = trips.reduce((s, t) => s + Number(t.prixTransport), 0);
   const dep = trips.reduce((s, t) => s + t.expenses.reduce((s2, e) => s2 + Number(e.montant), 0), 0);
   const benefice = ca - dep;
+  const distanceTotale = trips.reduce((s, t) => s + Math.max(0, (t.kmArrivee || 0) - (t.kmDepart || 0)), 0);
   const alerts = docAlerts(trucks);
 
   const byDriver = new Map<string, { name: string; ca: number; dep: number; voyages: number }>();
@@ -62,13 +64,13 @@ export default async function DashboardPage() {
         <nav style={{ display: "flex", gap: 10, fontSize: 12, flexWrap: "wrap", justifyContent: "flex-end" }}>
           <Link href="/trips">Voyages</Link>
           <Link href="/expenses">Dépenses</Link>
-          <Link href="/clients">Clients</Link>
+          {isOwner && <Link href="/clients">Clients</Link>}
           <Link href="/factures">Factures</Link>
           <Link href="/reglages">Réglages</Link>
         </nav>
       </div>
 
-      {alerts.length > 0 && (
+      {isOwner && alerts.length > 0 && (
         <Link href="/flotte" className="card" style={{ display: "block", textDecoration: "none", background: "#FDF1DF", border: "1px solid #F0D9A8" }}>
           <strong style={{ color: "#7A5314" }}>⚠ {alerts.length} document(s) à renouveler</strong>
           <div style={{ color: "#8A6A2E", fontSize: 13, marginTop: 4 }}>
@@ -93,6 +95,10 @@ export default async function DashboardPage() {
         <div className="stat-card">
           <div className="label">Bénéfice net</div>
           <div className="value">{fmtDH(benefice)}</div>
+        </div>
+        <div className="stat-card" style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--line)" }}>
+          <div className="label" style={{ color: "var(--muted)" }}>Distance parcourue</div>
+          <div className="value">{distanceTotale.toLocaleString("fr-FR")} km</div>
         </div>
       </div>
 

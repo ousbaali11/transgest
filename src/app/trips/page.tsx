@@ -4,7 +4,8 @@ import NewTripForm from "./NewTripForm";
 import TripCard from "./TripCard";
 
 export default async function TripsPage() {
-  const { org } = await requireActiveOrg();
+  const { org, session } = await requireActiveOrg();
+  const currentDriverId = session.role === "DRIVER" ? session.driverId : null;
 
   const [trips, trucks, drivers, clients, customFields] = await Promise.all([
     prisma.trip.findMany({
@@ -28,7 +29,7 @@ export default async function TripsPage() {
     <div className="container">
       <h1 style={{ fontSize: 20, margin: "20px 0" }}>Voyages</h1>
 
-      <NewTripForm trucks={trucksPlain} drivers={driversPlain} clients={clientsPlain} customFields={customFieldsPlain} />
+      <NewTripForm trucks={trucksPlain} drivers={driversPlain} clients={clientsPlain} customFields={customFieldsPlain} lockedDriverId={currentDriverId} />
 
       {trips.length === 0 ? (
         <p className="muted">Aucun voyage enregistré.</p>
@@ -54,6 +55,7 @@ export default async function TripsPage() {
               drivers={driversPlain}
               clients={clientsPlain}
               customFields={customFieldsPlain}
+              currentDriverId={currentDriverId}
             />
           );
         })
