@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireOrgSession, handleApiError } from "@/lib/guards";
 import { buildOrganizationWorkbook } from "@/lib/export-workbook";
-import { prisma } from "@/lib/prisma";
+import { getPlatformSettings } from "@/lib/settings";
 
 export async function GET() {
   try {
     const session = await requireOrgSession();
-    const settings = await prisma.platformSettings.findUnique({ where: { id: "singleton" } });
-    const buffer = await buildOrganizationWorkbook(session.organizationId, settings?.appName || "TransGest");
+    const settings = await getPlatformSettings();
+    const buffer = await buildOrganizationWorkbook(session.organizationId, settings.appName);
 
     return new NextResponse(buffer, {
       headers: {

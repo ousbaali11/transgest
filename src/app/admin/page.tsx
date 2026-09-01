@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { getPlatformSettings } from "@/lib/settings";
 import AdminUsersTable from "./AdminUsersTable";
 import AdminSettingsPanel from "./AdminSettingsPanel";
 import LogoutButton from "../LogoutButton";
@@ -13,7 +14,7 @@ export default async function AdminPage() {
     include: { users: { where: { role: "OWNER" }, take: 1 }, plan: true, _count: { select: { trips: true } } },
     orderBy: { createdAt: "desc" },
   });
-  const settings = await prisma.platformSettings.upsert({ where: { id: "singleton" }, update: {}, create: { id: "singleton" } });
+  const settings = await getPlatformSettings();
   const plans = await prisma.plan.findMany();
 
   const rows = organizations.map((org) => ({

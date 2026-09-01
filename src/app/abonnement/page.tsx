@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { getPlatformSettings } from "@/lib/settings";
 import { currencyForCountry, countryFromHeaders } from "@/lib/currency";
 import SubscribeForm from "./SubscribeForm";
 
@@ -12,7 +13,7 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
   const org = await prisma.organization.findUnique({ where: { id: session.organizationId } });
   if (!org) redirect("/login");
 
-  const settings = await prisma.platformSettings.upsert({ where: { id: "singleton" }, update: {}, create: { id: "singleton" } });
+  const settings = await getPlatformSettings();
   const plans = await prisma.plan.findMany({ where: { visible: true } });
   const availablePlans = settings.forcedPlanId ? plans.filter((p) => p.id === settings.forcedPlanId) : plans;
 

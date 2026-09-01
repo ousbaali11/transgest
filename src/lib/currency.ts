@@ -59,3 +59,38 @@ export function formatMoney(amountMAD: number, currency: Currency): string {
 export function countryFromHeaders(headers: Headers): string | null {
   return headers.get("x-vercel-ip-country") || null;
 }
+
+const TZ_COUNTRY: Record<string, string> = {
+  "Africa/Casablanca": "MA", "Africa/El_Aaiun": "MA",
+  "Europe/Paris": "FR", "Europe/Madrid": "ES", "Europe/Berlin": "DE", "Europe/Rome": "IT",
+  "Europe/Lisbon": "PT", "Europe/Brussels": "BE", "Europe/Amsterdam": "NL", "Europe/Luxembourg": "LU",
+  "Europe/Dublin": "IE", "Europe/Vienna": "AT", "Europe/Athens": "GR", "Europe/Helsinki": "FI",
+  "Europe/Stockholm": "SE", "Europe/Copenhagen": "DK", "Europe/Warsaw": "PL", "Europe/Prague": "CZ",
+  "Europe/Bucharest": "RO", "Europe/London": "GB",
+  "America/New_York": "US", "America/Chicago": "US", "America/Denver": "US", "America/Los_Angeles": "US", "America/Toronto": "CA",
+  "Africa/Algiers": "DZ", "Africa/Tunis": "TN",
+};
+
+/**
+ * Détection du pays côté navigateur (repli utilisé quand l'en-tête serveur
+ * n'est pas disponible, typiquement en développement local). Se base sur les
+ * réglages de langue/fuseau horaire de l'appareil — aucune requête réseau.
+ */
+export function detectCountryCodeClient(): string | null {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return null;
+  try {
+    const loc = new Intl.Locale(navigator.language) as Intl.Locale & { region?: string };
+    if (loc.region) return loc.region.toUpperCase();
+  } catch {}
+  try {
+    for (const l of navigator.languages || [navigator.language || ""]) {
+      const m = /-([A-Za-z]{2})$/.exec(l || "");
+      if (m) return m[1].toUpperCase();
+    }
+  } catch {}
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (TZ_COUNTRY[tz]) return TZ_COUNTRY[tz];
+  } catch {}
+  return null;
+}

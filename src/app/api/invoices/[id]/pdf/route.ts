@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOrgSession, handleApiError, HttpError } from "@/lib/guards";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
+import { getPlatformSettings } from "@/lib/settings";
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   try {
@@ -15,10 +16,10 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       throw new HttpError(404, "Facture introuvable");
     }
 
-    const settings = await prisma.platformSettings.findUnique({ where: { id: "singleton" } });
+    const settings = await getPlatformSettings();
 
     const buffer = await renderInvoicePdf({
-      appName: settings?.appName || "TransGest",
+      appName: settings.appName,
       number: invoice.number,
       date: invoice.date,
       status: invoice.status,

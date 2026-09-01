@@ -34,6 +34,26 @@ Ouvrez `http://localhost:3000` :
   `admin@transgest.ma` / `admin2026` — **changez-le dès le premier lancement**
   depuis Réglages admin > Sécurité)
 
+## Configurer Plivo pas à pas
+
+1. Sur **plivo.com** → **Sign Up** (email professionnel recommandé, une
+   adresse générique type gmail peut ralentir la validation du compte)
+2. Vérifiez votre email, puis votre numéro de téléphone personnel (2FA
+   obligatoire à la création du compte)
+3. Sur le tableau de bord (**console.plivo.com**), la page d'accueil affiche
+   directement votre **Auth ID** et **Auth Token** → copiez les deux
+4. **Phone Numbers → Buy Numbers** → cherchez un numéro (filtrez par pays)
+   capable d'envoyer des SMS → achetez-le avec le crédit d'essai offert →
+   notez-le, c'est votre `PLIVO_FROM_NUMBER`
+5. **Tant que le compte est en essai** : **Phone Numbers → Sandbox Numbers**
+   → **Add Sandbox Number** → entrez le numéro à tester (le vôtre pour
+   commencer) → vérifiez-le par SMS. Répétez pour chaque numéro de test.
+6. Renseignez `PLIVO_AUTH_ID`, `PLIVO_AUTH_TOKEN`, `PLIVO_FROM_NUMBER` dans
+   `.env` (et sur Vercel pour le site en ligne), `npm install`, relancez.
+7. **Pour lever la limite des numéros vérifiés** (ouverture au public) :
+   **Billing → Upgrade** → ajoutez un moyen de paiement. Le compte d'essai
+   ne s'efface jamais tout seul et le crédit déjà chargé reste utilisable.
+
 ## Déployer en production (Vercel + Supabase)
 
 1. **Base de données** : créez un projet sur supabase.com, copiez la
@@ -50,10 +70,22 @@ Ouvrez `http://localhost:3000` :
    npx prisma migrate deploy
    npm run db:seed
    ```
-5. Connectez un vrai fournisseur SMS (Twilio le plus simple à démarrer) en
-   ajoutant `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`
-   et en installant `npm install twilio`, puis en décommentant l'exemple dans
-   `src/lib/sms.ts`.
+5. Connectez un fournisseur SMS. `src/lib/sms.ts` choisit automatiquement
+   selon les variables présentes, dans cet ordre :
+   - **Twilio (actif)** — infrastructure cloud, aucun matériel requis.
+     Passez le compte en payant (Billing → Upgrade) pour lever la
+     restriction des numéros vérifiés du compte d'essai.
+     `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`.
+   - **Plivo** — alternative ~7 à 30 % moins chère une fois payant, utilisée
+     si les variables `TWILIO_*` sont vides. Note : l'inscription Plivo
+     s'est révélée indisponible selon les régions ("Sign up unavailable in
+     your region") — vérifiez sur plivo.com avant de compter dessus.
+     `PLIVO_AUTH_ID`, `PLIVO_AUTH_TOKEN`, `PLIVO_FROM_NUMBER`.
+   - **textbee.dev (gratuit)** — 300 SMS/mois sans carte bancaire, envoie à
+     n'importe quel numéro sans vérification préalable, mais nécessite un
+     téléphone Android dédié connecté en permanence avec leur app
+     installée (voir textbee.dev). Utilisé seulement si rien au-dessus
+     n'est configuré. `TEXTBEE_API_KEY`, `TEXTBEE_DEVICE_ID`.
 6. Pour le paiement réel (Stripe n'est pas disponible pour une entité
    domiciliée au Maroc), intégrez CMI ou PayZone : leur webhook de paiement
    confirmé doit appeler la même logique que
