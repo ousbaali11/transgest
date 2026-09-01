@@ -54,14 +54,12 @@ export async function POST(req: NextRequest) {
 
     const code = genOtp();
     const codeHash = await bcrypt.hash(code, 10);
-    await prisma.otpCode.create({
-      data: { phone, codeHash, expiresAt: new Date(Date.now() + 5 * 60_000), ip },
-    });
 
-    // L'envoi SMS est isolé dans son propre try/catch : si Twilio refuse
+    // L'envoi SMS se fait AVANT d'enregistrer le code : si Twilio refuse
     // (numéro non vérifié en compte d'essai, identifiants invalides...), on
-    // renvoie une erreur JSON claire plutôt que de laisser planter toute la
-    // requête (ce qui provoquait un échec silencieux côté navigateur).
+    // ne crée aucune ligne en base, donc le délai anti-spam de 30s ci-dessus
+    // ne se déclenche pas inutilement sur un envoi qui a échoué — l'utilisateur
+    // peut réessayer tout de suite après avoir corrigé le problème.
     try {
       await sendOtpSms(phone, code);
     } catch (smsError) {
@@ -71,6 +69,10 @@ export async function POST(req: NextRequest) {
         { status: 502 }
       );
     }
+
+    await prisma.otpCode.create({
+      data: { phone, codeHash, expiresAt: new Date(Date.now() + 5 * 60_000), ip },
+    });
 
     const isDev = process.env.NODE_ENV !== "production";
     return NextResponse.json({ ok: true, devCode: isDev ? code : undefined });
