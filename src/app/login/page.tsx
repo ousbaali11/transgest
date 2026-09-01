@@ -100,7 +100,7 @@ export default function LoginPage() {
           )}
           <label className="field">
             <span className="field-label">Code de vérification</span>
-            <input type="tel" maxLength={4} value={code} onChange={(e) => setCode(e.target.value)} placeholder="0000" />
+            <input type="tel" inputMode="numeric" autoComplete="one-time-code" maxLength={4} value={code} onChange={(e) => setCode(e.target.value)} placeholder="0000" />
           </label>
           {error && <p className="error-text">{error}</p>}
           <button className="btn" onClick={verify} disabled={busy || code.length < 4}>{busy ? "Vérification…" : "Vérifier"}</button>
