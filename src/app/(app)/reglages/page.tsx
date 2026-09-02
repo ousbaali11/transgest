@@ -71,7 +71,7 @@ export default async function ReglagesPage() {
 
       <div className="card">
         <strong>Compte</strong>
-        <div className="muted">{session.phone} {!isOwner && "· Chauffeur"}</div>
+        <div className="muted">{isOwner ? session.email : `${session.driverName} · Chauffeur`}</div>
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ export async function GET() {
     const rows = organizations.map((org) => ({
       organizationId: org.id,
       organizationName: org.name,
-      phone: org.users[0]?.phone || null,
+      email: org.users[0]?.email || null,
       plan: org.plan?.label || null,
       status: org.subscriptionStatus,
       grantedByAdmin: org.grantedByAdmin,

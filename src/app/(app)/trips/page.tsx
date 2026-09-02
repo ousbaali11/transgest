@@ -7,6 +7,7 @@ import TripCard from "./TripCard";
 export default async function TripsPage() {
   const { org, session } = await requireActiveOrg();
   const currentDriverId = session.role === "DRIVER" ? session.driverId : null;
+  const currentUserId = session.userId;
 
   const [trips, trucks, drivers, clients, customFields] = await Promise.all([
     prisma.trip.findMany({
@@ -44,7 +45,7 @@ export default async function TripsPage() {
               trip={JSON.parse(JSON.stringify({
                 id: t.id, date: t.date, depart: t.depart, arrivee: t.arrivee, marchandise: t.marchandise,
                 truckId: t.truckId, driverId: t.driverId, clientId: t.clientId,
-                kmDepart: t.kmDepart, kmArrivee: t.kmArrivee,
+                kmDepart: t.kmDepart, kmArrivee: t.kmArrivee, createdByUserId: t.createdByUserId,
                 prixTransport: Number(t.prixTransport), avance: Number(t.avance), customFields: t.customFields,
               }))}
               benefice={benefice}
@@ -57,6 +58,7 @@ export default async function TripsPage() {
               clients={clientsPlain}
               customFields={customFieldsPlain}
               currentDriverId={currentDriverId}
+              currentUserId={currentUserId}
             />
           );
         })

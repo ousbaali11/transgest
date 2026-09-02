@@ -5,7 +5,7 @@ import { useState } from "react";
 type Expense = {
   id: string; category: "CARBURANT" | "PEAGE" | "AUTRES"; date: string; montant: number;
   quantite: number | null; unite: string | null; prixUnitaire: number | null; notes: string | null;
-  truckId: string | null; driverId: string | null; tripId: string | null; customFields: Record<string, string> | null;
+  truckId: string | null; driverId: string | null; tripId: string | null; createdByUserId: string | null; customFields: Record<string, string> | null;
 };
 type Option = { id: string; name?: string; immat?: string };
 type Trip = { id: string; date: string; depart: string; arrivee: string };
@@ -17,7 +17,7 @@ function fmtDH(n: number) {
 
 const emptyForm = (trucks: Option[], lockedDriverId: string | null) => ({ tripId: "", truckId: trucks[0]?.id || "", driverId: lockedDriverId || "", quantite: "", prixUnitaire: "", montant: "", notes: "" });
 
-export default function ExpensesManager({ initialExpenses, trucks, drivers, trips, customFields = [], currentDriverId = null }: { initialExpenses: Expense[]; trucks: Option[]; drivers: Option[]; trips: Trip[]; customFields?: CustomFieldDef[]; currentDriverId?: string | null }) {
+export default function ExpensesManager({ initialExpenses, trucks, drivers, trips, customFields = [], currentDriverId = null, currentUserId = null }: { initialExpenses: Expense[]; trucks: Option[]; drivers: Option[]; trips: Trip[]; customFields?: CustomFieldDef[]; currentDriverId?: string | null; currentUserId?: string | null }) {
   const isDriverViewer = currentDriverId !== null;
   const [expenses, setExpenses] = useState(initialExpenses);
   const [category, setCategory] = useState<"CARBURANT" | "PEAGE" | "AUTRES">("CARBURANT");
@@ -148,7 +148,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
       </div>
 
       {expenses.map((e) => {
-        const canEdit = !isDriverViewer || e.driverId === currentDriverId;
+        const canEdit = !isDriverViewer || e.createdByUserId === currentUserId;
         return (
           <div key={e.id} className="card">
             <div style={{ display: "flex", justifyContent: "space-between" }}>

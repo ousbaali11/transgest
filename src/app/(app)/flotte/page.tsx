@@ -12,7 +12,7 @@ export default async function FlottePage() {
 
   const driversPlain = drivers.map((d) => ({
     id: d.id, name: d.name, phone: d.phone, truckId: d.truckId,
-    accountActive: !!d.user,
+    accessCode: d.accessCode, isOwnerSelf: d.isOwnerSelf,
   }));
 
   return (

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 type Row = {
   organizationId: string;
   organizationName: string;
-  phone: string;
+  email: string;
   planLabel: string;
   status: string;
   grantedByAdmin: boolean;
@@ -72,7 +72,7 @@ export default function AdminUsersTable({ rows, plans }: { rows: Row[]; plans: P
             <div key={r.organizationId} style={{ padding: "10px 0", borderTop: "1px solid var(--line)" }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <div>
-                  <div style={{ fontWeight: 600 }}>{r.phone}</div>
+                  <div style={{ fontWeight: 600 }}>{r.email}</div>
                   <div className="muted" style={{ fontSize: 12 }}>{r.planLabel} · {r.trips} voyage(s)</div>
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "#F1F1EF", color: STATUS_COLOR[r.status] }}>
@@ -104,7 +104,7 @@ export default function AdminUsersTable({ rows, plans }: { rows: Row[]; plans: P
       {grantTarget && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(15,20,30,0.45)", display: "flex", alignItems: "flex-end", zIndex: 50 }} onClick={() => setGrantTarget(null)}>
           <div className="container" style={{ background: "#fff", borderRadius: "16px 16px 0 0", margin: 0, width: "100%", padding: 20 }} onClick={(e) => e.stopPropagation()}>
-            <strong>Offrir un abonnement — {grantTarget.phone}</strong>
+            <strong>Offrir un abonnement — {grantTarget.email}</strong>
             <label className="field" style={{ marginTop: 12 }}>
               <span className="field-label">Formule</span>
               <select value={planKey} onChange={(e) => setPlanKey(e.target.value)}>

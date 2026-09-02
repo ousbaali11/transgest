@@ -1,55 +1,45 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { DIAL_CODES, detectCountryCodeClient } from "@/lib/currency";
+import { formatAccessCode } from "@/lib/access-code";
 
-function resolveDefaultCountry(initial: string): string {
-  if (initial && (DIAL_CODES[initial] || initial === "OTHER")) return initial;
-  return "OTHER";
-}
+type Role = "select" | "owner" | "driver";
+type OwnerStep = "email" | "code";
 
-export default function LoginForm({ appName, logoEmoji, logoType, logoImage, initialCountryCode }: { appName: string; logoEmoji: string; logoType: string; logoImage: string | null; initialCountryCode: string }) {
+export default function LoginForm({ appName, logoEmoji, logoType, logoImage }: { appName: string; logoEmoji: string; logoType: string; logoImage: string | null }) {
   const router = useRouter();
-  const [step, setStep] = useState<"phone" | "otp">("phone");
-  const [countryCode, setCountryCode] = useState(() => resolveDefaultCountry(initialCountryCode));
+  const [role, setRole] = useState<Role>("select");
 
-  // La détection IP côté serveur (page.tsx) est prioritaire et fiable dès le
-  // premier rendu. Si elle n'a rien donné (ex: développement local, où l'en-
-  // tête IP de Vercel est absent), on tente un repli via le navigateur —
-  // mais seulement APRÈS le montage, jamais pendant le rendu initial : le
-  // faire pendant le rendu (dans le useState ci-dessus, par exemple) rend le
-  // HTML du serveur différent de celui du client et casse l'hydratation
-  // React (l'erreur que vous avez vue).
-  useEffect(() => {
-    if (!initialCountryCode) {
-      const detected = detectCountryCodeClient();
-      if (detected && DIAL_CODES[detected]) setCountryCode(detected);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // --- Propriétaire : email + code ---
+  const [ownerStep, setOwnerStep] = useState<OwnerStep>("email");
+  const [email, setEmail] = useState("");
+  const [emailCode, setEmailCode] = useState("");
+  const [lastSentEmail, setLastSentEmail] = useState<string | null>(null);
+  const [devCode, setDevCode] = useState<string | null>(null);
 
-  const [customDial, setCustomDial] = useState("+");
-  const [national, setNational] = useState("");
-  const [code, setCode] = useState("");
+  // --- Chauffeur : code à 16 chiffres ---
+  const [driverCode, setDriverCode] = useState("");
+
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [devCode, setDevCode] = useState<string | null>(null);
-  const [lastSentPhone, setLastSentPhone] = useState<string | null>(null);
 
-  const isOther = countryCode === "OTHER";
-  const dial = isOther ? customDial || "+" : DIAL_CODES[countryCode].dial;
-  const fullPhone = `${dial}${national.replace(/\D/g, "").replace(/^0+/, "")}`;
-
-  async function sendCode() {
+  function backToSelect() {
+    setRole("select");
+    setOwnerStep("email");
     setError("");
-    if (national.replace(/\D/g, "").length < 8) { setError("Numéro de téléphone invalide"); return; }
+    setDriverCode("");
+  }
+
+  async function sendEmailCode() {
+    setError("");
+    if (!email.includes("@")) { setError("Adresse email invalide"); return; }
     setBusy(true);
     try {
-      const res = await fetch("/api/auth/send-otp", {
+      const res = await fetch("/api/auth/send-email-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: fullPhone }),
+        body: JSON.stringify({ email }),
       });
       let data: { error?: string; code?: string; devCode?: string } = {};
       try {
@@ -59,20 +49,16 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, ini
         return;
       }
       if (!res.ok) {
-        // Un code valable a déjà été envoyé il y a moins de 30s pour ce même
-        // numéro (ex: on a cliqué "Modifier" sans rien changer, puis
-        // renvoyé) : pas besoin d'attendre, ce code fonctionne toujours —
-        // direction l'écran de saisie plutôt qu'un message d'erreur bloquant.
-        if (data.code === "ALREADY_SENT" && fullPhone === lastSentPhone) {
-          setStep("otp");
+        if (data.code === "ALREADY_SENT" && email === lastSentEmail) {
+          setOwnerStep("code");
           return;
         }
         setError(data.error || "Erreur");
         return;
       }
-      setLastSentPhone(fullPhone);
+      setLastSentEmail(email);
       setDevCode(data.devCode || null);
-      setStep("otp");
+      setOwnerStep("code");
     } catch {
       setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
     } finally {
@@ -80,14 +66,14 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, ini
     }
   }
 
-  async function verify() {
+  async function verifyEmailCode() {
     setError("");
     setBusy(true);
     try {
-      const res = await fetch("/api/auth/verify-otp", {
+      const res = await fetch("/api/auth/verify-email-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: fullPhone, code, countryCode }),
+        body: JSON.stringify({ email, code: emailCode }),
       });
       let data: { error?: string } = {};
       try {
@@ -106,10 +92,38 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, ini
     }
   }
 
-  function editPhone() {
-    setStep("phone");
-    setCode("");
+  function editEmail() {
+    setOwnerStep("email");
+    setEmailCode("");
     setError("");
+  }
+
+  async function driverLogin() {
+    setError("");
+    const cleaned = driverCode.replace(/\s+/g, "");
+    if (cleaned.length !== 16) { setError("Le code doit contenir 16 chiffres."); return; }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/driver-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: cleaned }),
+      });
+      let data: { error?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        setError("Réponse inattendue du serveur. Réessayez.");
+        return;
+      }
+      if (!res.ok) { setError(data.error || "Code incorrect"); return; }
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -125,36 +139,30 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, ini
         <p className="muted">Gestion de flotte poids lourds</p>
       </div>
 
-      {step === "phone" ? (
+      {role === "select" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <button className="btn" onClick={() => setRole("owner")}>Je suis propriétaire</button>
+          <button className="btn btn-ghost" onClick={() => setRole("driver")}>Je suis chauffeur</button>
+        </div>
+      )}
+
+      {role === "owner" && ownerStep === "email" && (
         <>
           <label className="field">
-            <span className="field-label">Pays</span>
-            <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)}>
-              {Object.entries(DIAL_CODES).map(([cc, c]) => (
-                <option key={cc} value={cc}>{c.name} ({c.dial})</option>
-              ))}
-              <option value="OTHER">Autre (indicatif libre)</option>
-            </select>
-          </label>
-          <label className="field">
-            <span className="field-label">Numéro de téléphone</span>
-            <div style={{ display: "flex", gap: 8 }}>
-              {isOther ? (
-                <input style={{ width: 80, flexShrink: 0 }} value={customDial} onChange={(e) => setCustomDial(e.target.value)} placeholder="+000" />
-              ) : (
-                <div style={{ display: "flex", alignItems: "center", padding: "0 12px", border: "1px solid var(--line)", borderRadius: 8, background: "#f6f4ef", flexShrink: 0 }}>{dial}</div>
-              )}
-              <input type="tel" value={national} onChange={(e) => setNational(e.target.value)} placeholder="6 12 34 56 78" />
-            </div>
+            <span className="field-label">Adresse email</span>
+            <input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com" />
           </label>
           {error && <p className="error-text">{error}</p>}
-          <button className="btn" onClick={sendCode} disabled={busy || !national}>{busy ? "Envoi…" : "Recevoir le code"}</button>
+          <button className="btn" onClick={sendEmailCode} disabled={busy || !email}>{busy ? "Envoi…" : "Recevoir le code"}</button>
+          <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={backToSelect}>← Retour</button>
         </>
-      ) : (
+      )}
+
+      {role === "owner" && ownerStep === "code" && (
         <>
           <p className="muted">
-            Code envoyé au {fullPhone}.{" "}
-            <button type="button" onClick={editPhone} style={{ background: "none", border: "none", padding: 0, color: "var(--primary)", fontWeight: 600, cursor: "pointer", textDecoration: "underline", fontSize: "inherit" }}>
+            Code envoyé à {email}.{" "}
+            <button type="button" onClick={editEmail} style={{ background: "none", border: "none", padding: 0, color: "var(--primary)", fontWeight: 600, cursor: "pointer", textDecoration: "underline", fontSize: "inherit" }}>
               Modifier
             </button>
           </p>
@@ -166,17 +174,42 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, ini
           )}
           <label className="field">
             <span className="field-label">Code de vérification</span>
-            <input type="tel" inputMode="numeric" autoComplete="one-time-code" maxLength={4} value={code} onChange={(e) => setCode(e.target.value)} placeholder="0000" />
+            <input type="tel" inputMode="numeric" autoComplete="one-time-code" maxLength={4} value={emailCode} onChange={(e) => setEmailCode(e.target.value)} placeholder="0000" />
           </label>
           {error && <p className="error-text">{error}</p>}
-          <button className="btn" onClick={verify} disabled={busy || code.length < 4}>{busy ? "Vérification…" : "Vérifier"}</button>
-          <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={sendCode} disabled={busy}>Renvoyer le code</button>
+          <button className="btn" onClick={verifyEmailCode} disabled={busy || emailCode.length < 4}>{busy ? "Vérification…" : "Vérifier"}</button>
+          <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={sendEmailCode} disabled={busy}>Renvoyer le code</button>
         </>
       )}
 
-      <p style={{ textAlign: "center", marginTop: 32 }}>
-        <a href="/admin/login" className="muted">Espace administrateur</a>
-      </p>
+      {role === "driver" && (
+        <>
+          <label className="field">
+            <span className="field-label">Code chauffeur (16 chiffres)</span>
+            <input
+              type="tel"
+              inputMode="numeric"
+              autoComplete="off"
+              value={driverCode}
+              onChange={(e) => setDriverCode(formatAccessCode(e.target.value.replace(/\D/g, "").slice(0, 16)))}
+              placeholder="0000 0000 0000 0000"
+              style={{ letterSpacing: 2, fontSize: 18, textAlign: "center" }}
+            />
+          </label>
+          <p className="muted" style={{ fontSize: 13 }}>Ce code vous a été communiqué par le propriétaire de la flotte.</p>
+          {error && <p className="error-text">{error}</p>}
+          <button className="btn" onClick={driverLogin} disabled={busy || driverCode.replace(/\s+/g, "").length !== 16}>
+            {busy ? "Connexion…" : "Se connecter"}
+          </button>
+          <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={backToSelect}>← Retour</button>
+        </>
+      )}
+
+      {role === "select" && (
+        <p style={{ textAlign: "center", marginTop: 32 }}>
+          <a href="/admin/login" className="muted">Espace administrateur</a>
+        </p>
+      )}
     </div>
   );
 }

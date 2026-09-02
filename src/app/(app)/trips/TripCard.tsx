@@ -9,7 +9,7 @@ type CustomFieldDef = { id: string; label: string; type: "TEXT" | "NUMBER" };
 type Trip = {
   id: string; date: string; depart: string; arrivee: string; marchandise: string | null;
   truckId: string; driverId: string | null; clientId: string | null;
-  kmDepart: number | null; kmArrivee: number | null;
+  kmDepart: number | null; kmArrivee: number | null; createdByUserId: string | null;
   prixTransport: number; avance: number; customFields: Record<string, string> | null;
 };
 
@@ -19,15 +19,17 @@ function fmtDH(n: number) {
 
 export default function TripCard({
   trip, benefice, truckLabel, driverLabel, clientLabel, invoice,
-  trucks, drivers, clients, customFields = [], currentDriverId = null,
+  trucks, drivers, clients, customFields = [], currentDriverId = null, currentUserId = null,
 }: {
   trip: Trip; benefice: number; truckLabel: string; driverLabel: string; clientLabel: string;
   invoice: { id: string; number: string; status: string } | null;
-  trucks: Option[]; drivers: Option[]; clients: Option[]; customFields?: CustomFieldDef[]; currentDriverId?: string | null;
+  trucks: Option[]; drivers: Option[]; clients: Option[]; customFields?: CustomFieldDef[]; currentDriverId?: string | null; currentUserId?: string | null;
 }) {
   const router = useRouter();
   const isDriverViewer = currentDriverId !== null;
-  const canEdit = !isDriverViewer || trip.driverId === currentDriverId;
+  // Un chauffeur ne peut modifier que ce qu'il a lui-même saisi — pas ce que
+  // le propriétaire a entré, même si le voyage lui est attribué.
+  const canEdit = !isDriverViewer || trip.createdByUserId === currentUserId;
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [busy, setBusy] = useState(false);

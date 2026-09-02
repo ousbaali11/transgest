@@ -1,8 +1,9 @@
 # TransGest — application réelle (Next.js + PostgreSQL)
 
 Ceci est la vraie version, déployable, du prototype. Même modèle de données,
-mêmes fonctionnalités (authentification par téléphone, abonnements avec
-devise automatique, espace admin avec mots de passe et abonnements offerts),
+mêmes fonctionnalités (authentification par email pour le propriétaire et
+code à 16 chiffres pour les chauffeurs, abonnements avec devise automatique,
+espace admin avec mots de passe et abonnements offerts),
 mais avec une vraie base de données et une vraie authentification au lieu du
 stockage du navigateur.
 
@@ -12,9 +13,12 @@ stockage du navigateur.
 - **PostgreSQL** via **Prisma** — hébergez-le sur [Supabase](https://supabase.com), [Neon](https://neon.tech) ou Railway
 - **Sessions** par cookie JWT signé (`jsonwebtoken`), httpOnly
 - **Mots de passe admin** hachés avec `bcryptjs`
-- **SMS (OTP)** : interface prête dans `src/lib/sms.ts`, branchez Twilio ou un
-  agrégateur marocain ; en développement, le code s'affiche dans la console
-  et dans la réponse de l'API pour tester sans SMS réel
+- **Email (code de connexion propriétaire)** : interface prête dans
+  `src/lib/email.ts`, branchez Resend (voir plus bas) ; en développement, le
+  code s'affiche dans la console et dans la réponse de l'API pour tester
+  sans email réel
+- **Code de connexion chauffeur** : 16 chiffres généré automatiquement,
+  aucun envoi requis (le propriétaire le communique directement)
 
 ## Démarrage en local
 
@@ -27,58 +31,32 @@ npm run dev
 ```
 
 Ouvrez `http://localhost:3000` :
-- `/login` — création de compte / connexion par téléphone (le code de test
-  s'affiche à l'écran tant qu'aucun fournisseur SMS n'est configuré)
+- `/login` — choix propriétaire (email + code) ou chauffeur (code à 16
+  chiffres) ; le code de test s'affiche à l'écran tant qu'aucun fournisseur
+  email n'est configuré
 - `/admin/login` — connexion admin avec l'email/mot de passe défini dans
   `.env` (`ADMIN_EMAIL` / `ADMIN_PASSWORD`, par défaut
   `admin@transgest.ma` / `admin2026` — **changez-le dès le premier lancement**
   depuis Réglages admin > Sécurité)
 
-## Fiabiliser l'envoi de SMS vers le Maroc (Alphanumeric Sender ID)
+## Configurer Resend pas à pas (email de connexion propriétaire)
 
-Si des codes n'arrivent pas chez certains destinataires marocains (erreur Twilio
-21612 dans les logs), c'est que certains opérateurs refusent les SMS envoyés
-depuis un numéro américain classique. La solution officielle Twilio pour ce
-cas précis :
-
-1. Sur `console.twilio.com` → recherchez "Messaging Services" → **Create
-   Messaging Service** → choisissez "Notify my users" comme cas d'usage
-2. Dans **Sender Pool**, ajoutez votre numéro Twilio existant (comme repli
-   pour les pays qui ne supportent pas l'expéditeur textuel)
-3. Toujours dans le Messaging Service → **Settings** → cochez **Alphanumeric
-   Sender ID**, entrez le nom de votre app (11 caractères max, ex :
-   `MonCamion`)
-4. **Réglages généraux SMS** (Messaging → Settings → General) → vérifiez que
-   "Alphanumeric Sender ID" est activé pour le compte
-5. Notice Twilio : si vous n'êtes pas basé au Maroc, aucun document n'est à
-   fournir pour l'enregistrer — l'activation est immédiate
-6. Copiez le **Messaging Service SID** (commence par `MG...`) → renseignez
-   `TWILIO_MESSAGING_SERVICE_SID` dans `.env` (et sur Vercel)
-
-Une fois configuré, `src/lib/sms.ts` l'utilise automatiquement à la place du
-numéro simple — vos SMS marocains arriveront avec le nom de l'app comme
-expéditeur, ce qui règle aussi bien la fiabilité que la confiance du
-destinataire.
-
-## Configurer Plivo pas à pas
-
-1. Sur **plivo.com** → **Sign Up** (email professionnel recommandé, une
-   adresse générique type gmail peut ralentir la validation du compte)
-2. Vérifiez votre email, puis votre numéro de téléphone personnel (2FA
-   obligatoire à la création du compte)
-3. Sur le tableau de bord (**console.plivo.com**), la page d'accueil affiche
-   directement votre **Auth ID** et **Auth Token** → copiez les deux
-4. **Phone Numbers → Buy Numbers** → cherchez un numéro (filtrez par pays)
-   capable d'envoyer des SMS → achetez-le avec le crédit d'essai offert →
-   notez-le, c'est votre `PLIVO_FROM_NUMBER`
-5. **Tant que le compte est en essai** : **Phone Numbers → Sandbox Numbers**
-   → **Add Sandbox Number** → entrez le numéro à tester (le vôtre pour
-   commencer) → vérifiez-le par SMS. Répétez pour chaque numéro de test.
-6. Renseignez `PLIVO_AUTH_ID`, `PLIVO_AUTH_TOKEN`, `PLIVO_FROM_NUMBER` dans
-   `.env` (et sur Vercel pour le site en ligne), `npm install`, relancez.
-7. **Pour lever la limite des numéros vérifiés** (ouverture au public) :
-   **Billing → Upgrade** → ajoutez un moyen de paiement. Le compte d'essai
-   ne s'efface jamais tout seul et le crédit déjà chargé reste utilisable.
+1. Sur **resend.com** → **Sign Up** (gratuit, aucune carte bancaire requise)
+2. Une fois connecté, **API Keys** dans le menu de gauche → **Create API
+   Key** → copiez la clé (commence par `re_`)
+3. Renseignez-la dans `.env` (et sur Vercel pour le site en ligne) :
+   ```
+   RESEND_API_KEY="re_votre_cle"
+   ```
+4. C'est suffisant pour commencer à tester — les emails partiront depuis
+   `onboarding@resend.dev`, qui fonctionne immédiatement sans configuration
+   supplémentaire (peut atterrir en spam plus souvent qu'un domaine vérifié)
+5. **Pour une meilleure délivrabilité** (recommandé avant une ouverture au
+   public) : **Domains → Add Domain**, ajoutez votre propre domaine, puis
+   ajoutez les enregistrements DNS que Resend affiche (chez votre
+   hébergeur de domaine) — la vérification prend quelques minutes à
+   quelques heures. Une fois vérifié, renseignez `RESEND_FROM_EMAIL`
+   avec une adresse de ce domaine (ex : `connexion@votredomaine.com`)
 
 ## Déployer en production (Vercel + Supabase)
 
@@ -96,22 +74,11 @@ destinataire.
    npx prisma migrate deploy
    npm run db:seed
    ```
-5. Connectez un fournisseur SMS. `src/lib/sms.ts` choisit automatiquement
-   selon les variables présentes, dans cet ordre :
-   - **Twilio (actif)** — infrastructure cloud, aucun matériel requis.
-     Passez le compte en payant (Billing → Upgrade) pour lever la
-     restriction des numéros vérifiés du compte d'essai.
-     `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`.
-   - **Plivo** — alternative ~7 à 30 % moins chère une fois payant, utilisée
-     si les variables `TWILIO_*` sont vides. Note : l'inscription Plivo
-     s'est révélée indisponible selon les régions ("Sign up unavailable in
-     your region") — vérifiez sur plivo.com avant de compter dessus.
-     `PLIVO_AUTH_ID`, `PLIVO_AUTH_TOKEN`, `PLIVO_FROM_NUMBER`.
-   - **textbee.dev (gratuit)** — 300 SMS/mois sans carte bancaire, envoie à
-     n'importe quel numéro sans vérification préalable, mais nécessite un
-     téléphone Android dédié connecté en permanence avec leur app
-     installée (voir textbee.dev). Utilisé seulement si rien au-dessus
-     n'est configuré. `TEXTBEE_API_KEY`, `TEXTBEE_DEVICE_ID`.
+5. Connectez Resend pour l'envoi des codes de connexion propriétaire (voir
+   la section "Configurer Resend pas à pas" plus haut) : `RESEND_API_KEY`
+   dans `.env` (et sur Vercel). Les chauffeurs n'ont besoin d'aucun envoi —
+   leur code à 16 chiffres est généré automatiquement et communiqué
+   directement par le propriétaire depuis Camions & chauffeurs.
 6. Pour le paiement réel (Stripe n'est pas disponible pour une entité
    domiciliée au Maroc), intégrez CMI ou PayZone : leur webhook de paiement
    confirmé doit appeler la même logique que
@@ -120,13 +87,17 @@ destinataire.
 
 ## Ce qui est fonctionnel dès maintenant
 
-- Inscription/connexion par téléphone + code, avec indicatif auto-détecté
-  et option "Autre" à indicatif libre
-- **Accès chauffeur séparé** : un chauffeur dont le téléphone est renseigné
-  dans Camions & chauffeurs peut se connecter avec ce numéro — il saisit
-  alors ses propres voyages/dépenses (auto-attribués à lui, non
-  modifiables par un collègue), sans accès à la flotte, aux clients, aux
-  colonnes personnalisées ni à l'abonnement (réservés au propriétaire)
+- Inscription/connexion propriétaire par email + code (aucun SMS, aucune
+  restriction par pays)
+- **Accès chauffeur sans SMS** : un code à 16 chiffres généré automatiquement
+  à la création du chauffeur (visible/copiable/régénérable par le
+  propriétaire dans Camions & chauffeurs, à communiquer directement — rien
+  n'est envoyé). Le chauffeur saisit ses propres voyages/dépenses
+  (auto-attribués à lui) et ne peut modifier que ce qu'il a lui-même
+  saisi — pas ce que le propriétaire a entré, même si ça lui est attribué —
+  sans accès à la flotte, aux clients, aux colonnes personnalisées ni à
+  l'abonnement (réservés au propriétaire). Le propriétaire peut aussi
+  s'ajouter lui-même comme chauffeur (bouton dédié) s'il conduit aussi
 - Connexion admin par email/mot de passe, changement de mot de passe avec
   bouton afficher/masquer
 - Session persistante façon WhatsApp (400 jours, renouvelée automatiquement

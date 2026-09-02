@@ -5,14 +5,16 @@ import type { SessionPayload } from "@/lib/session";
 
 /**
  * Vérifie que le voyage appartient à l'organisation, et — pour un chauffeur —
- * qu'il s'agit bien d'un de SES voyages (jamais celui d'un collègue). Le
- * propriétaire peut toujours tout modifier/supprimer.
+ * qu'il s'agit bien d'un voyage qu'IL A LUI-MÊME saisi (pas seulement un
+ * voyage qui lui est attribué : ce que le propriétaire a saisi pour lui
+ * reste en lecture seule pour le chauffeur). Le propriétaire peut toujours
+ * tout modifier/supprimer.
  */
 async function assertAccess(session: Extract<SessionPayload, { role: "OWNER" | "DRIVER" }>, id: string) {
   const trip = await prisma.trip.findUnique({ where: { id } });
   if (!trip || trip.organizationId !== session.organizationId) throw new HttpError(404, "Voyage introuvable");
-  if (session.role === "DRIVER" && trip.driverId !== session.driverId) {
-    throw new HttpError(403, "Vous ne pouvez modifier que vos propres voyages.");
+  if (session.role === "DRIVER" && trip.createdByUserId !== session.userId) {
+    throw new HttpError(403, "Vous ne pouvez modifier que les voyages que vous avez vous-même saisis.");
   }
   return trip;
 }

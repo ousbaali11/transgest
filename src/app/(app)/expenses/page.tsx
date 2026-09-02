@@ -24,6 +24,7 @@ export default async function ExpensesPage() {
         trips={JSON.parse(JSON.stringify(trips))}
         customFields={JSON.parse(JSON.stringify(customFields))}
         currentDriverId={currentDriverId}
+        currentUserId={session.userId}
       />
     </div>
   );

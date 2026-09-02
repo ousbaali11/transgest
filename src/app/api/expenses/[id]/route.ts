@@ -6,8 +6,8 @@ import type { SessionPayload } from "@/lib/session";
 async function assertAccess(session: Extract<SessionPayload, { role: "OWNER" | "DRIVER" }>, id: string) {
   const expense = await prisma.expense.findUnique({ where: { id } });
   if (!expense || expense.organizationId !== session.organizationId) throw new HttpError(404, "Dépense introuvable");
-  if (session.role === "DRIVER" && expense.driverId !== session.driverId) {
-    throw new HttpError(403, "Vous ne pouvez modifier que vos propres dépenses.");
+  if (session.role === "DRIVER" && expense.createdByUserId !== session.userId) {
+    throw new HttpError(403, "Vous ne pouvez modifier que les dépenses que vous avez vous-même saisies.");
   }
   return expense;
 }

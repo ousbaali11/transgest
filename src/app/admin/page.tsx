@@ -20,7 +20,7 @@ export default async function AdminPage() {
   const rows = organizations.map((org) => ({
     organizationId: org.id,
     organizationName: org.name,
-    phone: org.users[0]?.phone || "—",
+    email: org.users[0]?.email || "—",
     planLabel: org.plan?.label || "Sans formule",
     status: org.subscriptionStatus,
     grantedByAdmin: org.grantedByAdmin,

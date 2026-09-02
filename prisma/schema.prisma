@@ -88,12 +88,9 @@ model User {
   organizationId String?
   driverId       String?   @unique
 
-  // Propriétaires / chauffeurs : authentification par téléphone (OTP)
-  phone          String?   @unique
-
-  // Admin plateforme uniquement : authentification par email + mot de passe
+  // Propriétaires : authentification par email + code envoyé par email
   email          String?   @unique
-  passwordHash   String?
+  passwordHash   String?   // uniquement pour PLATFORM_ADMIN
 
   createdAt DateTime @default(now())
 
@@ -106,17 +103,17 @@ model User {
   @@index([organizationId])
 }
 
-// Codes de vérification à usage unique (connexion par téléphone)
-model OtpCode {
+// Codes de vérification à usage unique (connexion propriétaire par email)
+model EmailCode {
   id        String   @id @default(cuid())
-  phone     String
+  email     String
   codeHash  String
   attempts  Int      @default(0)
   expiresAt DateTime
   ip        String?
   createdAt DateTime @default(now())
 
-  @@index([phone])
+  @@index([email])
   @@index([ip, createdAt])
 }
 
@@ -147,7 +144,9 @@ model Driver {
   organizationId String
   truckId        String?
   name           String
-  phone          String?  @unique
+  phone          String?  @unique // contact seulement, plus utilisé pour la connexion
+  accessCode     String?  @unique // code à 16 chiffres pour la connexion chauffeur (sans SMS)
+  isOwnerSelf    Boolean  @default(false) // le propriétaire s'est ajouté lui-même comme chauffeur
   notes          String?
   createdAt      DateTime @default(now())
 
