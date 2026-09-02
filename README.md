@@ -34,6 +34,32 @@ Ouvrez `http://localhost:3000` :
   `admin@transgest.ma` / `admin2026` — **changez-le dès le premier lancement**
   depuis Réglages admin > Sécurité)
 
+## Fiabiliser l'envoi de SMS vers le Maroc (Alphanumeric Sender ID)
+
+Si des codes n'arrivent pas chez certains destinataires marocains (erreur Twilio
+21612 dans les logs), c'est que certains opérateurs refusent les SMS envoyés
+depuis un numéro américain classique. La solution officielle Twilio pour ce
+cas précis :
+
+1. Sur `console.twilio.com` → recherchez "Messaging Services" → **Create
+   Messaging Service** → choisissez "Notify my users" comme cas d'usage
+2. Dans **Sender Pool**, ajoutez votre numéro Twilio existant (comme repli
+   pour les pays qui ne supportent pas l'expéditeur textuel)
+3. Toujours dans le Messaging Service → **Settings** → cochez **Alphanumeric
+   Sender ID**, entrez le nom de votre app (11 caractères max, ex :
+   `MonCamion`)
+4. **Réglages généraux SMS** (Messaging → Settings → General) → vérifiez que
+   "Alphanumeric Sender ID" est activé pour le compte
+5. Notice Twilio : si vous n'êtes pas basé au Maroc, aucun document n'est à
+   fournir pour l'enregistrer — l'activation est immédiate
+6. Copiez le **Messaging Service SID** (commence par `MG...`) → renseignez
+   `TWILIO_MESSAGING_SERVICE_SID` dans `.env` (et sur Vercel)
+
+Une fois configuré, `src/lib/sms.ts` l'utilise automatiquement à la place du
+numéro simple — vos SMS marocains arriveront avec le nom de l'app comme
+expéditeur, ce qui règle aussi bien la fiabilité que la confiance du
+destinataire.
+
 ## Configurer Plivo pas à pas
 
 1. Sur **plivo.com** → **Sign Up** (email professionnel recommandé, une

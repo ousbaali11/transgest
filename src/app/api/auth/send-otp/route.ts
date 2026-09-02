@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { sendOtpSms } from "@/lib/sms";
 import { handleApiError } from "@/lib/guards";
+import { getPlatformSettings } from "@/lib/settings";
 
 const bodySchema = z.object({
   phone: z.string().min(8).max(20),
@@ -61,7 +62,8 @@ export async function POST(req: NextRequest) {
     // ne se déclenche pas inutilement sur un envoi qui a échoué — l'utilisateur
     // peut réessayer tout de suite après avoir corrigé le problème.
     try {
-      await sendOtpSms(phone, code);
+      const settings = await getPlatformSettings();
+      await sendOtpSms(phone, code, settings.appName);
     } catch (smsError) {
       console.error("Échec d'envoi SMS :", smsError);
       const isDevError = process.env.NODE_ENV !== "production";

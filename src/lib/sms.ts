@@ -7,7 +7,16 @@ import * as plivo from "plivo";
  * dans cet ordre de priorité :
  *
  * 1) Twilio (actif) — infrastructure cloud, aucun matériel requis.
- *    Variables : TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER.
+ *    - Variables minimales : TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER.
+ *    - Variable recommandée en plus : TWILIO_MESSAGING_SERVICE_SID. Si elle
+ *      est présente, elle est utilisée à la place de TWILIO_FROM_NUMBER —
+ *      c'est ce qui permet à Twilio d'envoyer via un Alphanumeric Sender ID
+ *      (le SMS arrive avec le nom de l'app comme expéditeur au lieu d'un
+ *      numéro) pour les pays qui le supportent, avec un repli automatique
+ *      sur un numéro classique ailleurs. Corrige les erreurs Twilio 21612
+ *      ("Message cannot be sent with the current combination of To/From")
+ *      qui surviennent quand un numéro américain envoie vers certains
+ *      opérateurs internationaux (fréquent avec un numéro marocain).
  *
  * 2) Plivo — alternative moins chère une fois payant, conservée en repli
  *    si Twilio n'est pas configuré (l'inscription Plivo peut être
@@ -21,13 +30,17 @@ import * as plivo from "plivo";
  * Si aucun de ces fournisseurs n'est configuré : mode développement, le
  * code est journalisé côté serveur au lieu d'être envoyé.
  */
-export async function sendOtpSms(phone: string, code: string): Promise<void> {
-  const message = `Votre code TransGest : ${code}`;
+export async function sendOtpSms(phone: string, code: string, appName: string): Promise<void> {
+  const message = `Votre code ${appName} : ${code}`;
 
-  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER } = process.env;
-  if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_FROM_NUMBER) {
+  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER, TWILIO_MESSAGING_SERVICE_SID } = process.env;
+  if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && (TWILIO_MESSAGING_SERVICE_SID || TWILIO_FROM_NUMBER)) {
     const client = Twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-    await client.messages.create({ to: phone, from: TWILIO_FROM_NUMBER, body: message });
+    if (TWILIO_MESSAGING_SERVICE_SID) {
+      await client.messages.create({ to: phone, messagingServiceSid: TWILIO_MESSAGING_SERVICE_SID, body: message });
+    } else {
+      await client.messages.create({ to: phone, from: TWILIO_FROM_NUMBER!, body: message });
+    }
     return;
   }
 
