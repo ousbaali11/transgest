@@ -93,6 +93,13 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, ini
     }
   }
 
+  function editPhone() {
+    setStep("phone");
+    setCode("");
+    setError("");
+    setDevCode(null);
+  }
+
   return (
     <div className="container">
       <div style={{ textAlign: "center", margin: "40px 0" }}>
@@ -133,7 +140,12 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, ini
         </>
       ) : (
         <>
-          <p className="muted">Code envoyé au {fullPhone}.</p>
+          <p className="muted">
+            Code envoyé au {fullPhone}.{" "}
+            <button type="button" onClick={editPhone} style={{ background: "none", border: "none", padding: 0, color: "var(--primary)", fontWeight: 600, cursor: "pointer", textDecoration: "underline", fontSize: "inherit" }}>
+              Modifier
+            </button>
+          </p>
           {devCode && (
             <div className="card" style={{ background: "var(--primary-10)", border: "none" }}>
               <span style={{ fontSize: 13 }}>Mode développement — code : </span>

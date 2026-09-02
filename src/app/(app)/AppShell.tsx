@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, Route, Fuel, Receipt, Menu, Settings, Truck, Users, Package, Download, ChevronRight, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Home, Route, Fuel, Receipt, Menu, Settings, Truck, Users, Package, Download, ChevronRight, X, LogOut } from "lucide-react";
 
 const TABS = [
   { href: "/dashboard", label: "Accueil", icon: Home },
@@ -18,7 +18,14 @@ export default function AppShell({
   appName: string; logoEmoji: string; logoType: string; logoImage: string | null; isOwner: boolean; children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [plusOpen, setPlusOpen] = useState(false);
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
 
   const plusItems = [
     ...(isOwner
@@ -48,9 +55,19 @@ export default function AppShell({
             <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>Gestion de flotte poids lourds</div>
           </div>
         </Link>
-        <Link href="/reglages" aria-label="Réglages" style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex" }}>
-          <Settings size={17} color="#fff" />
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Link href="/reglages" aria-label="Réglages" title="Réglages" style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex" }}>
+            <Settings size={17} color="#fff" />
+          </Link>
+          <button
+            onClick={logout}
+            aria-label="Se déconnecter"
+            title="Se déconnecter"
+            style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex", border: "none", cursor: "pointer" }}
+          >
+            <LogOut size={17} color="#fff" />
+          </button>
+        </div>
       </div>
 
       {/* Contenu de la page */}

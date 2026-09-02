@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireActiveOrg } from "@/lib/require-active-org";
 import ScreenHeader from "@/components/ScreenHeader";
-import LogoutButton from "../../LogoutButton";
 import SubscriptionActions from "./SubscriptionActions";
 import { Truck, Users, Package, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -70,12 +69,9 @@ export default async function ReglagesPage() {
         </div>
       )}
 
-      <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <strong>Compte</strong>
-          <div className="muted">{session.phone} {!isOwner && "· Chauffeur"}</div>
-        </div>
-        <LogoutButton redirectTo="/login" />
+      <div className="card">
+        <strong>Compte</strong>
+        <div className="muted">{session.phone} {!isOwner && "· Chauffeur"}</div>
       </div>
     </div>
   );
