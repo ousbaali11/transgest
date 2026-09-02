@@ -35,6 +35,7 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, ini
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [devCode, setDevCode] = useState<string | null>(null);
+  const [lastSentPhone, setLastSentPhone] = useState<string | null>(null);
 
   const isOther = countryCode === "OTHER";
   const dial = isOther ? customDial || "+" : DIAL_CODES[countryCode].dial;
@@ -50,14 +51,26 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, ini
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: fullPhone }),
       });
-      let data: { error?: string; devCode?: string } = {};
+      let data: { error?: string; code?: string; devCode?: string } = {};
       try {
         data = await res.json();
       } catch {
         setError("Réponse inattendue du serveur. Réessayez.");
         return;
       }
-      if (!res.ok) { setError(data.error || "Erreur"); return; }
+      if (!res.ok) {
+        // Un code valable a déjà été envoyé il y a moins de 30s pour ce même
+        // numéro (ex: on a cliqué "Modifier" sans rien changer, puis
+        // renvoyé) : pas besoin d'attendre, ce code fonctionne toujours —
+        // direction l'écran de saisie plutôt qu'un message d'erreur bloquant.
+        if (data.code === "ALREADY_SENT" && fullPhone === lastSentPhone) {
+          setStep("otp");
+          return;
+        }
+        setError(data.error || "Erreur");
+        return;
+      }
+      setLastSentPhone(fullPhone);
       setDevCode(data.devCode || null);
       setStep("otp");
     } catch {
@@ -97,7 +110,6 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, ini
     setStep("phone");
     setCode("");
     setError("");
-    setDevCode(null);
   }
 
   return (

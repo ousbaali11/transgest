@@ -39,7 +39,10 @@ export async function POST(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
     if (recent) {
-      return NextResponse.json({ error: "Un code a déjà été envoyé, patientez quelques secondes." }, { status: 429 });
+      return NextResponse.json(
+        { error: "Un code a déjà été envoyé, patientez quelques secondes.", code: "ALREADY_SENT" },
+        { status: 429 }
+      );
     }
 
     // Anti-spam n°2 : une même adresse IP ne peut pas demander plus de
