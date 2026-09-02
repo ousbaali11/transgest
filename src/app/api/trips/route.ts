@@ -14,7 +14,7 @@ const createSchema = z.object({
   kmArrivee: z.number().optional().nullable(),
   marchandise: z.string().optional(),
   quantite: z.number().optional().nullable(),
-  unite: z.string().optional(),
+  unite: z.string().optional().nullable(),
   prixTransport: z.number().default(0),
   avance: z.number().default(0),
   notes: z.string().optional(),

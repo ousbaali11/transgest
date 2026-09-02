@@ -16,9 +16,11 @@ export default function NewTripForm({ trucks, drivers, clients, customFields = [
     prixTransport: "", avance: "", marchandise: "",
   });
   const [custom, setCustom] = useState<Record<string, string>>({});
+  const [error, setError] = useState("");
 
   async function submit() {
     setBusy(true);
+    setError("");
     try {
       const res = await fetch("/api/trips", {
         method: "POST",
@@ -38,12 +40,17 @@ export default function NewTripForm({ trucks, drivers, clients, customFields = [
           customFields: custom,
         }),
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setOpen(false);
         setF({ truckId: trucks[0]?.id || "", driverId: lockedDriverId || "", clientId: "", depart: "", arrivee: "", kmDepart: "", kmArrivee: "", prixTransport: "", avance: "", marchandise: "" });
         setCustom({});
         router.refresh();
+      } else {
+        setError(data.error || "Impossible d'enregistrer le voyage.");
       }
+    } catch {
+      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
     } finally {
       setBusy(false);
     }
@@ -89,6 +96,7 @@ export default function NewTripForm({ trucks, drivers, clients, customFields = [
           ))}
         </div>
       )}
+      {error && <p className="error-text" style={{ marginTop: 8 }}>{error}</p>}
       <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
         <button className="btn btn-ghost" onClick={() => setOpen(false)}>Annuler</button>
         <button className="btn" disabled={busy || !f.depart || !f.arrivee || !f.truckId} onClick={submit}>

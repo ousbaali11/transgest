@@ -10,7 +10,7 @@ const createSchema = z.object({
   category: z.enum(["CARBURANT", "PEAGE", "AUTRES"]),
   date: z.string().datetime(),
   quantite: z.number().optional().nullable(),
-  unite: z.string().optional(),
+  unite: z.string().optional().nullable(),
   prixUnitaire: z.number().optional().nullable(),
   montant: z.number(),
   notes: z.string().optional(),

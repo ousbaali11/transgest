@@ -26,6 +26,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
   const [busy, setBusy] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   const auto = category === "CARBURANT" && f.quantite && f.prixUnitaire ? Number(f.quantite) * Number(f.prixUnitaire) : null;
 
@@ -48,6 +49,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
 
   async function save() {
     setBusy(true);
+    setError("");
     try {
       const montant = category === "CARBURANT" ? (auto ?? Number(f.montant) ?? 0) : Number(f.montant) || 0;
       const payload = {
@@ -61,14 +63,17 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
 
       if (editingId) {
         const res = await fetch(`/api/expenses/${editingId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-        const updated = await res.json();
-        if (res.ok) setExpenses(expenses.map((e) => (e.id === editingId ? updated : e)));
+        const updated = await res.json().catch(() => ({}));
+        if (res.ok) { setExpenses(expenses.map((e) => (e.id === editingId ? updated : e))); cancelEdit(); }
+        else setError(updated.error || "Impossible d'enregistrer la dépense.");
       } else {
         const res = await fetch("/api/expenses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-        const created = await res.json();
-        if (res.ok) setExpenses([created, ...expenses]);
+        const created = await res.json().catch(() => ({}));
+        if (res.ok) { setExpenses([created, ...expenses]); cancelEdit(); }
+        else setError(created.error || "Impossible d'enregistrer la dépense.");
       }
-      cancelEdit();
+    } catch {
+      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
     } finally {
       setBusy(false);
     }
@@ -93,7 +98,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
           {(["CARBURANT", "PEAGE", "AUTRES"] as const).map((c) => (
             <button
               key={c}
-              onClick={() => setCategory(c)}
+              onClick={() => { setCategory(c); setError(""); }}
               style={{ flex: 1, padding: 8, border: "none", cursor: "pointer", background: category === c ? "var(--primary)" : "#fff", color: category === c ? "#fff" : "var(--text)" }}
             >
               {c === "CARBURANT" ? "Carburant" : c === "PEAGE" ? "Péage" : "Autres"}
@@ -135,6 +140,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
           </div>
         )}
 
+        {error && <p className="error-text" style={{ marginBottom: 8 }}>{error}</p>}
         <div style={{ display: "flex", gap: 8 }}>
           {editingId && <button className="btn btn-ghost" onClick={cancelEdit}>Annuler</button>}
           <button className="btn" disabled={busy} onClick={save}>{busy ? "…" : editingId ? "Enregistrer les modifications" : "Enregistrer"}</button>

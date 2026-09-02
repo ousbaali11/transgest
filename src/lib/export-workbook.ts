@@ -1,5 +1,20 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { prisma } from "./prisma";
+
+// Palette claire, cohérente avec le thème de l'application (bleu marine /
+// orange), pensée pour rester lisible et professionnelle à l'impression.
+const COLORS = {
+  headerFill: "FFE8EDF5", // bleu très clair
+  headerText: "FF16305B", // bleu marine (couleur primaire de l'app)
+  totalFill: "FFF1F1EF", // gris très clair
+  positiveFill: "FFE4F3EA", // vert très clair
+  positiveText: "FF2E7D53",
+  negativeFill: "FFFBE9E7", // rouge très clair
+  negativeText: "FFC0392B",
+  sectionFill: "FFFDF1DF", // orange très clair, pour les titres de section
+  sectionText: "FFB5791C",
+  stripe: "FFFAFAF8", // presque blanc, pour une ligne sur deux
+};
 
 function sanitizeSheetName(name: string, used: Set<string>): string {
   let n = (name || "Feuille").replace(/[:\\/?*[\]]/g, "-").trim().slice(0, 28) || "Feuille";
@@ -13,11 +28,16 @@ function sanitizeSheetName(name: string, used: Set<string>): string {
   return final;
 }
 
+function fillCell(cell: ExcelJS.Cell, argb: string) {
+  cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb } };
+}
+
+const MONEY_FORMAT = '#,##0.00" DH"';
+
 /**
  * Génère le classeur Excel complet d'une organisation : un onglet par
- * chauffeur (voyages, dépenses, formules Excel natives), plus un onglet
- * "Global" avec les totaux par chauffeur et par camion. Reprend la logique
- * du prototype, adaptée pour interroger la vraie base de données.
+ * chauffeur (voyages, dépenses, formules Excel natives, colorié), plus un
+ * onglet "Global" avec les totaux par chauffeur et par camion.
  */
 export async function buildOrganizationWorkbook(organizationId: string, appName: string): Promise<Buffer> {
   const [trucks, drivers, clients, trips, expenses, customFieldDefs] = await Promise.all([
@@ -41,15 +61,19 @@ export async function buildOrganizationWorkbook(organizationId: string, appName:
     return { carburant, peage, autres, total: carburant + peage + autres };
   }
 
-  const wb = XLSX.utils.book_new();
+  const wb = new ExcelJS.Workbook();
+  wb.creator = appName;
+  wb.created = new Date();
+
   const custom = customFieldDefs;
-  const baseHeaders = [
-    "DATE", "DÉPART", "ARRIVÉE", "CAMION", "CLIENT", "DISTANCE (KM)", "MARCHANDISE",
+  // "#" en première colonne (numéro de ligne) et "NOTES" en dernière,
+  // reprises de la structure de rapport fournie.
+  const headers = [
+    "#", "DATE", "DÉPART", "ARRIVÉE", "CAMION", "CLIENT", "DISTANCE (KM)", "MARCHANDISE",
     "PRIX TRANSPORT", "AVANCE", "SOLDE", "CARBURANT", "PÉAGE", "AUTRES DÉP.",
-    "TOTAL DÉP.", "BÉNÉFICE NET",
+    "TOTAL DÉP.", "BÉNÉFICE NET", ...custom.map((c) => c.label.toUpperCase()), "NOTES",
   ];
-  const headers = [...baseHeaders, ...custom.map((c) => c.label.toUpperCase())];
-  const col = (name: string) => headers.indexOf(name);
+  const col = (name: string) => headers.indexOf(name) + 1; // ExcelJS: colonnes indexées à partir de 1
   const usedNames = new Set<string>();
 
   const driverIds: string[] = Array.from(new Set(trips.map((t) => t.driverId || "unassigned")));
@@ -63,57 +87,98 @@ export async function buildOrganizationWorkbook(organizationId: string, appName:
       .sort((a, b) => a.date.getTime() - b.date.getTime());
     const primaryTruck = trucks.find((t) => t.id === driverTrips[0]?.truckId);
 
-    const rows: (string | number)[][] = [];
-    rows.push(["CHAUFFEUR", dName]);
-    rows.push(["CAMION", primaryTruck ? `${primaryTruck.immat}${primaryTruck.marque ? " — " + primaryTruck.marque + " " + (primaryTruck.modele || "") : ""}` : "—"]);
-    rows.push([]);
-    rows.push(headers);
-    const headerRowIdx = rows.length - 1;
+    const sheet = wb.addWorksheet(sanitizeSheetName(dName, usedNames));
 
-    driverTrips.forEach((trip) => {
-      const costs = tripCosts(trip.id);
-      const distance = (trip.kmArrivee || 0) - (trip.kmDepart || 0);
-      const cf = (trip.customFields as Record<string, string | number>) || {};
-      rows.push([
-        trip.date.toISOString().slice(0, 10), trip.depart, trip.arrivee,
-        truckName(trip.truckId), clientName(trip.clientId),
-        distance || 0, trip.marchandise || "",
-        Number(trip.prixTransport), Number(trip.avance), 0,
-        costs.carburant, costs.peage, costs.autres, 0, 0,
-        ...custom.map((c) => cf[c.id] ?? ""),
-      ]);
+    // Bloc d'en-tête : chauffeur / camion
+    sheet.getCell("A1").value = "CHAUFFEUR";
+    sheet.getCell("A1").font = { bold: true };
+    sheet.getCell("B1").value = dName;
+    sheet.getCell("A2").value = "CAMION";
+    sheet.getCell("A2").font = { bold: true };
+    sheet.getCell("B2").value = primaryTruck
+      ? `${primaryTruck.immat}${primaryTruck.marque ? " — " + primaryTruck.marque + " " + (primaryTruck.modele || "") : ""}`
+      : "—";
+
+    const headerRowIdx = 4;
+    const headerRow = sheet.getRow(headerRowIdx);
+    headerRow.values = headers;
+    headerRow.eachCell((cell) => {
+      fillCell(cell, COLORS.headerFill);
+      cell.font = { bold: true, color: { argb: COLORS.headerText } };
+      cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
     });
 
     const firstData = headerRowIdx + 1;
-    const lastData = rows.length - 1;
-    rows.push(["TOTAL", "", "", "", "", "", "", 0, 0, 0, 0, 0, 0, 0, 0, ...custom.map(() => "")]);
-    const totalRow = rows.length - 1;
+    driverTrips.forEach((trip, i) => {
+      const costs = tripCosts(trip.id);
+      const distance = (trip.kmArrivee || 0) - (trip.kmDepart || 0);
+      const cf = (trip.customFields as Record<string, string | number>) || {};
+      const prix = Number(trip.prixTransport);
+      const avance = Number(trip.avance);
+      const totalDep = costs.total;
+      const benefice = prix - totalDep;
+      const r = firstData + i;
+      const row = sheet.getRow(r);
+      row.values = [
+        i + 1, trip.date.toISOString().slice(0, 10), trip.depart, trip.arrivee,
+        truckName(trip.truckId), clientName(trip.clientId),
+        distance || 0, trip.marchandise || "",
+        prix, avance, undefined, // SOLDE = formule, posée plus bas
+        costs.carburant, costs.peage, costs.autres, undefined, undefined, // TOTAL DÉP. et BÉNÉFICE NET = formules
+        ...custom.map((c) => cf[c.id] ?? ""),
+        trip.notes || "",
+      ];
 
-    const sheet = XLSX.utils.aoa_to_sheet(rows);
-    if (lastData >= firstData) {
-      for (let r = firstData; r <= lastData; r++) {
-        const H = XLSX.utils.encode_cell({ r, c: col("PRIX TRANSPORT") });
-        const I = XLSX.utils.encode_cell({ r, c: col("AVANCE") });
-        const J = XLSX.utils.encode_cell({ r, c: col("SOLDE") });
-        const K = XLSX.utils.encode_cell({ r, c: col("CARBURANT") });
-        const L = XLSX.utils.encode_cell({ r, c: col("PÉAGE") });
-        const M = XLSX.utils.encode_cell({ r, c: col("AUTRES DÉP.") });
-        const N = XLSX.utils.encode_cell({ r, c: col("TOTAL DÉP.") });
-        const O = XLSX.utils.encode_cell({ r, c: col("BÉNÉFICE NET") });
-        sheet[J] = { t: "n", f: `${H}-${I}` };
-        sheet[N] = { t: "n", f: `${K}+${L}+${M}` };
-        sheet[O] = { t: "n", f: `${H}-${N}` };
+      const H = sheet.getCell(r, col("PRIX TRANSPORT"));
+      const I = sheet.getCell(r, col("AVANCE"));
+      const J = sheet.getCell(r, col("SOLDE"));
+      const K = sheet.getCell(r, col("CARBURANT"));
+      const L = sheet.getCell(r, col("PÉAGE"));
+      const M = sheet.getCell(r, col("AUTRES DÉP."));
+      const N = sheet.getCell(r, col("TOTAL DÉP."));
+      const O = sheet.getCell(r, col("BÉNÉFICE NET"));
+      J.value = { formula: `${H.address}-${I.address}`, result: prix - avance };
+      N.value = { formula: `${K.address}+${L.address}+${M.address}`, result: totalDep };
+      O.value = { formula: `${H.address}-${N.address}`, result: benefice };
+
+      [H, I, J, K, L, M, N, O].forEach((c) => (c.numFmt = MONEY_FORMAT));
+      fillCell(O, benefice >= 0 ? COLORS.positiveFill : COLORS.negativeFill);
+      O.font = { bold: true, color: { argb: benefice >= 0 ? COLORS.positiveText : COLORS.negativeText } };
+
+      // Une ligne sur deux très légèrement teintée, pour la lisibilité
+      // (sans écraser la couleur du bénéfice net déjà posée ci-dessus).
+      if (i % 2 === 1) {
+        row.eachCell({ includeEmpty: true }, (cell) => {
+          if (cell.address !== O.address) fillCell(cell, COLORS.stripe);
+        });
       }
+    });
+
+    const lastData = firstData + driverTrips.length - 1;
+    const totalRowIdx = Math.max(lastData, firstData) + 1;
+    const totalRow = sheet.getRow(totalRowIdx);
+    totalRow.getCell(1).value = "TOTAL";
+    if (lastData >= firstData) {
       ["PRIX TRANSPORT", "AVANCE", "SOLDE", "CARBURANT", "PÉAGE", "AUTRES DÉP.", "TOTAL DÉP.", "BÉNÉFICE NET"].forEach((cname) => {
         const c = col(cname);
-        const addr = XLSX.utils.encode_cell({ r: totalRow, c });
-        const range = `${XLSX.utils.encode_cell({ r: firstData, c })}:${XLSX.utils.encode_cell({ r: lastData, c })}`;
-        sheet[addr] = { t: "n", f: `SUM(${range})` };
+        const cell = sheet.getCell(totalRowIdx, c);
+        const colLetter = sheet.getColumn(c).letter;
+        cell.value = { formula: `SUM(${colLetter}${firstData}:${colLetter}${lastData})`, result: 0 };
+        cell.numFmt = MONEY_FORMAT;
       });
     }
-    sheet["!cols"] = headers.map((h) => ({ wch: Math.max(12, Math.min(22, h.length + 4)) }));
+    totalRow.eachCell({ includeEmpty: true }, (cell) => {
+      fillCell(cell, COLORS.totalFill);
+      cell.font = { bold: true };
+    });
 
-    XLSX.utils.book_append_sheet(wb, sheet, sanitizeSheetName(dName, usedNames));
+    // Largeurs de colonnes : affectation directe (et non un .forEach sur
+    // sheet.columns, qui reste vide tant qu'on ne l'a pas assigné — ce qui
+    // provoquait des "###" à l'affichage faute de place pour les nombres).
+    sheet.columns = headers.map((header) => ({
+      width: header === "#" ? 12 : header === "NOTES" ? 30 : Math.max(14, Math.min(26, header.length + 6)),
+    }));
+    headerRow.height = 28;
 
     const ca = driverTrips.reduce((s, t) => s + Number(t.prixTransport), 0);
     const dep = driverTrips.reduce((s, t) => s + tripCosts(t.id).total, 0);
@@ -129,30 +194,99 @@ export async function buildOrganizationWorkbook(organizationId: string, appName:
     return { truck: truckName(id), voyages: tTrips.length, ca, dep };
   });
 
+  buildGlobalSheet(wb, appName, driverSummaries, truckSummaries);
+
+  const arrayBuffer = await wb.xlsx.writeBuffer();
+  return Buffer.from(arrayBuffer);
+}
+
+function buildGlobalSheet(
+  wb: ExcelJS.Workbook,
+  appName: string,
+  driverSummaries: { driver: string; truck: string; voyages: number; ca: number; dep: number; km: number }[],
+  truckSummaries: { truck: string; voyages: number; ca: number; dep: number }[]
+) {
+  const sheet = wb.addWorksheet("Global");
   const sum = (arr: Array<Record<string, unknown>>, key: string) => arr.reduce((s, x) => s + (Number(x[key]) || 0), 0);
 
-  const gRows: (string | number)[][] = [];
-  gRows.push([`RAPPORT GLOBAL — ${appName}`]);
-  gRows.push([`Généré le ${new Date().toLocaleDateString("fr-FR")}`]);
-  gRows.push([]);
-  gRows.push(["PAR CHAUFFEUR"]);
-  gRows.push(["CHAUFFEUR", "CAMION", "VOYAGES", "CHIFFRE D'AFFAIRES", "DÉPENSES", "BÉNÉFICE NET", "DISTANCE (KM)", "BÉNÉFICE / KM"]);
-  driverSummaries.forEach((s) => {
-    gRows.push([s.driver, s.truck, s.voyages, s.ca, s.dep, s.ca - s.dep, s.km, s.km ? Math.round(((s.ca - s.dep) / s.km) * 100) / 100 : 0]);
+  sheet.getCell("A1").value = `RAPPORT GLOBAL — ${appName}`;
+  sheet.getCell("A1").font = { bold: true, size: 14, color: { argb: COLORS.headerText } };
+  sheet.getCell("A2").value = `Généré le ${new Date().toLocaleDateString("fr-FR")}`;
+  sheet.getCell("A2").font = { italic: true, color: { argb: "FF6B7280" } };
+
+  let r = 4;
+  sheet.getCell(`A${r}`).value = "PAR CHAUFFEUR";
+  const sec1 = sheet.getRow(r);
+  sec1.eachCell({ includeEmpty: true }, (cell) => {
+    fillCell(cell, COLORS.sectionFill);
+    cell.font = { bold: true, color: { argb: COLORS.sectionText } };
   });
-  gRows.push([
-    "TOTAL", "", sum(driverSummaries, "voyages"), sum(driverSummaries, "ca"), sum(driverSummaries, "dep"),
-    sum(driverSummaries, "ca") - sum(driverSummaries, "dep"), sum(driverSummaries, "km"), "",
-  ]);
-  gRows.push([]);
-  gRows.push(["PAR CAMION"]);
-  gRows.push(["CAMION", "VOYAGES", "CHIFFRE D'AFFAIRES", "DÉPENSES", "BÉNÉFICE NET"]);
-  truckSummaries.forEach((s) => gRows.push([s.truck, s.voyages, s.ca, s.dep, s.ca - s.dep]));
-  gRows.push(["TOTAL", sum(truckSummaries, "voyages"), sum(truckSummaries, "ca"), sum(truckSummaries, "dep"), sum(truckSummaries, "ca") - sum(truckSummaries, "dep")]);
+  r++;
 
-  const gSheet = XLSX.utils.aoa_to_sheet(gRows);
-  gSheet["!cols"] = [{ wch: 22 }, { wch: 16 }, { wch: 10 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 }];
-  XLSX.utils.book_append_sheet(wb, gSheet, "Global");
+  const driverHeaders = ["CHAUFFEUR", "CAMION", "VOYAGES", "CHIFFRE D'AFFAIRES", "DÉPENSES", "BÉNÉFICE NET", "DISTANCE (KM)", "BÉNÉFICE / KM"];
+  const headerRow1 = sheet.getRow(r);
+  headerRow1.values = driverHeaders;
+  headerRow1.eachCell((cell) => {
+    fillCell(cell, COLORS.headerFill);
+    cell.font = { bold: true, color: { argb: COLORS.headerText } };
+  });
+  r++;
 
-  return XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
+  driverSummaries.forEach((s) => {
+    const benefice = s.ca - s.dep;
+    const row = sheet.getRow(r);
+    row.values = [s.driver, s.truck, s.voyages, s.ca, s.dep, benefice, s.km, s.km ? Math.round((benefice / s.km) * 100) / 100 : 0];
+    [4, 5, 6, 8].forEach((c) => (row.getCell(c).numFmt = MONEY_FORMAT));
+    const beneficeCell = row.getCell(6);
+    fillCell(beneficeCell, benefice >= 0 ? COLORS.positiveFill : COLORS.negativeFill);
+    beneficeCell.font = { bold: true, color: { argb: benefice >= 0 ? COLORS.positiveText : COLORS.negativeText } };
+    r++;
+  });
+  const driverTotalBenefice = sum(driverSummaries, "ca") - sum(driverSummaries, "dep");
+  const totalRow1 = sheet.getRow(r);
+  totalRow1.values = ["TOTAL", "", sum(driverSummaries, "voyages"), sum(driverSummaries, "ca"), sum(driverSummaries, "dep"), driverTotalBenefice, sum(driverSummaries, "km"), ""];
+  totalRow1.eachCell({ includeEmpty: true }, (cell) => {
+    fillCell(cell, COLORS.totalFill);
+    cell.font = { bold: true };
+  });
+  [4, 5, 6].forEach((c) => (totalRow1.getCell(c).numFmt = MONEY_FORMAT));
+  r += 2;
+
+  sheet.getCell(`A${r}`).value = "PAR CAMION";
+  const sec2 = sheet.getRow(r);
+  sec2.eachCell({ includeEmpty: true }, (cell) => {
+    fillCell(cell, COLORS.sectionFill);
+    cell.font = { bold: true, color: { argb: COLORS.sectionText } };
+  });
+  r++;
+
+  const truckHeaders = ["CAMION", "VOYAGES", "CHIFFRE D'AFFAIRES", "DÉPENSES", "BÉNÉFICE NET"];
+  const headerRow2 = sheet.getRow(r);
+  headerRow2.values = truckHeaders;
+  headerRow2.eachCell((cell) => {
+    fillCell(cell, COLORS.headerFill);
+    cell.font = { bold: true, color: { argb: COLORS.headerText } };
+  });
+  r++;
+
+  truckSummaries.forEach((s) => {
+    const benefice = s.ca - s.dep;
+    const row = sheet.getRow(r);
+    row.values = [s.truck, s.voyages, s.ca, s.dep, benefice];
+    [3, 4, 5].forEach((c) => (row.getCell(c).numFmt = MONEY_FORMAT));
+    const beneficeCell = row.getCell(5);
+    fillCell(beneficeCell, benefice >= 0 ? COLORS.positiveFill : COLORS.negativeFill);
+    beneficeCell.font = { bold: true, color: { argb: benefice >= 0 ? COLORS.positiveText : COLORS.negativeText } };
+    r++;
+  });
+  const truckTotalBenefice = sum(truckSummaries, "ca") - sum(truckSummaries, "dep");
+  const totalRow2 = sheet.getRow(r);
+  totalRow2.values = ["TOTAL", sum(truckSummaries, "voyages"), sum(truckSummaries, "ca"), sum(truckSummaries, "dep"), truckTotalBenefice];
+  totalRow2.eachCell({ includeEmpty: true }, (cell) => {
+    fillCell(cell, COLORS.totalFill);
+    cell.font = { bold: true };
+  });
+  [3, 4, 5].forEach((c) => (totalRow2.getCell(c).numFmt = MONEY_FORMAT));
+
+  sheet.columns = [{ width: 26 }, { width: 18 }, { width: 12 }, { width: 20 }, { width: 16 }, { width: 16 }, { width: 14 }, { width: 14 }];
 }

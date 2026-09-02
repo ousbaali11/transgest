@@ -18,11 +18,25 @@ export default async function FacturesPage({ searchParams }: { searchParams: { s
   const { org } = await requireActiveOrg();
   const activeTab = searchParams.status === "PAYEE" || searchParams.status === "EN_ATTENTE" ? searchParams.status : "all";
 
-  const invoices = await prisma.invoice.findMany({
-    where: { organizationId: org.id, ...(activeTab !== "all" ? { status: activeTab } : {}) },
-    include: { trip: true, client: true },
-    orderBy: { date: "desc" },
-  });
+  const [invoices, allInvoices] = await Promise.all([
+    prisma.invoice.findMany({
+      where: { organizationId: org.id, ...(activeTab !== "all" ? { status: activeTab } : {}) },
+      include: { trip: true, client: true },
+      orderBy: { date: "desc" },
+    }),
+    prisma.invoice.findMany({ where: { organizationId: org.id }, select: { status: true } }),
+  ]);
+
+  const counts = {
+    all: allInvoices.length,
+    PAYEE: allInvoices.filter((i) => i.status === "PAYEE").length,
+    EN_ATTENTE: allInvoices.filter((i) => i.status === "EN_ATTENTE").length,
+  };
+
+  const emptyMessage =
+    activeTab === "PAYEE" ? "Aucune facture payée pour l'instant." :
+    activeTab === "EN_ATTENTE" ? "Aucune facture en attente." :
+    "Aucune facture. Générez-en une depuis le détail d'un voyage.";
 
   return (
     <div className="container">
@@ -39,13 +53,13 @@ export default async function FacturesPage({ searchParams }: { searchParams: { s
               borderBottom: activeTab === t.key ? "2px solid var(--primary)" : "2px solid transparent",
             }}
           >
-            {t.label}
+            {t.label} <span style={{ opacity: 0.7 }}>({counts[t.key]})</span>
           </Link>
         ))}
       </div>
 
       {invoices.length === 0 ? (
-        <p className="muted">Aucune facture. Générez-en une depuis le détail d'un voyage.</p>
+        <p className="muted">{emptyMessage}</p>
       ) : (
         invoices.map((inv) => (
           <div key={inv.id} className="card" style={{ display: "flex", justifyContent: "space-between" }}>

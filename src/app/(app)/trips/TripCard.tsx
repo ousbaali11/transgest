@@ -38,9 +38,11 @@ export default function TripCard({
     prixTransport: trip.prixTransport.toString(), avance: trip.avance.toString(), marchandise: trip.marchandise || "",
   });
   const [custom, setCustom] = useState<Record<string, string>>(trip.customFields || {});
+  const [error, setError] = useState("");
 
   async function save() {
     setBusy(true);
+    setError("");
     try {
       const res = await fetch(`/api/trips/${trip.id}`, {
         method: "PATCH",
@@ -53,7 +55,11 @@ export default function TripCard({
           customFields: custom,
         }),
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) { setEditing(false); router.refresh(); }
+      else setError(data.error || "Impossible d'enregistrer les modifications.");
+    } catch {
+      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
     } finally {
       setBusy(false);
     }
@@ -115,6 +121,7 @@ export default function TripCard({
             ))}
           </div>
         )}
+        {error && <p className="error-text" style={{ marginTop: 8 }}>{error}</p>}
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
           <button className="btn btn-ghost" onClick={() => setEditing(false)}>Annuler</button>
           <button className="btn" disabled={busy} onClick={save}>{busy ? "…" : "Enregistrer"}</button>

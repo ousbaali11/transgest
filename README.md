@@ -142,9 +142,13 @@ destinataire.
 - Colonnes personnalisées (`/colonnes`) : créez des champs propres à votre
   activité, ils apparaissent automatiquement dans les formulaires de voyage
   et de dépense, et dans l'export Excel
-- **Export Excel** (`/api/export`, lien depuis Réglages) : un onglet par
-  chauffeur avec formules Excel natives (solde, total dépenses, bénéfice),
-  un onglet Global avec les totaux par chauffeur et par camion
+- **Export Excel** (`/api/export`, lien depuis Réglages ou menu Plus) : un
+  onglet par chauffeur avec formules Excel natives (solde, total dépenses,
+  bénéfice), numérotation de ligne, colonne notes, mise en couleur (en-têtes,
+  lignes de total, bénéfice positif/négatif) — généré avec `exceljs`, car la
+  bibliothèque utilisée initialement (`xlsx`) n'écrit pas les couleurs dans
+  le fichier de sortie malgré ce que sa documentation laisse penser ; un
+  onglet Global avec les totaux par chauffeur et par camion
 - Alertes d'échéance des documents véhicules (assurance, visite technique,
   vignette) : badge sur le camion concerné, bannière sur le tableau de bord
 - Logo de marque en emoji ou en image (upload + réglage de la taille) depuis
