@@ -44,7 +44,12 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
           ? "Renouvelez pour retrouver l'accès à vos voyages, dépenses et factures."
           : "Un abonnement actif est nécessaire pour accéder à l'application."}
       </p>
-      <SubscribeForm plans={availablePlans} initialCurrency={currency} />
+      <SubscribeForm
+        plans={JSON.parse(JSON.stringify(availablePlans))}
+        initialCurrency={currency}
+        stripeEnabled={settings.stripeEnabled}
+        paypalEnabled={settings.paypalEnabled}
+      />
     </div>
   );
 }

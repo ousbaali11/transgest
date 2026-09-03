@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOwnerSession, handleApiError } from "@/lib/guards";
+import { requireOwnerSession, handleApiError, HttpError } from "@/lib/guards";
 
 const bodySchema = z.object({ planKey: z.string() });
 
 /**
- * Active un abonnement pour l'organisation courante.
- *
- * NOTE PAIEMENT : cette route active l'abonnement immédiatement, comme le
- * faisait le prototype (paiement simulé). En production, ne l'appelez
- * qu'après confirmation du paiement — par exemple depuis le webhook de votre
- * passerelle (CMI, PayZone, ChariBaaS...) une fois la transaction validée,
- * pas directement depuis le clic du bouton côté client.
+ * Active directement une formule GRATUITE pour l'organisation courante.
+ * Réservé aux formules à 0 MAD : toute formule payante doit obligatoirement
+ * passer par un vrai paiement (Stripe ou PayPal — voir
+ * /api/subscription/checkout/*), jamais par cette route, pour ne jamais
+ * activer un accès payant sans paiement confirmé.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -21,20 +19,22 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
 
     const plan = await prisma.plan.findUnique({ where: { key: parsed.data.planKey } });
-    if (!plan) return NextResponse.json({ error: "Formule introuvable" }, { status: 404 });
-
-    const currentPeriodEnd = new Date();
-    currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 30);
+    if (!plan) throw new HttpError(404, "Formule introuvable");
+    if (plan.priceMAD > 0) {
+      throw new HttpError(400, "Cette formule est payante — utilisez le paiement par carte ou PayPal.");
+    }
 
     const org = await prisma.organization.update({
       where: { id: session.organizationId },
       data: {
         planId: plan.id,
+        billingInterval: null,
         subscriptionStatus: "ACTIVE",
-        currentPeriodEnd,
+        currentPeriodEnd: null,
         cancelAtPeriodEnd: false,
         canceledAt: null,
         grantedByAdmin: false,
+        paymentProvider: null,
       },
     });
 

@@ -3,8 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; themePrimary: string; themeAccent: string; forcedPlanId: string | null };
-type Plan = { id: string; key: string; label: string; priceMAD: number; visible: boolean };
+type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; themePrimary: string; themeAccent: string; forcedPlanId: string | null; stripeEnabled: boolean; paypalEnabled: boolean };
+type Plan = {
+  id: string; key: string; label: string; priceMAD: number; visible: boolean;
+  priceMonthlyMAD: number | null; priceAnnualMAD: number | null;
+  stripePriceIdMonthly: string | null; stripePriceIdAnnual: string | null;
+  paypalPlanIdMonthly: string | null; paypalPlanIdAnnual: string | null;
+};
 
 const PRESETS = [
   { primary: "#16305B", accent: "#E8892E", name: "Route" },
@@ -43,6 +48,45 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
       body: JSON.stringify({ visible: !plan.visible }),
     });
     if (res.ok) setPlans(plans.map((p) => (p.id === plan.id ? { ...p, visible: !p.visible } : p)));
+  }
+
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
+  const [planDraft, setPlanDraft] = useState<Partial<Plan>>({});
+  const [planSaveMsg, setPlanSaveMsg] = useState("");
+
+  function startEditPlan(plan: Plan) {
+    setEditingPlanId(plan.id);
+    setPlanDraft({ ...plan });
+    setPlanSaveMsg("");
+  }
+
+  async function savePlanDraft() {
+    if (!editingPlanId) return;
+    setBusy(true);
+    setPlanSaveMsg("");
+    try {
+      const res = await fetch(`/api/admin/plans/${editingPlanId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          priceMonthlyMAD: planDraft.priceMonthlyMAD === null || planDraft.priceMonthlyMAD === undefined ? null : Number(planDraft.priceMonthlyMAD),
+          priceAnnualMAD: planDraft.priceAnnualMAD === null || planDraft.priceAnnualMAD === undefined ? null : Number(planDraft.priceAnnualMAD),
+          stripePriceIdMonthly: planDraft.stripePriceIdMonthly || null,
+          stripePriceIdAnnual: planDraft.stripePriceIdAnnual || null,
+          paypalPlanIdMonthly: planDraft.paypalPlanIdMonthly || null,
+          paypalPlanIdAnnual: planDraft.paypalPlanIdAnnual || null,
+        }),
+      });
+      const updated = await res.json();
+      if (res.ok) {
+        setPlans(plans.map((p) => (p.id === editingPlanId ? updated : p)));
+        setEditingPlanId(null);
+      } else {
+        setPlanSaveMsg(updated.error || "Erreur lors de l'enregistrement.");
+      }
+    } finally {
+      setBusy(false);
+    }
   }
 
   function onLogoFile(file: File | undefined) {
@@ -149,28 +193,95 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
       <div className="card">
         <strong>Abonnements</strong>
         {plans.map((p) => (
-          <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 8 }}>
-            <div>
-              <div style={{ fontWeight: 600 }}>{p.label} {p.priceMAD ? `— ${p.priceMAD} DH/mois` : "— gratuit"}</div>
-              <div className="muted" style={{ fontSize: 12 }}>Visible : {p.visible ? "Oui" : "Non"} {settings.forcedPlanId === p.id && "· Forcé pour tous"}</div>
+          <div key={p.id} style={{ padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontWeight: 600 }}>{p.label} {p.priceMAD ? `— ${p.priceMAD} DH/mois` : "— gratuit"}</div>
+                <div className="muted" style={{ fontSize: 12 }}>Visible : {p.visible ? "Oui" : "Non"} {settings.forcedPlanId === p.id && "· Forcé pour tous"}</div>
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button className="btn" style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: "#F1F1EF", color: "var(--text)" }} onClick={() => togglePlanVisible(p)}>
+                  {p.visible ? "Masquer" : "Afficher"}
+                </button>
+                <button
+                  className="btn"
+                  style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: settings.forcedPlanId === p.id ? "var(--primary)" : "#F1F1EF", color: settings.forcedPlanId === p.id ? "#fff" : "var(--text)" }}
+                  onClick={() => saveSettings({ forcedPlanId: settings.forcedPlanId === p.id ? null : p.id })}
+                >
+                  {settings.forcedPlanId === p.id ? "Actif" : "Activer pour tous"}
+                </button>
+              </div>
             </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button className="btn" style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: "#F1F1EF", color: "var(--text)" }} onClick={() => togglePlanVisible(p)}>
-                {p.visible ? "Masquer" : "Afficher"}
-              </button>
-              <button
-                className="btn"
-                style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: settings.forcedPlanId === p.id ? "var(--primary)" : "#F1F1EF", color: settings.forcedPlanId === p.id ? "#fff" : "var(--text)" }}
-                onClick={() => saveSettings({ forcedPlanId: settings.forcedPlanId === p.id ? null : p.id })}
-              >
-                {settings.forcedPlanId === p.id ? "Actif" : "Activer pour tous"}
-              </button>
-            </div>
+
+            {p.priceMAD > 0 && (
+              editingPlanId === p.id ? (
+                <div style={{ marginTop: 10, background: "#F6F4EF", borderRadius: 8, padding: 10 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+                    <label className="field" style={{ margin: 0 }}>
+                      <span className="field-label">Prix mensuel (MAD)</span>
+                      <input type="number" value={planDraft.priceMonthlyMAD ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, priceMonthlyMAD: e.target.value ? Number(e.target.value) : null })} />
+                    </label>
+                    <label className="field" style={{ margin: 0 }}>
+                      <span className="field-label">Prix annuel (MAD)</span>
+                      <input type="number" value={planDraft.priceAnnualMAD ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, priceAnnualMAD: e.target.value ? Number(e.target.value) : null })} />
+                    </label>
+                    <label className="field" style={{ margin: 0 }}>
+                      <span className="field-label">Stripe — Price ID mensuel</span>
+                      <input placeholder="price_..." value={planDraft.stripePriceIdMonthly ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, stripePriceIdMonthly: e.target.value })} />
+                    </label>
+                    <label className="field" style={{ margin: 0 }}>
+                      <span className="field-label">Stripe — Price ID annuel</span>
+                      <input placeholder="price_..." value={planDraft.stripePriceIdAnnual ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, stripePriceIdAnnual: e.target.value })} />
+                    </label>
+                    <label className="field" style={{ margin: 0 }}>
+                      <span className="field-label">PayPal — Plan ID mensuel</span>
+                      <input placeholder="P-..." value={planDraft.paypalPlanIdMonthly ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, paypalPlanIdMonthly: e.target.value })} />
+                    </label>
+                    <label className="field" style={{ margin: 0 }}>
+                      <span className="field-label">PayPal — Plan ID annuel</span>
+                      <input placeholder="P-..." value={planDraft.paypalPlanIdAnnual ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, paypalPlanIdAnnual: e.target.value })} />
+                    </label>
+                  </div>
+                  {planSaveMsg && <p className="error-text" style={{ marginBottom: 8 }}>{planSaveMsg}</p>}
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="btn btn-ghost" onClick={() => setEditingPlanId(null)}>Annuler</button>
+                    <button className="btn" disabled={busy} onClick={savePlanDraft}>{busy ? "…" : "Enregistrer"}</button>
+                  </div>
+                </div>
+              ) : (
+                <button type="button" onClick={() => startEditPlan(p)} className="muted" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, textDecoration: "underline", marginTop: 6, padding: 0 }}>
+                  Configurer les prix et identifiants de paiement
+                </button>
+              )
+            )}
           </div>
         ))}
         <p className="muted" style={{ fontSize: 11, marginTop: 8 }}>
           Masquer la formule Gratuite et activer « Pro » pour tous rend l'abonnement payant obligatoire pour tout nouvel utilisateur.
         </p>
+      </div>
+
+      <div className="card">
+        <strong>Moyens de paiement</strong>
+        <p className="muted" style={{ fontSize: 12, marginTop: 6, marginBottom: 10 }}>
+          Choisissez ce qui est proposé aux utilisateurs sur l&apos;écran d&apos;abonnement. Configurez
+          d&apos;abord les identifiants dans <code>.env</code> (voir README) avant d&apos;activer.
+        </p>
+        {([
+          { key: "stripeEnabled" as const, label: "Paiement par carte (Stripe)" },
+          { key: "paypalEnabled" as const, label: "PayPal" },
+        ]).map((m) => (
+          <div key={m.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 8 }}>
+            <span style={{ fontSize: 14 }}>{m.label}</span>
+            <button
+              className="btn"
+              style={{ width: "auto", padding: "4px 12px", fontSize: 12, background: settings[m.key] ? "#2E7D53" : "#F1F1EF", color: settings[m.key] ? "#fff" : "var(--text)" }}
+              onClick={() => saveSettings({ [m.key]: !settings[m.key] } as Partial<Settings>)}
+            >
+              {settings[m.key] ? "Activé" : "Désactivé"}
+            </button>
+          </div>
+        ))}
       </div>
 
       <div className="card">
