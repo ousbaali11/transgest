@@ -3,7 +3,7 @@ import { Route, Wallet, Fuel, TrendingUp, BarChart3, Gauge, Receipt, Plus } from
 import { prisma } from "@/lib/prisma";
 import { requireActiveOrg } from "@/lib/require-active-org";
 import { getLocale } from "@/lib/get-locale";
-import { t } from "@/lib/i18n";
+import { t as tr } from "@/lib/i18n";
 import RevenueChart from "@/components/RevenueChart";
 import SeedDemoButton from "./SeedDemoButton";
 
@@ -107,8 +107,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="container">
-      <h1 style={{ fontSize: 20, margin: "20px 0" }}>{t(locale, "dashboard_greeting")}</h1>
-      <p className="muted" style={{ marginTop: -14, marginBottom: 16 }}>{t(locale, "dashboard_summary")}</p>
+      <h1 style={{ fontSize: 20, margin: "20px 0" }}>{tr(locale, "dashboard_greeting")}</h1>
+      <p className="muted" style={{ marginTop: -14, marginBottom: 16 }}>{tr(locale, "dashboard_summary")}</p>
 
       {isOwner && alerts.length > 0 && (
         <Link href="/flotte" className="card" style={{ display: "block", textDecoration: "none", background: "#FDF1DF", border: "1px solid #F0D9A8" }}>
@@ -122,28 +122,28 @@ export default async function DashboardPage() {
       <div className="stat-grid">
         <div className="stat-card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div className="label">{t(locale, "dashboard_trips_this_month")}</div>
+            <div className="label">{tr(locale, "dashboard_trips_this_month")}</div>
             <Route size={15} style={{ opacity: 0.85 }} />
           </div>
           <div className="value">{monthTrips.length}</div>
         </div>
         <div className="stat-card" style={{ background: "var(--accent)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div className="label">{t(locale, "dashboard_revenue")}</div>
+            <div className="label">{tr(locale, "dashboard_revenue")}</div>
             <Wallet size={15} style={{ opacity: 0.85 }} />
           </div>
           <div className="value">{fmtDH(ca)}</div>
         </div>
         <div className="stat-card" style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--line)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div className="label" style={{ color: "var(--muted)" }}>{t(locale, "dashboard_total_expenses")}</div>
+            <div className="label" style={{ color: "var(--muted)" }}>{tr(locale, "dashboard_total_expenses")}</div>
             <Fuel size={15} color="var(--muted)" />
           </div>
           <div className="value">{fmtDH(dep)}</div>
         </div>
         <div className="stat-card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div className="label">{t(locale, "dashboard_net_profit")}</div>
+            <div className="label">{tr(locale, "dashboard_net_profit")}</div>
             <TrendingUp size={15} style={{ opacity: 0.85 }} />
           </div>
           <div className="value">{fmtDH(benefice)}</div>
@@ -204,8 +204,8 @@ export default async function DashboardPage() {
       )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <strong style={{ fontSize: 14 }}>{t(locale, "dashboard_recent_trips")}</strong>
-        {hasData && <Link href="/trips" style={{ fontSize: 12, fontWeight: 600 }}>{t(locale, "dashboard_view_all")}</Link>}
+        <strong style={{ fontSize: 14 }}>{tr(locale, "dashboard_recent_trips")}</strong>
+        {hasData && <Link href="/trips" style={{ fontSize: 12, fontWeight: 600 }}>{tr(locale, "dashboard_view_all")}</Link>}
       </div>
 
       {!hasData ? (
@@ -213,14 +213,14 @@ export default async function DashboardPage() {
           <div style={{ width: 48, height: 48, borderRadius: 999, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
             <Route size={22} color="var(--primary)" />
           </div>
-          <strong style={{ display: "block", marginBottom: 6 }}>{t(locale, "dashboard_no_trips")}</strong>
+          <strong style={{ display: "block", marginBottom: 6 }}>{tr(locale, "dashboard_no_trips")}</strong>
           <p className="muted" style={{ marginBottom: 16 }}>
             Ajoutez votre premier voyage pour commencer à suivre votre activité, ou chargez un exemple pour
             explorer l&apos;application.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <Link href="/trips" className="btn" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, textDecoration: "none" }}>
-              <Plus size={15} /> {t(locale, "dashboard_new_trip")}
+              <Plus size={15} /> {tr(locale, "dashboard_new_trip")}
             </Link>
             {isOwner && <SeedDemoButton locale={locale} />}
           </div>
@@ -230,7 +230,7 @@ export default async function DashboardPage() {
           <div key={t.id} className="card" style={{ display: "flex", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontWeight: 600 }}>{t.depart} → {t.arrivee}</div>
-              <div className="muted">{t.date.toLocaleDateString("fr-FR")} · {t.driver?.name || "Non assigné"}</div>
+              <div className="muted">{t.date.toLocaleDateString("fr-FR")} · {t.driver?.name || tr(locale, "not_assigned")}</div>
             </div>
             <strong>{fmtDH(Number(t.prixTransport))}</strong>
           </div>

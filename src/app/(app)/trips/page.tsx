@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { requireActiveOrg } from "@/lib/require-active-org";
 import ScreenHeader from "@/components/ScreenHeader";
+import { getLocale } from "@/lib/get-locale";
+import { t as tr } from "@/lib/i18n";
 import NewTripForm from "./NewTripForm";
 import TripCard from "./TripCard";
 
@@ -8,6 +10,7 @@ export default async function TripsPage() {
   const { org, session } = await requireActiveOrg();
   const currentDriverId = session.role === "DRIVER" ? session.driverId : null;
   const currentUserId = session.userId;
+  const locale = getLocale();
 
   const [trips, trucks, drivers, clients, customFields] = await Promise.all([
     prisma.trip.findMany({
@@ -29,12 +32,12 @@ export default async function TripsPage() {
 
   return (
     <div className="container">
-      <ScreenHeader title="Voyages" />
+      <ScreenHeader title={tr(locale, "nav_trips")} />
 
-      <NewTripForm trucks={trucksPlain} drivers={driversPlain} clients={clientsPlain} customFields={customFieldsPlain} lockedDriverId={currentDriverId} />
+      <NewTripForm trucks={trucksPlain} drivers={driversPlain} clients={clientsPlain} customFields={customFieldsPlain} lockedDriverId={currentDriverId} locale={locale} />
 
       {trips.length === 0 ? (
-        <p className="muted">Aucun voyage enregistré.</p>
+        <p className="muted">{tr(locale, "trips_empty")}</p>
       ) : (
         trips.map((t) => {
           const totalDep = t.expenses.reduce((s, e) => s + Number(e.montant), 0);
@@ -50,8 +53,8 @@ export default async function TripsPage() {
               }))}
               benefice={benefice}
               truckLabel={t.truck.immat}
-              driverLabel={t.driver?.name || "Non assigné"}
-              clientLabel={t.client?.name || "Sans client"}
+              driverLabel={t.driver?.name || tr(locale, "not_assigned")}
+              clientLabel={t.client?.name || tr(locale, "no_client")}
               invoice={t.invoice ? { id: t.invoice.id, number: t.invoice.number, status: t.invoice.status } : null}
               trucks={trucksPlain}
               drivers={driversPlain}
@@ -59,6 +62,7 @@ export default async function TripsPage() {
               customFields={customFieldsPlain}
               currentDriverId={currentDriverId}
               currentUserId={currentUserId}
+              locale={locale}
             />
           );
         })

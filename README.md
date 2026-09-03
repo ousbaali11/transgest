@@ -58,6 +58,59 @@ Ouvrez `http://localhost:3000` :
    quelques heures. Une fois vérifié, renseignez `RESEND_FROM_EMAIL`
    avec une adresse de ce domaine (ex : `connexion@votredomaine.com`)
 
+## Configurer Stripe pas à pas (paiement par carte)
+
+1. Sur **dashboard.stripe.com** → créez un compte si besoin
+2. **Développeurs → Clés API** → copiez la **clé secrète** (commence par
+   `sk_test_` en mode test, `sk_live_` une fois prêt) → `STRIPE_SECRET_KEY`
+3. Créez votre produit : **Catalogue de produits → Ajouter un produit** →
+   nommez-le (ex : "MonCamion Pro") → ajoutez **deux prix récurrents** sur ce
+   même produit : un mensuel, un annuel (bouton "Ajouter un autre prix")
+4. Copiez l'ID de chaque prix (commence par `price_...`, visible sous le nom
+   du prix dans la liste) — vous les collerez dans Admin > Réglages >
+   Abonnements > "Configurer les prix et identifiants de paiement"
+5. **Webhooks** → **Ajouter un endpoint** → URL : `https://votre-site.vercel.app/api/webhooks/stripe`
+   → événements à écouter : `checkout.session.completed`,
+   `customer.subscription.updated`, `customer.subscription.deleted`
+6. Copiez le **secret de signature** de ce endpoint (commence par `whsec_`)
+   → `STRIPE_WEBHOOK_SECRET`
+7. Dans `.env` (et sur Vercel) : `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+8. Dans Admin > Réglages, activez "Paiement par carte (Stripe)", puis
+   ouvrez chaque formule payante pour y coller les Price ID créés à l'étape 4
+9. **Testez avec une carte de test** (`4242 4242 4242 4242`, n'importe quelle
+   date future, n'importe quel CVC) avant de passer en mode live
+10. **Pour passer en production** : basculez le tableau de bord Stripe en
+    mode "Live", refaites les étapes 2 à 6 avec les clés live (les IDs de
+    produits/prix test et live sont différents), mettez à jour `.env`
+
+## Configurer PayPal pas à pas
+
+1. Sur **developer.paypal.com** → **Dashboard** → connectez-vous avec votre
+   compte PayPal (ou créez-en un)
+2. **Apps & Credentials** → mode **Sandbox** pour tester d'abord → **Create App**
+   → nommez-la → copiez **Client ID** et **Secret**
+3. Créez un produit : cherchez **"Catalog Products"** dans la doc PayPal, ou
+   utilisez directement l'API (voir ci-dessous) — PayPal ne propose pas
+   toujours cette étape dans son tableau de bord standard selon les comptes
+4. Créez un **plan récurrent** par formule/périodicité (mensuel, annuel) —
+   l'ID généré commence par `P-...`
+5. Dans Admin > Réglages > Abonnements, collez ces Plan ID PayPal dans la
+   formule correspondante
+6. **Webhooks** : **Apps & Credentials → votre app → Add Webhook** → URL :
+   `https://votre-site.vercel.app/api/webhooks/paypal` → événements :
+   `BILLING.SUBSCRIPTION.ACTIVATED`, `BILLING.SUBSCRIPTION.CANCELLED`,
+   `BILLING.SUBSCRIPTION.EXPIRED`, `BILLING.SUBSCRIPTION.SUSPENDED`,
+   `PAYMENT.SALE.COMPLETED`, `PAYMENT.SALE.DENIED`
+7. Copiez le **Webhook ID** affiché après création → `PAYPAL_WEBHOOK_ID`
+8. Dans `.env` (et sur Vercel) : `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`,
+   `PAYPAL_WEBHOOK_ID`, `PAYPAL_MODE="sandbox"`
+9. Dans Admin > Réglages, activez "PayPal"
+10. **Testez avec un compte sandbox** (Developer Dashboard → Sandbox →
+    Accounts, un compte acheteur de test y est généré automatiquement)
+11. **Pour passer en production** : refaites les étapes 2 à 7 en mode
+    "Live" dans le sélecteur du Developer Dashboard, mettez à jour `.env`
+    avec `PAYPAL_MODE="live"` et les nouveaux identifiants
+
 ## Déployer en production (Vercel + Supabase)
 
 1. **Base de données** : créez un projet sur supabase.com, copiez la
@@ -102,10 +155,22 @@ Ouvrez `http://localhost:3000` :
   bouton afficher/masquer
 - Session persistante façon WhatsApp (400 jours, renouvelée automatiquement
   à chaque visite — voir `src/middleware.ts`)
-- Abonnement avec devise automatique (MAD/EUR/USD), résiliation avec accès
-  jusqu'à la fin de la période payée, puis verrouillage automatique
+- **Paiement réel par carte (Stripe) et PayPal**, mensuel ou annuel, devise
+  automatique (MAD/EUR/USD) — l'admin choisit lesquels sont proposés.
+  L'activation d'un abonnement payant ne se fait **jamais** au clic du
+  client, uniquement via le webhook du prestataire une fois le paiement
+  confirmé (voir `src/app/api/webhooks/`)
+- Résiliation avec accès jusqu'à la fin de la période payée, puis
+  verrouillage automatique (redirection vers `/abonnement`, aucune action
+  possible tant qu'un abonnement n'est pas actif)
+- **Sélecteur de langue** (drapeau, en haut à droite) : Français / English /
+  الدارجة (arabe, texte affiché de droite à gauche). Choix mémorisé
+  durablement (cookie, ~400 jours), sans changement d'URL. Traduit pour
+  l'instant : la barre de navigation, la connexion, et le tableau de bord —
+  voir `src/lib/i18n.ts` pour ajouter des clés et étendre au reste du site
 - Attribution gratuite d'un abonnement par l'admin à un utilisateur précis
-  (voir `/admin`), avec durée ou accès illimité
+  (voir `/admin`), avec durée ou accès illimité ; la retirer renvoie
+  l'utilisateur vers le paiement, sans jamais perdre ses données
 - CRUD complet avec modification et suppression : camions, chauffeurs,
   clients, voyages, dépenses — toutes les routes API dans `src/app/api/`
 - Génération de facture depuis un voyage (`/trips`), statut payée/en attente

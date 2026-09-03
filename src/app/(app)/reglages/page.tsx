@@ -4,6 +4,8 @@ import ScreenHeader from "@/components/ScreenHeader";
 import SubscriptionActions from "./SubscriptionActions";
 import { Truck, Users, Package, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 
 function fmtDate(d: Date | null) {
   if (!d) return null;
@@ -13,37 +15,37 @@ function fmtDate(d: Date | null) {
 export default async function ReglagesPage() {
   const { org, session } = await requireActiveOrg();
   const isOwner = session.role === "OWNER";
+  const locale = getLocale();
   const plan = org.planId ? await prisma.plan.findUnique({ where: { id: org.planId } }) : null;
 
   return (
     <div className="container">
-      <ScreenHeader title="Réglages" backHref="/dashboard" />
+      <ScreenHeader title={t(locale, "nav_settings")} backHref="/dashboard" />
 
       {isOwner ? (
         <div className="card">
-          <strong>Mon abonnement</strong>
+          <strong>{t(locale, "my_subscription")}</strong>
           <div style={{ background: "var(--primary-10)", borderRadius: 8, padding: 12, margin: "10px 0" }}>
             <div style={{ fontWeight: 700, color: "var(--primary)" }}>{plan?.label || "—"}</div>
             <div style={{ fontSize: 13 }}>
               {org.grantedByAdmin
-                ? `Offert par l'administrateur${org.currentPeriodEnd ? ` — jusqu'au ${fmtDate(org.currentPeriodEnd)}` : " — accès illimité"}`
+                ? `${t(locale, "offered_by_admin")}${org.currentPeriodEnd ? ` — ${t(locale, "until")} ${fmtDate(org.currentPeriodEnd)}` : ` — ${t(locale, "unlimited_access")}`}`
                 : org.cancelAtPeriodEnd
-                ? `Résilié — accès jusqu'au ${fmtDate(org.currentPeriodEnd)}`
-                : `Renouvellement le ${fmtDate(org.currentPeriodEnd)}`}
+                ? `${t(locale, "cancelled_access_until")} ${fmtDate(org.currentPeriodEnd)}`
+                : `${t(locale, "renewal_on")} ${fmtDate(org.currentPeriodEnd)}`}
             </div>
           </div>
           {org.grantedByAdmin ? (
-            <p className="muted">Cet abonnement vous a été offert par l'administrateur — il ne peut pas être résilié depuis l'application.</p>
+            <p className="muted">{t(locale, "offered_cannot_cancel")}</p>
           ) : (
-            <SubscriptionActions cancelAtPeriodEnd={org.cancelAtPeriodEnd} />
+            <SubscriptionActions cancelAtPeriodEnd={org.cancelAtPeriodEnd} locale={locale} />
           )}
         </div>
       ) : (
         <div className="card">
-          <strong>Compte chauffeur</strong>
+          <strong>{t(locale, "driver_account_title")}</strong>
           <p className="muted" style={{ marginTop: 8 }}>
-            Vous pouvez saisir vos voyages et vos dépenses. La gestion de la flotte, des clients et de
-            l&apos;abonnement est réservée au propriétaire.
+            {t(locale, "driver_account_desc")}
           </p>
         </div>
       )}
@@ -51,9 +53,9 @@ export default async function ReglagesPage() {
       {isOwner && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
           {[
-            { href: "/flotte", label: "Camions & chauffeurs", icon: Truck },
-            { href: "/clients", label: "Clients", icon: Users },
-            { href: "/colonnes", label: "Colonnes personnalisées", icon: Package },
+            { href: "/flotte", label: t(locale, "nav_fleet"), icon: Truck },
+            { href: "/clients", label: t(locale, "nav_clients"), icon: Users },
+            { href: "/colonnes", label: t(locale, "nav_custom_fields"), icon: Package },
           ].map((it) => (
             <Link
               key={it.href}
@@ -70,8 +72,8 @@ export default async function ReglagesPage() {
       )}
 
       <div className="card">
-        <strong>Compte</strong>
-        <div className="muted">{isOwner ? session.email : `${session.driverName} · Chauffeur`}</div>
+        <strong>{t(locale, "account_label")}</strong>
+        <div className="muted">{isOwner ? session.email : `${session.driverName} · ${t(locale, "field_driver")}`}</div>
       </div>
     </div>
   );

@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { requireActiveOrg } from "@/lib/require-active-org";
 import ScreenHeader from "@/components/ScreenHeader";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 import ColonnesManager from "./ColonnesManager";
 
 export default async function ColonnesPage() {
   const { org } = await requireActiveOrg();
+  const locale = getLocale();
   const fields = await prisma.customFieldDefinition.findMany({
     where: { organizationId: org.id },
     orderBy: { createdAt: "desc" },
@@ -12,12 +15,11 @@ export default async function ColonnesPage() {
 
   return (
     <div className="container">
-      <ScreenHeader title="Colonnes personnalisées" backHref="/dashboard" />
+      <ScreenHeader title={t(locale, "nav_custom_fields")} backHref="/dashboard" />
       <p className="muted" style={{ marginBottom: 16 }}>
-        Ajoutez des champs propres à votre activité (ex : n° de plomb, type de remorque). Ils apparaissent dans les
-        formulaires de voyage/dépense et dans l'export Excel.
+        {t(locale, "columns_intro")}
       </p>
-      <ColonnesManager initialFields={JSON.parse(JSON.stringify(fields))} />
+      <ColonnesManager initialFields={JSON.parse(JSON.stringify(fields))} locale={locale} />
     </div>
   );
 }

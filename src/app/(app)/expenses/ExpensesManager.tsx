@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { t as tr, type Locale } from "@/lib/i18n";
 
 type Expense = {
   id: string; category: "CARBURANT" | "PEAGE" | "AUTRES"; date: string; montant: number;
@@ -17,7 +18,7 @@ function fmtDH(n: number) {
 
 const emptyForm = (trucks: Option[], lockedDriverId: string | null) => ({ tripId: "", truckId: trucks[0]?.id || "", driverId: lockedDriverId || "", quantite: "", prixUnitaire: "", montant: "", notes: "" });
 
-export default function ExpensesManager({ initialExpenses, trucks, drivers, trips, customFields = [], currentDriverId = null, currentUserId = null }: { initialExpenses: Expense[]; trucks: Option[]; drivers: Option[]; trips: Trip[]; customFields?: CustomFieldDef[]; currentDriverId?: string | null; currentUserId?: string | null }) {
+export default function ExpensesManager({ initialExpenses, trucks, drivers, trips, customFields = [], currentDriverId = null, currentUserId = null, locale }: { initialExpenses: Expense[]; trucks: Option[]; drivers: Option[]; trips: Trip[]; customFields?: CustomFieldDef[]; currentDriverId?: string | null; currentUserId?: string | null; locale: Locale }) {
   const isDriverViewer = currentDriverId !== null;
   const [expenses, setExpenses] = useState(initialExpenses);
   const [category, setCategory] = useState<"CARBURANT" | "PEAGE" | "AUTRES">("CARBURANT");
@@ -93,7 +94,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
   return (
     <>
       <div className="card">
-        <strong>{editingId ? "Modifier la dépense" : "Nouvelle dépense"}</strong>
+        <strong>{editingId ? tr(locale, "expenses_edit") : tr(locale, "expenses_new")}</strong>
         <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", border: "1px solid var(--line)", marginTop: 10, marginBottom: 12 }}>
           {(["CARBURANT", "PEAGE", "AUTRES"] as const).map((c) => (
             <button
@@ -101,13 +102,13 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
               onClick={() => { setCategory(c); setError(""); }}
               style={{ flex: 1, padding: 8, border: "none", cursor: "pointer", background: category === c ? "var(--primary)" : "#fff", color: category === c ? "#fff" : "var(--text)" }}
             >
-              {c === "CARBURANT" ? "Carburant" : c === "PEAGE" ? "Péage" : "Autres"}
+              {c === "CARBURANT" ? tr(locale, "category_fuel") : c === "PEAGE" ? tr(locale, "category_toll") : tr(locale, "category_other")}
             </button>
           ))}
         </div>
 
         <select value={f.tripId} onChange={(e) => setF({ ...f, tripId: e.target.value })} style={{ marginBottom: 8 }}>
-          <option value="">Voyage lié (optionnel)</option>
+          <option value="">{tr(locale, "field_linked_trip")}</option>
           {trips.map((t) => <option key={t.id} value={t.id}>{new Date(t.date).toLocaleDateString("fr-FR")} · {t.depart} → {t.arrivee}</option>)}
         </select>
 
@@ -116,21 +117,21 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
             {trucks.map((t) => <option key={t.id} value={t.id}>{t.immat}</option>)}
           </select>
           <select value={f.driverId} onChange={(e) => setF({ ...f, driverId: e.target.value })} disabled={isDriverViewer}>
-            <option value="">Chauffeur</option>
+            <option value="">{tr(locale, "field_driver")}</option>
             {drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
 
         {category === "CARBURANT" ? (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
-            <input type="number" placeholder="Quantité (L)" value={f.quantite} onChange={(e) => setF({ ...f, quantite: e.target.value })} />
-            <input type="number" placeholder="Prix unitaire (DH/L)" value={f.prixUnitaire} onChange={(e) => setF({ ...f, prixUnitaire: e.target.value })} />
+            <input type="number" placeholder={tr(locale, "field_quantity_l")} value={f.quantite} onChange={(e) => setF({ ...f, quantite: e.target.value })} />
+            <input type="number" placeholder={tr(locale, "field_unit_price")} value={f.prixUnitaire} onChange={(e) => setF({ ...f, prixUnitaire: e.target.value })} />
           </div>
         ) : (
-          <input type="number" placeholder="Montant (DH)" value={f.montant} onChange={(e) => setF({ ...f, montant: e.target.value })} style={{ marginBottom: 8 }} />
+          <input type="number" placeholder={tr(locale, "field_amount")} value={f.montant} onChange={(e) => setF({ ...f, montant: e.target.value })} style={{ marginBottom: 8 }} />
         )}
-        {auto !== null && <p className="muted" style={{ marginBottom: 8 }}>Dépense totale : {fmtDH(auto)}</p>}
-        <input placeholder="Notes" value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} style={{ marginBottom: 8 }} />
+        {auto !== null && <p className="muted" style={{ marginBottom: 8 }}>{tr(locale, "total_expense_label")}{fmtDH(auto)}</p>}
+        <input placeholder={tr(locale, "field_notes")} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} style={{ marginBottom: 8 }} />
 
         {customFields.length > 0 && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
@@ -142,8 +143,8 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
 
         {error && <p className="error-text" style={{ marginBottom: 8 }}>{error}</p>}
         <div style={{ display: "flex", gap: 8 }}>
-          {editingId && <button className="btn btn-ghost" onClick={cancelEdit}>Annuler</button>}
-          <button className="btn" disabled={busy} onClick={save}>{busy ? "…" : editingId ? "Enregistrer les modifications" : "Enregistrer"}</button>
+          {editingId && <button className="btn btn-ghost" onClick={cancelEdit}>{tr(locale, "cancel")}</button>}
+          <button className="btn" disabled={busy} onClick={save}>{busy ? "…" : editingId ? tr(locale, "save_changes") : tr(locale, "save")}</button>
         </div>
       </div>
 
@@ -160,11 +161,11 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
             </div>
             {canEdit && (
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginTop: 8 }}>
-                <button className="btn" style={{ width: "auto", padding: "4px 10px", fontSize: 12, background: "#F1F1EF", color: "var(--text)" }} onClick={() => startEdit(e)}>Modifier</button>
+                <button className="btn" style={{ width: "auto", padding: "4px 10px", fontSize: 12, background: "#F1F1EF", color: "var(--text)" }} onClick={() => startEdit(e)}>{tr(locale, "edit")}</button>
                 {confirmingDeleteId === e.id ? (
-                  <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} disabled={busy} onClick={() => remove(e.id)}>Confirmer ?</button>
+                  <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} disabled={busy} onClick={() => remove(e.id)}>{tr(locale, "confirm")}</button>
                 ) : (
-                  <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} onClick={() => setConfirmingDeleteId(e.id)}>Supprimer</button>
+                  <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} onClick={() => setConfirmingDeleteId(e.id)}>{tr(locale, "delete")}</button>
                 )}
               </div>
             )}

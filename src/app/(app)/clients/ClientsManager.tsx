@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { t, type Locale } from "@/lib/i18n";
 
 type Client = { id: string; name: string; phone: string | null; email: string | null; address: string | null };
 
-export default function ClientsManager({ initialClients }: { initialClients: Client[] }) {
+export default function ClientsManager({ initialClients, locale }: { initialClients: Client[]; locale: Locale }) {
   const [clients, setClients] = useState(initialClients);
   const [f, setF] = useState({ name: "", phone: "", email: "", address: "" });
   const [busy, setBusy] = useState(false);
@@ -34,14 +35,14 @@ export default function ClientsManager({ initialClients }: { initialClients: Cli
 
   return (
     <div className="card">
-      <strong>Nouveau client</strong>
+      <strong>{t(locale, "clients_new")}</strong>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, margin: "10px 0" }}>
-        <input placeholder="Nom" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-        <input placeholder="Téléphone" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
-        <input placeholder="Email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
-        <input placeholder="Adresse" value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} />
+        <input placeholder={t(locale, "field_name")} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+        <input placeholder={t(locale, "field_phone")} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+        <input placeholder={t(locale, "field_email")} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
+        <input placeholder={t(locale, "field_address")} value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} />
       </div>
-      <button className="btn" disabled={busy || !f.name} onClick={add}>Ajouter le client</button>
+      <button className="btn" disabled={busy || !f.name} onClick={add}>{t(locale, "add_client")}</button>
 
       {clients.map((c) => (
         <div key={c.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 10 }}>
@@ -51,7 +52,7 @@ export default function ClientsManager({ initialClients }: { initialClients: Cli
             </Link>
             <div className="muted">{[c.phone, c.email, c.address].filter(Boolean).join(" · ")}</div>
           </div>
-          <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px" }} onClick={() => remove(c.id)}>Supprimer</button>
+          <button className="btn btn-danger" style={{ width: "auto", padding: "4px 10px" }} onClick={() => remove(c.id)}>{t(locale, "delete")}</button>
         </div>
       ))}
     </div>

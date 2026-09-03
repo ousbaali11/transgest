@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { requireActiveOrg } from "@/lib/require-active-org";
 import ScreenHeader from "@/components/ScreenHeader";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 import ExpensesManager from "./ExpensesManager";
 
 export default async function ExpensesPage() {
   const { org, session } = await requireActiveOrg();
   const currentDriverId = session.role === "DRIVER" ? session.driverId : null;
+  const locale = getLocale();
   const [expenses, trucks, drivers, trips, customFields] = await Promise.all([
     prisma.expense.findMany({ where: { organizationId: org.id }, orderBy: { date: "desc" }, take: 100 }),
     prisma.truck.findMany({ where: { organizationId: org.id } }),
@@ -16,7 +19,7 @@ export default async function ExpensesPage() {
 
   return (
     <div className="container">
-      <ScreenHeader title="Dépenses" />
+      <ScreenHeader title={t(locale, "nav_expenses")} />
       <ExpensesManager
         initialExpenses={JSON.parse(JSON.stringify(expenses))}
         trucks={JSON.parse(JSON.stringify(trucks))}
@@ -25,6 +28,7 @@ export default async function ExpensesPage() {
         customFields={JSON.parse(JSON.stringify(customFields))}
         currentDriverId={currentDriverId}
         currentUserId={session.userId}
+        locale={locale}
       />
     </div>
   );

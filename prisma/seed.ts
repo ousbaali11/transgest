@@ -13,7 +13,10 @@ async function main() {
   await prisma.plan.upsert({
     where: { key: "pro" },
     update: {},
-    create: { key: "pro", label: "Pro", priceMAD: 299, visible: true, tagline: "Pour les flottes actives, support prioritaire" },
+    create: {
+      key: "pro", label: "Pro", priceMAD: 299, visible: true, tagline: "Pour les flottes actives, support prioritaire",
+      priceMonthlyMAD: 299, priceAnnualMAD: 2990, // ~2 mois offerts sur l'annuel, à ajuster librement depuis Admin
+    },
   });
 
   // --- Réglages de la plateforme ----------------------------------------------

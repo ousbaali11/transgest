@@ -22,6 +22,8 @@ model PlatformSettings {
   themePrimary String   @default("#16305B")
   themeAccent  String   @default("#E8892E")
   forcedPlanId String?
+  stripeEnabled Boolean @default(false) // visible sur /abonnement uniquement une fois activé
+  paypalEnabled Boolean @default(false)
   updatedAt    DateTime @updatedAt
 
   forcedPlan Plan? @relation(fields: [forcedPlanId], references: [id])
@@ -31,10 +33,17 @@ model Plan {
   id        String   @id @default(cuid())
   key       String   @unique // "free" | "pro"
   label     String
-  priceMAD  Int      @default(0)
+  priceMAD  Int      @default(0) // conservé pour compat, correspond au prix mensuel
+  priceMonthlyMAD Int? // prix mensuel en MAD (référence pour la conversion de devise)
+  priceAnnualMAD  Int? // prix annuel en MAD — null = pas d'offre annuelle pour cette formule
   visible   Boolean  @default(true)
   tagline   String?
   createdAt DateTime @default(now())
+
+  stripePriceIdMonthly String? // ID du Price Stripe récurrent mensuel
+  stripePriceIdAnnual  String? // ID du Price Stripe récurrent annuel
+  paypalPlanIdMonthly  String? // ID du Plan PayPal récurrent mensuel
+  paypalPlanIdAnnual   String? // ID du Plan PayPal récurrent annuel
 
   organizations    Organization[]
   platformSettings PlatformSettings[]
@@ -44,6 +53,7 @@ enum SubscriptionStatus {
   NONE
   ACTIVE
   CANCELING
+  PAST_DUE
   EXPIRED
 }
 
@@ -53,12 +63,21 @@ model Organization {
 
   // Abonnement — auto-service (paiement) OU offert par l'admin (grantedByAdmin)
   planId              String?
+  billingInterval     String? // "monthly" | "annual" — formule choisie par l'organisation
   subscriptionStatus  SubscriptionStatus @default(NONE)
   currentPeriodEnd    DateTime?
   cancelAtPeriodEnd   Boolean            @default(false)
   canceledAt          DateTime?
   grantedByAdmin      Boolean            @default(false)
   countryCode         String? // pays déclaré à l'inscription, utilisé pour la devise affichée
+
+  // Identifiants côté prestataires de paiement — utilisés pour retrouver
+  // l'organisation depuis un webhook Stripe/PayPal et gérer le cycle de vie
+  // de l'abonnement (annulation, échec de paiement, renouvellement).
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
+  paypalSubscriptionId String? @unique
+  paymentProvider      String? // "stripe" | "paypal" — utilisé pour cet abonnement
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
