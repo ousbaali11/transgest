@@ -3,6 +3,8 @@ import type { CSSProperties } from "react";
 import "./globals.css";
 import RegisterServiceWorker from "./RegisterServiceWorker";
 import { getPlatformSettings } from "@/lib/settings";
+import { getLocale } from "@/lib/get-locale";
+import { localeInfo } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "TransGest — Gestion de flotte poids lourds",
@@ -23,6 +25,7 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const settings = await getPlatformSettings();
+  const locale = getLocale();
 
   // Les couleurs choisies dans Admin > Thème sont injectées ici en variables
   // CSS sur <body> : elles écrasent les valeurs par défaut de globals.css
@@ -34,7 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   } as CSSProperties;
 
   return (
-    <html lang="fr">
+    <html lang={locale} dir={localeInfo[locale].dir}>
       <body style={themeStyle}>
         {children}
         <RegisterServiceWorker />

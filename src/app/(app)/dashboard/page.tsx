@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Route, Wallet, Fuel, TrendingUp, BarChart3, Gauge, Receipt, Plus } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireActiveOrg } from "@/lib/require-active-org";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 import RevenueChart from "@/components/RevenueChart";
 import SeedDemoButton from "./SeedDemoButton";
 
@@ -30,6 +32,7 @@ function docAlerts(trucks: { immat: string; assuranceExpiry: Date | null; visite
 export default async function DashboardPage() {
   const { org, session } = await requireActiveOrg();
   const isOwner = session.role === "OWNER";
+  const locale = getLocale();
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -104,8 +107,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="container">
-      <h1 style={{ fontSize: 20, margin: "20px 0" }}>Bonjour 👋</h1>
-      <p className="muted" style={{ marginTop: -14, marginBottom: 16 }}>Voici le résumé de votre activité</p>
+      <h1 style={{ fontSize: 20, margin: "20px 0" }}>{t(locale, "dashboard_greeting")}</h1>
+      <p className="muted" style={{ marginTop: -14, marginBottom: 16 }}>{t(locale, "dashboard_summary")}</p>
 
       {isOwner && alerts.length > 0 && (
         <Link href="/flotte" className="card" style={{ display: "block", textDecoration: "none", background: "#FDF1DF", border: "1px solid #F0D9A8" }}>
@@ -119,28 +122,28 @@ export default async function DashboardPage() {
       <div className="stat-grid">
         <div className="stat-card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div className="label">Voyages ce mois</div>
+            <div className="label">{t(locale, "dashboard_trips_this_month")}</div>
             <Route size={15} style={{ opacity: 0.85 }} />
           </div>
           <div className="value">{monthTrips.length}</div>
         </div>
         <div className="stat-card" style={{ background: "var(--accent)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div className="label">Chiffre d'affaires</div>
+            <div className="label">{t(locale, "dashboard_revenue")}</div>
             <Wallet size={15} style={{ opacity: 0.85 }} />
           </div>
           <div className="value">{fmtDH(ca)}</div>
         </div>
         <div className="stat-card" style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--line)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div className="label" style={{ color: "var(--muted)" }}>Dépenses totales</div>
+            <div className="label" style={{ color: "var(--muted)" }}>{t(locale, "dashboard_total_expenses")}</div>
             <Fuel size={15} color="var(--muted)" />
           </div>
           <div className="value">{fmtDH(dep)}</div>
         </div>
         <div className="stat-card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div className="label">Bénéfice net</div>
+            <div className="label">{t(locale, "dashboard_net_profit")}</div>
             <TrendingUp size={15} style={{ opacity: 0.85 }} />
           </div>
           <div className="value">{fmtDH(benefice)}</div>
@@ -201,8 +204,8 @@ export default async function DashboardPage() {
       )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <strong style={{ fontSize: 14 }}>Voyages récents</strong>
-        {hasData && <Link href="/trips" style={{ fontSize: 12, fontWeight: 600 }}>Voir tout</Link>}
+        <strong style={{ fontSize: 14 }}>{t(locale, "dashboard_recent_trips")}</strong>
+        {hasData && <Link href="/trips" style={{ fontSize: 12, fontWeight: 600 }}>{t(locale, "dashboard_view_all")}</Link>}
       </div>
 
       {!hasData ? (
@@ -210,16 +213,16 @@ export default async function DashboardPage() {
           <div style={{ width: 48, height: 48, borderRadius: 999, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
             <Route size={22} color="var(--primary)" />
           </div>
-          <strong style={{ display: "block", marginBottom: 6 }}>Aucun voyage enregistré</strong>
+          <strong style={{ display: "block", marginBottom: 6 }}>{t(locale, "dashboard_no_trips")}</strong>
           <p className="muted" style={{ marginBottom: 16 }}>
             Ajoutez votre premier voyage pour commencer à suivre votre activité, ou chargez un exemple pour
             explorer l&apos;application.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <Link href="/trips" className="btn" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, textDecoration: "none" }}>
-              <Plus size={15} /> Nouveau voyage
+              <Plus size={15} /> {t(locale, "dashboard_new_trip")}
             </Link>
-            {isOwner && <SeedDemoButton />}
+            {isOwner && <SeedDemoButton locale={locale} />}
           </div>
         </div>
       ) : (

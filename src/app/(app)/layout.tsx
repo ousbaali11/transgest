@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/session";
 import { getPlatformSettings } from "@/lib/settings";
+import { getLocale } from "@/lib/get-locale";
 import AppShell from "./AppShell";
 
 /**
@@ -16,9 +17,10 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   const session = await getSession();
   const settings = await getPlatformSettings();
   const isOwner = !!session && "role" in session && session.role === "OWNER";
+  const locale = getLocale();
 
   return (
-    <AppShell appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} isOwner={isOwner}>
+    <AppShell appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} isOwner={isOwner} locale={locale}>
       {children}
     </AppShell>
   );

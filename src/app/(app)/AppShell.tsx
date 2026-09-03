@@ -4,22 +4,24 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Home, Route, Fuel, Receipt, Menu, Settings, Truck, Users, Package, Download, ChevronRight, X, LogOut } from "lucide-react";
-
-const TABS = [
-  { href: "/dashboard", label: "Accueil", icon: Home },
-  { href: "/trips", label: "Voyages", icon: Route },
-  { href: "/expenses", label: "Dépenses", icon: Fuel },
-  { href: "/factures", label: "Factures", icon: Receipt },
-];
+import { t, type Locale } from "@/lib/i18n";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function AppShell({
-  appName, logoEmoji, logoType, logoImage, isOwner, children,
+  appName, logoEmoji, logoType, logoImage, isOwner, locale, children,
 }: {
-  appName: string; logoEmoji: string; logoType: string; logoImage: string | null; isOwner: boolean; children: React.ReactNode;
+  appName: string; logoEmoji: string; logoType: string; logoImage: string | null; isOwner: boolean; locale: Locale; children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const [plusOpen, setPlusOpen] = useState(false);
+
+  const TABS = [
+    { href: "/dashboard", label: t(locale, "nav_home"), icon: Home },
+    { href: "/trips", label: t(locale, "nav_trips"), icon: Route },
+    { href: "/expenses", label: t(locale, "nav_expenses"), icon: Fuel },
+    { href: "/factures", label: t(locale, "nav_invoices"), icon: Receipt },
+  ];
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -30,13 +32,13 @@ export default function AppShell({
   const plusItems = [
     ...(isOwner
       ? [
-          { href: "/flotte", label: "Camions & chauffeurs", icon: Truck },
-          { href: "/clients", label: "Clients", icon: Users },
-          { href: "/colonnes", label: "Colonnes personnalisées", icon: Package },
-          { href: "/api/export", label: "Exporter en Excel", icon: Download },
+          { href: "/flotte", label: t(locale, "nav_fleet"), icon: Truck },
+          { href: "/clients", label: t(locale, "nav_clients"), icon: Users },
+          { href: "/colonnes", label: t(locale, "nav_custom_fields"), icon: Package },
+          { href: "/api/export", label: t(locale, "nav_export_excel"), icon: Download },
         ]
       : []),
-    { href: "/reglages", label: "Réglages", icon: Settings },
+    { href: "/reglages", label: t(locale, "nav_settings"), icon: Settings },
   ];
 
   return (
@@ -56,13 +58,14 @@ export default function AppShell({
           </div>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Link href="/reglages" aria-label="Réglages" title="Réglages" style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex" }}>
+          <LanguageSwitcher current={locale} />
+          <Link href="/reglages" aria-label={t(locale, "nav_settings")} title={t(locale, "nav_settings")} style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex" }}>
             <Settings size={17} color="#fff" />
           </Link>
           <button
             onClick={logout}
-            aria-label="Se déconnecter"
-            title="Se déconnecter"
+            aria-label={t(locale, "nav_logout")}
+            title={t(locale, "nav_logout")}
             style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex", border: "none", cursor: "pointer" }}
           >
             <LogOut size={17} color="#fff" />
@@ -75,12 +78,12 @@ export default function AppShell({
 
       {/* Barre du bas */}
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#fff", borderTop: "1px solid var(--line)", display: "flex", maxWidth: 480, margin: "0 auto", zIndex: 40 }}>
-        {TABS.map((t) => {
-          const active = pathname.startsWith(t.href);
+        {TABS.map((tab) => {
+          const active = pathname.startsWith(tab.href);
           return (
-            <Link key={t.href} href={t.href} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "10px 0 8px", textDecoration: "none" }}>
-              <t.icon size={19} color={active ? "var(--primary)" : "#9CA3AF"} />
-              <span style={{ fontSize: 10, fontWeight: 600, color: active ? "var(--primary)" : "#9CA3AF" }}>{t.label}</span>
+            <Link key={tab.href} href={tab.href} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "10px 0 8px", textDecoration: "none" }}>
+              <tab.icon size={19} color={active ? "var(--primary)" : "#9CA3AF"} />
+              <span style={{ fontSize: 10, fontWeight: 600, color: active ? "var(--primary)" : "#9CA3AF" }}>{tab.label}</span>
             </Link>
           );
         })}
@@ -89,7 +92,7 @@ export default function AppShell({
           style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "10px 0 8px", background: "none", border: "none", cursor: "pointer" }}
         >
           <Menu size={19} color={plusOpen ? "var(--primary)" : "#9CA3AF"} />
-          <span style={{ fontSize: 10, fontWeight: 600, color: plusOpen ? "var(--primary)" : "#9CA3AF" }}>Plus</span>
+          <span style={{ fontSize: 10, fontWeight: 600, color: plusOpen ? "var(--primary)" : "#9CA3AF" }}>{t(locale, "nav_more")}</span>
         </button>
       </div>
 
@@ -104,7 +107,7 @@ export default function AppShell({
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <strong style={{ fontFamily: "var(--font-display)", fontSize: 17 }}>Plus</strong>
+              <strong style={{ fontFamily: "var(--font-display)", fontSize: 17 }}>{t(locale, "nav_more")}</strong>
               <button onClick={() => setPlusOpen(false)} aria-label="Fermer" style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
                 <X size={20} color="var(--text)" />
               </button>
