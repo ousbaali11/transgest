@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatMoney, type Currency } from "@/lib/currency";
+import { t, type Locale } from "@/lib/i18n";
 
 type Plan = {
   id: string; key: string; label: string; priceMAD: number; tagline: string | null;
@@ -13,9 +14,9 @@ type Plan = {
 type Interval = "monthly" | "annual";
 
 export default function SubscribeForm({
-  plans, initialCurrency, stripeEnabled, paypalEnabled,
+  plans, initialCurrency, stripeEnabled, paypalEnabled, locale,
 }: {
-  plans: Plan[]; initialCurrency: Currency; stripeEnabled: boolean; paypalEnabled: boolean;
+  plans: Plan[]; initialCurrency: Currency; stripeEnabled: boolean; paypalEnabled: boolean; locale: Locale;
 }) {
   const router = useRouter();
   const [currency, setCurrency] = useState<Currency>(initialCurrency);
@@ -34,7 +35,7 @@ export default function SubscribeForm({
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) { router.push("/dashboard"); router.refresh(); }
-      else setError(data.error || "Erreur");
+      else setError(data.error || t(locale, "error_generic"));
     } finally {
       setBusy(null);
     }
@@ -53,11 +54,11 @@ export default function SubscribeForm({
       if (res.ok && data.url) {
         window.location.href = data.url;
       } else {
-        setError(data.error || "Impossible de démarrer le paiement.");
+        setError(data.error || t(locale, "checkout_error"));
         setBusy(null);
       }
     } catch {
-      setError("Impossible de contacter le serveur. Réessayez.");
+      setError(t(locale, "server_unreachable_short"));
       setBusy(null);
     }
   }
@@ -67,7 +68,7 @@ export default function SubscribeForm({
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 8, flexWrap: "wrap" }}>
-        <span className="muted">Devise détectée automatiquement</span>
+        <span className="muted">{t(locale, "currency_auto_detected")}</span>
         <select value={currency} onChange={(e) => setCurrency(e.target.value as Currency)} style={{ width: 110 }}>
           <option value="MAD">MAD (DH)</option>
           <option value="EUR">EUR (€)</option>
@@ -83,7 +84,7 @@ export default function SubscribeForm({
               onClick={() => setInterval(iv)}
               style={{ flex: 1, padding: 10, border: "none", cursor: "pointer", fontWeight: 600, background: interval === iv ? "var(--primary)" : "#fff", color: interval === iv ? "#fff" : "var(--text)" }}
             >
-              {iv === "monthly" ? "Mensuel" : "Annuel"}
+              {iv === "monthly" ? t(locale, "interval_monthly") : t(locale, "interval_annual")}
             </button>
           ))}
         </div>
@@ -103,29 +104,29 @@ export default function SubscribeForm({
               <strong>{plan.label}</strong>
               <strong style={{ color: "var(--primary)" }}>
                 {formatMoney(priceForInterval, currency)}
-                {!isFree && <span className="muted">/{interval === "annual" ? "an" : "mois"}</span>}
+                {!isFree && <span className="muted">/{interval === "annual" ? t(locale, "per_year") : t(locale, "per_month")}</span>}
               </strong>
             </div>
             <p className="muted" style={{ marginBottom: 12 }}>{plan.tagline}</p>
 
             {isFree ? (
               <button className="btn" disabled={busy !== null} onClick={() => subscribeFree(plan.key)}>
-                {busy === plan.key ? "…" : "Continuer gratuitement"}
+                {busy === plan.key ? "…" : t(locale, "continue_free")}
               </button>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {canStripe && (
                   <button className="btn" disabled={busy !== null} onClick={() => checkout("stripe", plan.key)}>
-                    {busy === `stripe-${plan.key}` ? "…" : "Payer par carte"}
+                    {busy === `stripe-${plan.key}` ? "…" : t(locale, "pay_by_card")}
                   </button>
                 )}
                 {canPaypal && (
                   <button className="btn" style={{ background: "#0070BA" }} disabled={busy !== null} onClick={() => checkout("paypal", plan.key)}>
-                    {busy === `paypal-${plan.key}` ? "…" : "Payer avec PayPal"}
+                    {busy === `paypal-${plan.key}` ? "…" : t(locale, "pay_with_paypal")}
                   </button>
                 )}
                 {!canStripe && !canPaypal && (
-                  <p className="muted" style={{ fontSize: 12 }}>Aucun moyen de paiement disponible pour le moment — contactez le support.</p>
+                  <p className="muted" style={{ fontSize: 12 }}>{t(locale, "no_payment_method")}</p>
                 )}
               </div>
             )}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { t, type Locale } from "@/lib/i18n";
 
 type Row = {
   organizationId: string;
@@ -15,7 +16,7 @@ type Row = {
 };
 type Plan = { id: string; key: string; label: string };
 
-const STATUS_LABEL: Record<string, string> = { NONE: "—", ACTIVE: "Actif", CANCELING: "Résilié", EXPIRED: "Expiré" };
+
 const STATUS_COLOR: Record<string, string> = { NONE: "#9CA3AF", ACTIVE: "#2E7D53", CANCELING: "#B5791C", EXPIRED: "#C0392B" };
 
 function fmtDate(d: string | Date | null) {
@@ -23,7 +24,15 @@ function fmtDate(d: string | Date | null) {
   return new Date(d).toLocaleDateString("fr-FR");
 }
 
-export default function AdminUsersTable({ rows, plans }: { rows: Row[]; plans: Plan[] }) {
+function statusLabel(locale: Locale, status: string): string {
+  const map: Record<string, string> = {
+    NONE: t(locale, "status_none"), ACTIVE: t(locale, "status_active"),
+    CANCELING: t(locale, "status_canceling"), PAST_DUE: t(locale, "status_past_due"), EXPIRED: t(locale, "status_expired"),
+  };
+  return map[status] || status;
+}
+
+export default function AdminUsersTable({ rows, plans, locale }: { rows: Row[]; plans: Plan[]; locale: Locale }) {
   const router = useRouter();
   const [grantTarget, setGrantTarget] = useState<Row | null>(null);
   const [planKey, setPlanKey] = useState(plans[plans.length - 1]?.key || plans[0]?.key || "");
@@ -63,9 +72,9 @@ export default function AdminUsersTable({ rows, plans }: { rows: Row[]; plans: P
 
   return (
     <div className="card">
-      <strong>Utilisateurs</strong>
+      <strong>{t(locale, "users_title")}</strong>
       {rows.length === 0 ? (
-        <p className="muted" style={{ marginTop: 8 }}>Aucun compte créé pour le moment.</p>
+        <p className="muted" style={{ marginTop: 8 }}>{t(locale, "no_accounts_yet")}</p>
       ) : (
         <div style={{ marginTop: 12, maxHeight: 420, overflowY: "auto" }}>
           {rows.map((r) => (
@@ -73,16 +82,16 @@ export default function AdminUsersTable({ rows, plans }: { rows: Row[]; plans: P
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <div>
                   <div style={{ fontWeight: 600 }}>{r.email}</div>
-                  <div className="muted" style={{ fontSize: 12 }}>{r.planLabel} · {r.trips} voyage(s)</div>
+                  <div className="muted" style={{ fontSize: 12 }}>{r.planLabel} · {r.trips} {t(locale, "trips_suffix")}</div>
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "#F1F1EF", color: STATUS_COLOR[r.status] }}>
-                  {STATUS_LABEL[r.status] || r.status}
+                  {statusLabel(locale, r.status)}
                 </span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
                 {r.grantedByAdmin ? (
                   <span style={{ fontSize: 11, color: "var(--primary)" }}>
-                    🎁 offert{r.currentPeriodEnd ? ` jusqu'au ${fmtDate(r.currentPeriodEnd)}` : " (illimité)"}
+                    {t(locale, "offered_gift")}{r.currentPeriodEnd ? ` ${t(locale, "offered_until")} ${fmtDate(r.currentPeriodEnd)}` : ` ${t(locale, "offered_unlimited")}`}
                   </span>
                 ) : <span />}
                 <button
@@ -90,7 +99,7 @@ export default function AdminUsersTable({ rows, plans }: { rows: Row[]; plans: P
                   style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: r.grantedByAdmin ? "var(--primary)" : "#F1F1EF", color: r.grantedByAdmin ? "#fff" : "var(--text)" }}
                   onClick={() => setGrantTarget(r)}
                 >
-                  {r.grantedByAdmin ? "Modifier l'offre" : "Offrir un abonnement"}
+                  {r.grantedByAdmin ? t(locale, "modify_offer") : t(locale, "offer_subscription")}
                 </button>
               </div>
             </div>
@@ -98,32 +107,32 @@ export default function AdminUsersTable({ rows, plans }: { rows: Row[]; plans: P
         </div>
       )}
       <p className="muted" style={{ fontSize: 11, marginTop: 8 }}>
-        Ces numéros sont protégés par la session admin et par les policies RLS côté base de données — contrairement au prototype, ils ne sont plus lisibles par n'importe quel visiteur.
+        {t(locale, "admin_users_note")}
       </p>
 
       {grantTarget && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(15,20,30,0.45)", display: "flex", alignItems: "flex-end", zIndex: 50 }} onClick={() => setGrantTarget(null)}>
           <div className="container" style={{ background: "#fff", borderRadius: "16px 16px 0 0", margin: 0, width: "100%", padding: 20 }} onClick={(e) => e.stopPropagation()}>
-            <strong>Offrir un abonnement — {grantTarget.email}</strong>
+            <strong>{t(locale, "offer_subscription_for")} {grantTarget.email}</strong>
             <label className="field" style={{ marginTop: 12 }}>
-              <span className="field-label">Formule</span>
+              <span className="field-label">{t(locale, "field_plan")}</span>
               <select value={planKey} onChange={(e) => setPlanKey(e.target.value)}>
                 {plans.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
               </select>
             </label>
             <label className="field">
-              <span className="field-label">Durée</span>
+              <span className="field-label">{t(locale, "field_duration")}</span>
               <select value={duration} onChange={(e) => setDuration(e.target.value)}>
-                <option value="30">30 jours</option>
-                <option value="90">90 jours</option>
-                <option value="365">1 an</option>
-                <option value="unlimited">Illimitée</option>
+                <option value="30">{t(locale, "duration_30_days")}</option>
+                <option value="90">{t(locale, "duration_90_days")}</option>
+                <option value="365">{t(locale, "duration_1_year")}</option>
+                <option value="unlimited">{t(locale, "duration_unlimited")}</option>
               </select>
             </label>
-            <button className="btn" disabled={busy} onClick={saveGrant}>Offrir cet abonnement</button>
+            <button className="btn" disabled={busy} onClick={saveGrant}>{t(locale, "offer_this_subscription")}</button>
             {grantTarget.grantedByAdmin && (
               <button className="btn btn-danger" style={{ marginTop: 8 }} disabled={busy} onClick={() => revokeGrant(grantTarget.organizationId)}>
-                Retirer l'abonnement offert
+                {t(locale, "revoke_offered_subscription")}
               </button>
             )}
           </div>

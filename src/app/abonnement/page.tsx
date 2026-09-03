@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { getPlatformSettings } from "@/lib/settings";
 import { currencyForCountry, countryFromHeaders } from "@/lib/currency";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 import SubscribeForm from "./SubscribeForm";
 
 export default async function AbonnementPage({ searchParams }: { searchParams: { reason?: string } }) {
@@ -19,15 +21,15 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
 
   const detectedCountry = org.countryCode || countryFromHeaders(headers());
   const currency = currencyForCountry(detectedCountry);
+  const locale = getLocale();
 
   if (session.role === "DRIVER") {
     return (
       <div className="container">
-        <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>Abonnement inactif</h1>
+        <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>{t(locale, "subscription_inactive_title")}</h1>
         <div className="card" style={{ marginTop: 20, textAlign: "center" }}>
           <p className="muted">
-            L&apos;abonnement de votre entreprise n&apos;est plus actif. Contactez le propriétaire de la
-            flotte pour qu&apos;il le renouvelle — l&apos;accès sera automatiquement rétabli.
+            {t(locale, "subscription_inactive_driver_desc")}
           </p>
         </div>
       </div>
@@ -37,18 +39,19 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
   return (
     <div className="container">
       <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>
-        {searchParams.reason === "expired" ? "Votre abonnement a expiré" : "Choisissez votre formule"}
+        {searchParams.reason === "expired" ? t(locale, "subscription_expired_title") : t(locale, "choose_plan_title")}
       </h1>
       <p className="muted" style={{ textAlign: "center", marginBottom: 24 }}>
         {searchParams.reason === "expired"
-          ? "Renouvelez pour retrouver l'accès à vos voyages, dépenses et factures."
-          : "Un abonnement actif est nécessaire pour accéder à l'application."}
+          ? t(locale, "subscription_expired_desc")
+          : t(locale, "choose_plan_desc")}
       </p>
       <SubscribeForm
         plans={JSON.parse(JSON.stringify(availablePlans))}
         initialCurrency={currency}
         stripeEnabled={settings.stripeEnabled}
         paypalEnabled={settings.paypalEnabled}
+        locale={locale}
       />
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { t, type Locale } from "@/lib/i18n";
 
 type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; themePrimary: string; themeAccent: string; forcedPlanId: string | null; stripeEnabled: boolean; paypalEnabled: boolean };
 type Plan = {
@@ -19,7 +20,7 @@ const PRESETS = [
   { primary: "#0F2C4C", accent: "#3AAED8", name: "Océan" },
 ];
 
-export default function AdminSettingsPanel({ initialSettings, initialPlans }: { initialSettings: Settings; initialPlans: Plan[] }) {
+export default function AdminSettingsPanel({ initialSettings, initialPlans, locale }: { initialSettings: Settings; initialPlans: Plan[]; locale: Locale }) {
   const router = useRouter();
   const [settings, setSettings] = useState(initialSettings);
   const [plans, setPlans] = useState(initialPlans);
@@ -29,6 +30,7 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
   const [showCurPwd, setShowCurPwd] = useState(false);
   const [showNewPwd, setShowNewPwd] = useState(false);
   const [pwdMsg, setPwdMsg] = useState("");
+  const [pwdOk, setPwdOk] = useState(false);
   const [logoMsg, setLogoMsg] = useState("");
 
   async function saveSettings(patch: Partial<Settings>) {
@@ -82,7 +84,7 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
         setPlans(plans.map((p) => (p.id === editingPlanId ? updated : p)));
         setEditingPlanId(null);
       } else {
-        setPlanSaveMsg(updated.error || "Erreur lors de l'enregistrement.");
+        setPlanSaveMsg(updated.error || t(locale, "save_error"));
       }
     } finally {
       setBusy(false);
@@ -91,12 +93,12 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
 
   function onLogoFile(file: File | undefined) {
     if (!file) return;
-    if (file.size > 900 * 1024) { setLogoMsg("Image trop lourde — choisissez un fichier de moins de 900 Ko."); return; }
+    if (file.size > 900 * 1024) { setLogoMsg(t(locale, "logo_too_heavy")); return; }
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
       saveSettings({ logoType: "image", logoImage: dataUrl } as Partial<Settings>);
-      setLogoMsg("Logo mis à jour.");
+      setLogoMsg(t(locale, "logo_updated"));
     };
     reader.readAsDataURL(file);
   }
@@ -114,20 +116,20 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
       body: JSON.stringify({ currentPassword: curPwd, newPassword: newPwd }),
     });
     const data = await res.json();
-    if (res.ok) { setPwdMsg("Mot de passe mis à jour."); setCurPwd(""); setNewPwd(""); }
-    else setPwdMsg(data.error || "Erreur");
+    if (res.ok) { setPwdMsg(t(locale, "password_updated")); setPwdOk(true); setCurPwd(""); setNewPwd(""); }
+    else { setPwdMsg(data.error || t(locale, "error_generic")); setPwdOk(false); }
   }
 
   return (
     <>
       <div className="card">
-        <strong>Marque</strong>
+        <strong>{t(locale, "brand_title")}</strong>
         <label className="field" style={{ marginTop: 10 }}>
-          <span className="field-label">Nom de l'application</span>
+          <span className="field-label">{t(locale, "app_name_field")}</span>
           <input value={settings.appName} onChange={(e) => setSettings({ ...settings, appName: e.target.value })} />
         </label>
 
-        <span className="field-label" style={{ display: "block", marginBottom: 8 }}>Logo</span>
+        <span className="field-label" style={{ display: "block", marginBottom: 8 }}>{t(locale, "logo_label")}</span>
         <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", border: "1px solid var(--line)", marginBottom: 12 }}>
           {(["emoji", "image"] as const).map((v) => (
             <button
@@ -136,7 +138,7 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
               onClick={() => saveSettings({ logoType: v } as Partial<Settings>)}
               style={{ flex: 1, padding: 8, border: "none", cursor: "pointer", background: settings.logoType === v ? "var(--primary)" : "#fff", color: settings.logoType === v ? "#fff" : "var(--text)" }}
             >
-              {v === "emoji" ? "Icône" : "Image"}
+              {v === "emoji" ? t(locale, "icon_option") : t(locale, "image_option")}
             </button>
           ))}
         </div>
@@ -162,7 +164,7 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
           </div>
         </div>
 
-        <span className="field-label" style={{ display: "block", marginBottom: 8 }}>Dimensions du logo ({settings.logoSize || 40}px)</span>
+        <span className="field-label" style={{ display: "block", marginBottom: 8 }}>{t(locale, "logo_dimensions").replace("{n}", String(settings.logoSize || 40))}</span>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
           <button type="button" onClick={() => adjustLogoSize(-8)} style={{ width: 34, height: 34, borderRadius: 8, border: "1px solid var(--line)", background: "#fff", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>−</button>
           <div style={{ flex: 1, height: 6, borderRadius: 999, background: "var(--line)", position: "relative" }}>
@@ -172,12 +174,12 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
         </div>
 
         <button className="btn" disabled={busy} onClick={() => saveSettings({ appName: settings.appName, logoEmoji: settings.logoEmoji })}>
-          Enregistrer la marque
+          {t(locale, "save_brand")}
         </button>
       </div>
 
       <div className="card">
-        <strong>Thème</strong>
+        <strong>{t(locale, "theme_title")}</strong>
         <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
           {PRESETS.map((p) => (
             <button
@@ -191,24 +193,24 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
       </div>
 
       <div className="card">
-        <strong>Abonnements</strong>
+        <strong>{t(locale, "subscriptions_title")}</strong>
         {plans.map((p) => (
           <div key={p.id} style={{ padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 8 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontWeight: 600 }}>{p.label} {p.priceMAD ? `— ${p.priceMAD} DH/mois` : "— gratuit"}</div>
-                <div className="muted" style={{ fontSize: 12 }}>Visible : {p.visible ? "Oui" : "Non"} {settings.forcedPlanId === p.id && "· Forcé pour tous"}</div>
+                <div style={{ fontWeight: 600 }}>{p.label} {p.priceMAD ? `— ${p.priceMAD} DH/${t(locale, "per_month")}` : `— ${t(locale, "free_label")}`}</div>
+                <div className="muted" style={{ fontSize: 12 }}>{t(locale, "visible_label")} : {p.visible ? t(locale, "yes_label") : t(locale, "no_label")} {settings.forcedPlanId === p.id && `· ${t(locale, "forced_for_all")}`}</div>
               </div>
               <div style={{ display: "flex", gap: 6 }}>
                 <button className="btn" style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: "#F1F1EF", color: "var(--text)" }} onClick={() => togglePlanVisible(p)}>
-                  {p.visible ? "Masquer" : "Afficher"}
+                  {p.visible ? t(locale, "hide") : t(locale, "show_action")}
                 </button>
                 <button
                   className="btn"
                   style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: settings.forcedPlanId === p.id ? "var(--primary)" : "#F1F1EF", color: settings.forcedPlanId === p.id ? "#fff" : "var(--text)" }}
                   onClick={() => saveSettings({ forcedPlanId: settings.forcedPlanId === p.id ? null : p.id })}
                 >
-                  {settings.forcedPlanId === p.id ? "Actif" : "Activer pour tous"}
+                  {settings.forcedPlanId === p.id ? t(locale, "active_label") : t(locale, "activate_for_all")}
                 </button>
               </div>
             </div>
@@ -218,58 +220,57 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
                 <div style={{ marginTop: 10, background: "#F6F4EF", borderRadius: 8, padding: 10 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
                     <label className="field" style={{ margin: 0 }}>
-                      <span className="field-label">Prix mensuel (MAD)</span>
+                      <span className="field-label">{t(locale, "monthly_price_mad")}</span>
                       <input type="number" value={planDraft.priceMonthlyMAD ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, priceMonthlyMAD: e.target.value ? Number(e.target.value) : null })} />
                     </label>
                     <label className="field" style={{ margin: 0 }}>
-                      <span className="field-label">Prix annuel (MAD)</span>
+                      <span className="field-label">{t(locale, "annual_price_mad")}</span>
                       <input type="number" value={planDraft.priceAnnualMAD ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, priceAnnualMAD: e.target.value ? Number(e.target.value) : null })} />
                     </label>
                     <label className="field" style={{ margin: 0 }}>
-                      <span className="field-label">Stripe — Price ID mensuel</span>
+                      <span className="field-label">{t(locale, "stripe_price_monthly")}</span>
                       <input placeholder="price_..." value={planDraft.stripePriceIdMonthly ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, stripePriceIdMonthly: e.target.value })} />
                     </label>
                     <label className="field" style={{ margin: 0 }}>
-                      <span className="field-label">Stripe — Price ID annuel</span>
+                      <span className="field-label">{t(locale, "stripe_price_annual")}</span>
                       <input placeholder="price_..." value={planDraft.stripePriceIdAnnual ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, stripePriceIdAnnual: e.target.value })} />
                     </label>
                     <label className="field" style={{ margin: 0 }}>
-                      <span className="field-label">PayPal — Plan ID mensuel</span>
+                      <span className="field-label">{t(locale, "paypal_plan_monthly")}</span>
                       <input placeholder="P-..." value={planDraft.paypalPlanIdMonthly ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, paypalPlanIdMonthly: e.target.value })} />
                     </label>
                     <label className="field" style={{ margin: 0 }}>
-                      <span className="field-label">PayPal — Plan ID annuel</span>
+                      <span className="field-label">{t(locale, "paypal_plan_annual")}</span>
                       <input placeholder="P-..." value={planDraft.paypalPlanIdAnnual ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, paypalPlanIdAnnual: e.target.value })} />
                     </label>
                   </div>
                   {planSaveMsg && <p className="error-text" style={{ marginBottom: 8 }}>{planSaveMsg}</p>}
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button className="btn btn-ghost" onClick={() => setEditingPlanId(null)}>Annuler</button>
-                    <button className="btn" disabled={busy} onClick={savePlanDraft}>{busy ? "…" : "Enregistrer"}</button>
+                    <button className="btn btn-ghost" onClick={() => setEditingPlanId(null)}>{t(locale, "cancel")}</button>
+                    <button className="btn" disabled={busy} onClick={savePlanDraft}>{busy ? "…" : t(locale, "save")}</button>
                   </div>
                 </div>
               ) : (
                 <button type="button" onClick={() => startEditPlan(p)} className="muted" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, textDecoration: "underline", marginTop: 6, padding: 0 }}>
-                  Configurer les prix et identifiants de paiement
+                  {t(locale, "configure_payment")}
                 </button>
               )
             )}
           </div>
         ))}
         <p className="muted" style={{ fontSize: 11, marginTop: 8 }}>
-          Masquer la formule Gratuite et activer « Pro » pour tous rend l'abonnement payant obligatoire pour tout nouvel utilisateur.
+          {t(locale, "hide_free_note")}
         </p>
       </div>
 
       <div className="card">
-        <strong>Moyens de paiement</strong>
+        <strong>{t(locale, "payment_methods_title")}</strong>
         <p className="muted" style={{ fontSize: 12, marginTop: 6, marginBottom: 10 }}>
-          Choisissez ce qui est proposé aux utilisateurs sur l&apos;écran d&apos;abonnement. Configurez
-          d&apos;abord les identifiants dans <code>.env</code> (voir README) avant d&apos;activer.
+          {t(locale, "payment_methods_desc_1")} {t(locale, "payment_methods_desc_2")} <code>.env</code> {t(locale, "payment_methods_desc_3")}
         </p>
         {([
-          { key: "stripeEnabled" as const, label: "Paiement par carte (Stripe)" },
-          { key: "paypalEnabled" as const, label: "PayPal" },
+          { key: "stripeEnabled" as const, label: t(locale, "card_payment_label") },
+          { key: "paypalEnabled" as const, label: t(locale, "paypal_label") },
         ]).map((m) => (
           <div key={m.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 8 }}>
             <span style={{ fontSize: 14 }}>{m.label}</span>
@@ -278,34 +279,34 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans }: { 
               style={{ width: "auto", padding: "4px 12px", fontSize: 12, background: settings[m.key] ? "#2E7D53" : "#F1F1EF", color: settings[m.key] ? "#fff" : "var(--text)" }}
               onClick={() => saveSettings({ [m.key]: !settings[m.key] } as Partial<Settings>)}
             >
-              {settings[m.key] ? "Activé" : "Désactivé"}
+              {settings[m.key] ? t(locale, "enabled_label") : t(locale, "disabled_label")}
             </button>
           </div>
         ))}
       </div>
 
       <div className="card">
-        <strong>Sécurité — changer le mot de passe</strong>
+        <strong>{t(locale, "security_change_password")}</strong>
         <label className="field" style={{ marginTop: 10 }}>
-          <span className="field-label">Mot de passe actuel</span>
+          <span className="field-label">{t(locale, "current_password")}</span>
           <div style={{ position: "relative" }}>
             <input type={showCurPwd ? "text" : "password"} autoComplete="current-password" value={curPwd} onChange={(e) => setCurPwd(e.target.value)} style={{ paddingRight: 40 }} />
             <button type="button" onClick={() => setShowCurPwd((v) => !v)} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", border: "none", background: "none", cursor: "pointer", fontSize: 12, color: "var(--muted)" }}>
-              {showCurPwd ? "Masquer" : "Afficher"}
+              {showCurPwd ? t(locale, "hide") : t(locale, "show_action")}
             </button>
           </div>
         </label>
         <label className="field">
-          <span className="field-label">Nouveau mot de passe</span>
+          <span className="field-label">{t(locale, "new_password")}</span>
           <div style={{ position: "relative" }}>
             <input type={showNewPwd ? "text" : "password"} autoComplete="new-password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} style={{ paddingRight: 40 }} />
             <button type="button" onClick={() => setShowNewPwd((v) => !v)} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", border: "none", background: "none", cursor: "pointer", fontSize: 12, color: "var(--muted)" }}>
-              {showNewPwd ? "Masquer" : "Afficher"}
+              {showNewPwd ? t(locale, "hide") : t(locale, "show_action")}
             </button>
           </div>
         </label>
-        <button className="btn" disabled={!curPwd || !newPwd} onClick={changePassword}>Mettre à jour le mot de passe</button>
-        {pwdMsg && <p className={pwdMsg.startsWith("Mot de passe mis") ? "muted" : "error-text"} style={{ marginTop: 8 }}>{pwdMsg}</p>}
+        <button className="btn" disabled={!curPwd || !newPwd} onClick={changePassword}>{t(locale, "update_password")}</button>
+        {pwdMsg && <p className={pwdOk ? "muted" : "error-text"} style={{ marginTop: 8 }}>{pwdMsg}</p>}
       </div>
     </>
   );
