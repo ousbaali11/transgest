@@ -54,17 +54,18 @@ export async function POST() {
           unite: t.unite,
           prixTransport: t.prixTransport,
           avance: t.avance,
+          createdByUserId: session.userId,
         },
       });
 
       await prisma.expense.create({
-        data: { organizationId, tripId: trip.id, truckId: truck.id, driverId: driver.id, category: "CARBURANT", date: t.date, quantite: Math.round(t.fuel / 13), unite: "L", prixUnitaire: 13, montant: t.fuel },
+        data: { organizationId, tripId: trip.id, truckId: truck.id, driverId: driver.id, category: "CARBURANT", date: t.date, quantite: Math.round(t.fuel / 13), unite: "L", prixUnitaire: 13, montant: t.fuel, createdByUserId: session.userId },
       });
       if (t.peage > 0) {
-        await prisma.expense.create({ data: { organizationId, tripId: trip.id, truckId: truck.id, driverId: driver.id, category: "PEAGE", date: t.date, montant: t.peage } });
+        await prisma.expense.create({ data: { organizationId, tripId: trip.id, truckId: truck.id, driverId: driver.id, category: "PEAGE", date: t.date, montant: t.peage, createdByUserId: session.userId } });
       }
       if (t.autres > 0) {
-        await prisma.expense.create({ data: { organizationId, tripId: trip.id, truckId: truck.id, driverId: driver.id, category: "AUTRES", date: t.date, montant: t.autres, notes: "Entretien véhicule" } });
+        await prisma.expense.create({ data: { organizationId, tripId: trip.id, truckId: truck.id, driverId: driver.id, category: "AUTRES", date: t.date, montant: t.autres, notes: "Entretien véhicule", createdByUserId: session.userId } });
       }
 
       // Facture pour les deux voyages les plus récents, l'une payée, l'autre en attente.

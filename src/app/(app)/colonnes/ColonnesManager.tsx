@@ -11,18 +11,23 @@ export default function ColonnesManager({ initialFields, locale }: { initialFiel
   const [label, setLabel] = useState("");
   const [type, setType] = useState<"TEXT" | "NUMBER">("TEXT");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   async function add() {
     if (!label.trim()) return;
     setBusy(true);
+    setError("");
     try {
       const res = await fetch("/api/custom-fields", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ target, label, type }),
       });
-      const f = await res.json();
+      const f = await res.json().catch(() => ({}));
       if (res.ok) { setFields([f, ...fields]); setLabel(""); }
+      else setError(f.error || t(locale, "error_generic"));
+    } catch {
+      setError(t(locale, "server_unreachable_short"));
     } finally {
       setBusy(false);
     }
@@ -30,9 +35,13 @@ export default function ColonnesManager({ initialFields, locale }: { initialFiel
 
   async function remove(id: string) {
     setBusy(true);
+    setError("");
     try {
-      await fetch(`/api/custom-fields?id=${id}`, { method: "DELETE" });
-      setFields(fields.filter((f) => f.id !== id));
+      const res = await fetch(`/api/custom-fields?id=${id}`, { method: "DELETE" });
+      if (res.ok) setFields(fields.filter((f) => f.id !== id));
+      else setError(t(locale, "error_generic"));
+    } catch {
+      setError(t(locale, "server_unreachable_short"));
     } finally {
       setBusy(false);
     }
@@ -56,6 +65,7 @@ export default function ColonnesManager({ initialFields, locale }: { initialFiel
           </select>
         </div>
         <input placeholder={t(locale, "field_column_name")} value={label} onChange={(e) => setLabel(e.target.value)} style={{ marginBottom: 8 }} />
+        {error && <p className="error-text" style={{ marginBottom: 8 }}>{error}</p>}
         <button className="btn" disabled={busy || !label.trim()} onClick={add}>{t(locale, "add_column")}</button>
       </div>
 

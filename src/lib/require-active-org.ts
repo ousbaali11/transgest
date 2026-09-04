@@ -20,11 +20,16 @@ export async function requireActiveOrg() {
   if (!org) redirect("/login");
 
   const now = new Date();
-  const expired = org.currentPeriodEnd ? org.currentPeriodEnd < now : org.subscriptionStatus === "NONE";
-  const active = org.subscriptionStatus !== "NONE" && !expired;
+  // Seuls ACTIVE et CANCELING (résilié mais encore dans la période payée)
+  // donnent accès — PAST_DUE (paiement en échec) et NONE/EXPIRED bloquent
+  // explicitement, même si currentPeriodEnd n'est pas encore dépassée.
+  const statusGrantsAccess = org.subscriptionStatus === "ACTIVE" || org.subscriptionStatus === "CANCELING";
+  const periodStillValid = !org.currentPeriodEnd || org.currentPeriodEnd > now;
+  const active = statusGrantsAccess && periodStillValid;
 
   if (!active) {
-    redirect(expired && org.subscriptionStatus !== "NONE" ? "/abonnement?reason=expired" : "/abonnement");
+    const hadSubscriptionBefore = org.subscriptionStatus !== "NONE";
+    redirect(hadSubscriptionBefore ? "/abonnement?reason=expired" : "/abonnement");
   }
 
   return { session, org };

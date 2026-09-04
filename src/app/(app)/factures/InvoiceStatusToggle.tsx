@@ -17,6 +17,8 @@ export default function InvoiceStatusToggle({ id, status, locale }: { id: string
         body: JSON.stringify({ status: status === "PAYEE" ? "EN_ATTENTE" : "PAYEE" }),
       });
       router.refresh();
+    } catch (e) {
+      console.error("Échec de la mise à jour du statut de facture :", e);
     } finally {
       setBusy(false);
     }

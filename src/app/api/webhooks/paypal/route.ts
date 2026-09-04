@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
         const billingAgreementId = resource.billing_agreement_id;
         if (billingAgreementId) {
           const org = await prisma.organization.findFirst({ where: { paypalSubscriptionId: billingAgreementId } });
-          if (org) {
+          if (org && !org.grantedByAdmin) {
             await prisma.organization.update({
               where: { id: org.id },
               data: { subscriptionStatus: "ACTIVE", currentPeriodEnd: computePeriodEnd(org.billingInterval as "monthly" | "annual" | null) },

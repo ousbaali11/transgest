@@ -6,15 +6,26 @@ import { getPlatformSettings } from "@/lib/settings";
 import { getLocale } from "@/lib/get-locale";
 import { localeInfo } from "@/lib/i18n";
 
-export const metadata: Metadata = {
-  title: "TransGest — Gestion de flotte poids lourds",
-  description: "Voyages, dépenses et factures pour propriétaires de camions.",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "TransGest",
-  },
-};
+/**
+ * Le titre d'onglet suit le nom d'application choisi dans Admin > Marque
+ * ("{appName} — Gestion de flotte poids lourds") — d'où generateMetadata()
+ * (dynamique, lu en base) plutôt qu'un export const metadata statique.
+ * getPlatformSettings() est mémoïsé (React cache()) : cet appel et celui
+ * du composant RootLayout plus bas ne déclenchent qu'une seule requête
+ * base de données pour la même requête HTTP.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getPlatformSettings();
+  return {
+    title: `${settings.appName} — Gestion de flotte poids lourds`,
+    description: "Voyages, dépenses et factures pour propriétaires de camions.",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: settings.appName,
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#16305B",

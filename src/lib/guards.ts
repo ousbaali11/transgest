@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { getSession, SessionPayload } from "./session";
+import { getLocale } from "./get-locale";
+import { t } from "./i18n";
 
 export class HttpError extends Error {
   status: number;
@@ -45,6 +48,20 @@ export async function requireAdminSession() {
 export function handleApiError(e: unknown) {
   if (e instanceof HttpError) {
     return NextResponse.json({ error: e.message }, { status: e.status });
+  }
+  // Erreurs Prisma connues : messages compréhensibles plutôt qu'un générique
+  // "Erreur serveur" qui n'aide personne à comprendre ce qui a coincé.
+  if (e instanceof Prisma.PrismaClientKnownRequestError) {
+    const locale = getLocale();
+    if (e.code === "P2003") {
+      return NextResponse.json({ error: t(locale, "delete_conflict_error") }, { status: 409 });
+    }
+    if (e.code === "P2025") {
+      return NextResponse.json({ error: t(locale, "not_found_error") }, { status: 404 });
+    }
+    if (e.code === "P2002") {
+      return NextResponse.json({ error: t(locale, "duplicate_value_error") }, { status: 409 });
+    }
   }
   console.error(e);
   return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

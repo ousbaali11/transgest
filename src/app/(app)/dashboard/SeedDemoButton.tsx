@@ -14,6 +14,8 @@ export default function SeedDemoButton({ locale }: { locale: Locale }) {
     try {
       const res = await fetch("/api/seed-demo", { method: "POST" });
       if (res.ok) router.refresh();
+    } catch (e) {
+      console.error("Échec du chargement des données d'exemple :", e);
     } finally {
       setBusy(false);
     }

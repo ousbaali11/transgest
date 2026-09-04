@@ -32,24 +32,38 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
   const [pwdMsg, setPwdMsg] = useState("");
   const [pwdOk, setPwdOk] = useState(false);
   const [logoMsg, setLogoMsg] = useState("");
+  const [settingsError, setSettingsError] = useState("");
 
   async function saveSettings(patch: Partial<Settings>) {
     setBusy(true);
+    setSettingsError("");
     try {
       const res = await fetch("/api/admin/settings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
       if (res.ok) { setSettings({ ...settings, ...patch }); router.refresh(); }
+      else {
+        const data = await res.json().catch(() => ({}));
+        setSettingsError(data.error || t(locale, "error_generic"));
+      }
+    } catch {
+      setSettingsError(t(locale, "server_unreachable_short"));
     } finally {
       setBusy(false);
     }
   }
 
   async function togglePlanVisible(plan: Plan) {
-    const res = await fetch(`/api/admin/plans/${plan.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ visible: !plan.visible }),
-    });
-    if (res.ok) setPlans(plans.map((p) => (p.id === plan.id ? { ...p, visible: !p.visible } : p)));
+    setSettingsError("");
+    try {
+      const res = await fetch(`/api/admin/plans/${plan.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visible: !plan.visible }),
+      });
+      if (res.ok) setPlans(plans.map((p) => (p.id === plan.id ? { ...p, visible: !p.visible } : p)));
+      else setSettingsError(t(locale, "error_generic"));
+    } catch {
+      setSettingsError(t(locale, "server_unreachable_short"));
+    }
   }
 
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
@@ -122,6 +136,11 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
 
   return (
     <>
+      {settingsError && (
+        <div className="card" style={{ background: "#FBE9E7", border: "1px solid #E8B4AE" }}>
+          <p className="error-text" style={{ margin: 0 }}>{settingsError}</p>
+        </div>
+      )}
       <div className="card">
         <strong>{t(locale, "brand_title")}</strong>
         <label className="field" style={{ marginTop: 10 }}>

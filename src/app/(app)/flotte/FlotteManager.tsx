@@ -38,12 +38,14 @@ export default function FlotteManager({ initialTrucks, initialDrivers, locale }:
   const [showDocs, setShowDocs] = useState(false);
   const [revealedCodeId, setRevealedCodeId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [truckError, setTruckError] = useState("");
 
   const ownerAlreadyAdded = drivers.some((d) => d.isOwnerSelf);
 
   async function addTruck() {
     if (!newTruck.immat) return;
     setBusy(true);
+    setTruckError("");
     try {
       const payload = {
         ...newTruck,
@@ -52,8 +54,11 @@ export default function FlotteManager({ initialTrucks, initialDrivers, locale }:
         vignetteExpiry: newTruck.vignetteExpiry ? new Date(newTruck.vignetteExpiry).toISOString() : null,
       };
       const res = await fetch("/api/trucks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      const t = await res.json();
-      if (res.ok) { setTrucks([t, ...trucks]); setNewTruck(emptyTruck); }
+      const created = await res.json().catch(() => ({}));
+      if (res.ok) { setTrucks([created, ...trucks]); setNewTruck(emptyTruck); }
+      else setTruckError(created.error || t(locale, "error_generic"));
+    } catch {
+      setTruckError(t(locale, "server_unreachable_short"));
     } finally {
       setBusy(false);
     }
@@ -61,9 +66,13 @@ export default function FlotteManager({ initialTrucks, initialDrivers, locale }:
 
   async function removeTruck(id: string) {
     setBusy(true);
+    setTruckError("");
     try {
-      await fetch(`/api/trucks/${id}`, { method: "DELETE" });
-      setTrucks(trucks.filter((t) => t.id !== id));
+      const res = await fetch(`/api/trucks/${id}`, { method: "DELETE" });
+      if (res.ok) setTrucks(trucks.filter((truck) => truck.id !== id));
+      else setTruckError(t(locale, "error_generic"));
+    } catch {
+      setTruckError(t(locale, "server_unreachable_short"));
     } finally {
       setBusy(false);
     }
@@ -82,13 +91,15 @@ export default function FlotteManager({ initialTrucks, initialDrivers, locale }:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const d = await res.json();
+      const d = await res.json().catch(() => ({}));
       if (res.ok) {
         setDrivers([d, ...drivers]);
         if (!isOwnerSelf) { setNewDriver({ name: "", phone: "", truckId: "" }); setRevealedCodeId(d.id); }
       } else {
-        setDriverError(d.error || "Erreur lors de l'ajout du chauffeur.");
+        setDriverError(d.error || t(locale, "error_generic"));
       }
+    } catch {
+      setDriverError(t(locale, "server_unreachable_short"));
     } finally {
       setBusy(false);
     }
@@ -96,9 +107,13 @@ export default function FlotteManager({ initialTrucks, initialDrivers, locale }:
 
   async function removeDriver(id: string) {
     setBusy(true);
+    setDriverError("");
     try {
-      await fetch(`/api/drivers/${id}`, { method: "DELETE" });
-      setDrivers(drivers.filter((d) => d.id !== id));
+      const res = await fetch(`/api/drivers/${id}`, { method: "DELETE" });
+      if (res.ok) setDrivers(drivers.filter((d) => d.id !== id));
+      else setDriverError(t(locale, "error_generic"));
+    } catch {
+      setDriverError(t(locale, "server_unreachable_short"));
     } finally {
       setBusy(false);
     }
@@ -106,13 +121,18 @@ export default function FlotteManager({ initialTrucks, initialDrivers, locale }:
 
   async function regenerateCode(id: string) {
     setBusy(true);
+    setDriverError("");
     try {
       const res = await fetch(`/api/drivers/${id}/regenerate-code`, { method: "POST" });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setDrivers(drivers.map((d) => (d.id === id ? { ...d, accessCode: data.accessCode } : d)));
         setRevealedCodeId(id);
+      } else {
+        setDriverError(data.error || t(locale, "error_generic"));
       }
+    } catch {
+      setDriverError(t(locale, "server_unreachable_short"));
     } finally {
       setBusy(false);
     }
@@ -154,6 +174,7 @@ export default function FlotteManager({ initialTrucks, initialDrivers, locale }:
             </label>
           </div>
         )}
+        {truckError && <p className="error-text" style={{ marginBottom: 8 }}>{truckError}</p>}
         <button className="btn" disabled={busy || !newTruck.immat} onClick={addTruck}>{t(locale, "add_truck")}</button>
         {trucks.map((truck) => {
           const alert = docAlert(truck, locale);

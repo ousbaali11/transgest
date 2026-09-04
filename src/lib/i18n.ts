@@ -344,6 +344,9 @@ const dict = {
   server_unreachable_short: { fr: "Impossible de contacter le serveur. Réessayez.", en: "Could not reach the server. Try again.", ary: "ما قدرناش نتواصلو مع السيرفر. عاود حاول." },
   unexpected_server_response: { fr: "Réponse inattendue du serveur. Réessayez.", en: "Unexpected server response. Try again.", ary: "جواب ماشي متوقع من السيرفر. عاود حاول." },
   server_unreachable: { fr: "Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.", en: "Could not reach the server. Check your connection and try again.", ary: "ما قدرناش نتواصلو مع السيرفر. تأكد من الكونيكسيون وعاود حاول." },
+  delete_conflict_error: { fr: "Impossible de supprimer : cet élément est encore utilisé ailleurs (voyage, dépense ou facture liée).", en: "Cannot delete: this item is still used elsewhere (a linked trip, expense or invoice).", ary: "ما يمكنش نحيدو: هاد العنصر مازال مستعمل شي حاجة أخرى (سفرية، مصروف، ولا فاكتورة مرتبطة)." },
+  not_found_error: { fr: "Cet élément n'existe plus — il a peut-être déjà été supprimé.", en: "This item no longer exists — it may have already been deleted.", ary: "هاد العنصر ماعادش كاين — يمكن تحيد من قبل." },
+  duplicate_value_error: { fr: "Cette valeur est déjà utilisée par un autre élément.", en: "This value is already used by another item.", ary: "هاد القيمة مستعملة من قبل من عنصر آخر." },
 } as const;
 
 export type TKey = keyof typeof dict;

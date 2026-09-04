@@ -38,12 +38,14 @@ export default function AdminUsersTable({ rows, plans, locale }: { rows: Row[]; 
   const [planKey, setPlanKey] = useState(plans[plans.length - 1]?.key || plans[0]?.key || "");
   const [duration, setDuration] = useState("30");
   const [busy, setBusy] = useState(false);
+  const [grantError, setGrantError] = useState("");
 
   async function saveGrant() {
     if (!grantTarget) return;
     setBusy(true);
+    setGrantError("");
     try {
-      await fetch("/api/admin/grants", {
+      const res = await fetch("/api/admin/grants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -52,8 +54,15 @@ export default function AdminUsersTable({ rows, plans, locale }: { rows: Row[]; 
           durationDays: duration === "unlimited" ? null : Number(duration),
         }),
       });
-      setGrantTarget(null);
-      router.refresh();
+      if (res.ok) {
+        setGrantTarget(null);
+        router.refresh();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setGrantError(data.error || t(locale, "error_generic"));
+      }
+    } catch {
+      setGrantError(t(locale, "server_unreachable_short"));
     } finally {
       setBusy(false);
     }
@@ -61,10 +70,18 @@ export default function AdminUsersTable({ rows, plans, locale }: { rows: Row[]; 
 
   async function revokeGrant(organizationId: string) {
     setBusy(true);
+    setGrantError("");
     try {
-      await fetch(`/api/admin/grants?organizationId=${organizationId}`, { method: "DELETE" });
-      setGrantTarget(null);
-      router.refresh();
+      const res = await fetch(`/api/admin/grants?organizationId=${organizationId}`, { method: "DELETE" });
+      if (res.ok) {
+        setGrantTarget(null);
+        router.refresh();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setGrantError(data.error || t(locale, "error_generic"));
+      }
+    } catch {
+      setGrantError(t(locale, "server_unreachable_short"));
     } finally {
       setBusy(false);
     }
@@ -97,7 +114,7 @@ export default function AdminUsersTable({ rows, plans, locale }: { rows: Row[]; 
                 <button
                   className="btn"
                   style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: r.grantedByAdmin ? "var(--primary)" : "#F1F1EF", color: r.grantedByAdmin ? "#fff" : "var(--text)" }}
-                  onClick={() => setGrantTarget(r)}
+                  onClick={() => { setGrantTarget(r); setGrantError(""); }}
                 >
                   {r.grantedByAdmin ? t(locale, "modify_offer") : t(locale, "offer_subscription")}
                 </button>
@@ -129,6 +146,7 @@ export default function AdminUsersTable({ rows, plans, locale }: { rows: Row[]; 
                 <option value="unlimited">{t(locale, "duration_unlimited")}</option>
               </select>
             </label>
+            {grantError && <p className="error-text" style={{ marginTop: 8 }}>{grantError}</p>}
             <button className="btn" disabled={busy} onClick={saveGrant}>{t(locale, "offer_this_subscription")}</button>
             {grantTarget.grantedByAdmin && (
               <button className="btn btn-danger" style={{ marginTop: 8 }} disabled={busy} onClick={() => revokeGrant(grantTarget.organizationId)}>

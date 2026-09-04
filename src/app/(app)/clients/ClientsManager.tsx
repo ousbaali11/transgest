@@ -10,14 +10,19 @@ export default function ClientsManager({ initialClients, locale }: { initialClie
   const [clients, setClients] = useState(initialClients);
   const [f, setF] = useState({ name: "", phone: "", email: "", address: "" });
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   async function add() {
     if (!f.name) return;
     setBusy(true);
+    setError("");
     try {
       const res = await fetch("/api/clients", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(f) });
-      const c = await res.json();
+      const c = await res.json().catch(() => ({}));
       if (res.ok) { setClients([c, ...clients]); setF({ name: "", phone: "", email: "", address: "" }); }
+      else setError(c.error || t(locale, "error_generic"));
+    } catch {
+      setError(t(locale, "server_unreachable_short"));
     } finally {
       setBusy(false);
     }
@@ -25,9 +30,13 @@ export default function ClientsManager({ initialClients, locale }: { initialClie
 
   async function remove(id: string) {
     setBusy(true);
+    setError("");
     try {
-      await fetch(`/api/clients/${id}`, { method: "DELETE" });
-      setClients(clients.filter((c) => c.id !== id));
+      const res = await fetch(`/api/clients/${id}`, { method: "DELETE" });
+      if (res.ok) setClients(clients.filter((c) => c.id !== id));
+      else setError(t(locale, "error_generic"));
+    } catch {
+      setError(t(locale, "server_unreachable_short"));
     } finally {
       setBusy(false);
     }
@@ -43,6 +52,7 @@ export default function ClientsManager({ initialClients, locale }: { initialClie
         <input placeholder={t(locale, "field_address")} value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} />
       </div>
       <button className="btn" disabled={busy || !f.name} onClick={add}>{t(locale, "add_client")}</button>
+      {error && <p className="error-text" style={{ marginTop: 8 }}>{error}</p>}
 
       {clients.map((c) => (
         <div key={c.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 10 }}>

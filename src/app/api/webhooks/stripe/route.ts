@@ -60,19 +60,27 @@ export async function POST(req: NextRequest) {
         const sub = event.data.object as Stripe.Subscription;
         const organizationId = sub.metadata?.organizationId;
         if (organizationId) {
-          const status: "ACTIVE" | "CANCELING" | "PAST_DUE" | "NONE" =
-            sub.status === "active" ? (sub.cancel_at_period_end ? "CANCELING" : "ACTIVE")
-            : sub.status === "past_due" || sub.status === "unpaid" ? "PAST_DUE"
-            : sub.status === "canceled" ? "NONE"
-            : "ACTIVE";
-          await prisma.organization.update({
-            where: { id: organizationId },
-            data: {
-              subscriptionStatus: status,
-              currentPeriodEnd: new Date(sub.current_period_end * 1000),
-              cancelAtPeriodEnd: sub.cancel_at_period_end,
-            },
-          });
+          // Ne jamais écraser un accès offert par l'admin avec l'état d'un
+          // abonnement Stripe encore actif en arrière-plan (ex: l'admin a
+          // offert un accès gratuit sans que l'ancien abonnement payant
+          // n'ait été annulé) — voir aussi /api/admin/grants qui annule
+          // désormais l'abonnement Stripe existant au moment de l'offre.
+          const org = await prisma.organization.findUnique({ where: { id: organizationId } });
+          if (org && !org.grantedByAdmin) {
+            const status: "ACTIVE" | "CANCELING" | "PAST_DUE" | "NONE" =
+              sub.status === "active" ? (sub.cancel_at_period_end ? "CANCELING" : "ACTIVE")
+              : sub.status === "past_due" || sub.status === "unpaid" ? "PAST_DUE"
+              : sub.status === "canceled" ? "NONE"
+              : "ACTIVE";
+            await prisma.organization.update({
+              where: { id: organizationId },
+              data: {
+                subscriptionStatus: status,
+                currentPeriodEnd: new Date(sub.current_period_end * 1000),
+                cancelAtPeriodEnd: sub.cancel_at_period_end,
+              },
+            });
+          }
         }
         break;
       }
