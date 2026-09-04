@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { t, type Locale } from "@/lib/i18n";
+import { t, dateLocale, type Locale } from "@/lib/i18n";
 
 type Row = {
   organizationId: string;
@@ -19,9 +19,9 @@ type Plan = { id: string; key: string; label: string };
 
 const STATUS_COLOR: Record<string, string> = { NONE: "#9CA3AF", ACTIVE: "#2E7D53", CANCELING: "#B5791C", EXPIRED: "#C0392B" };
 
-function fmtDate(d: string | Date | null) {
+function fmtDate(d: string | Date | null, locale: Locale) {
   if (!d) return null;
-  return new Date(d).toLocaleDateString("fr-FR");
+  return new Date(d).toLocaleDateString(dateLocale(locale));
 }
 
 function statusLabel(locale: Locale, status: string): string {
@@ -91,7 +91,7 @@ export default function AdminUsersTable({ rows, plans, locale }: { rows: Row[]; 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
                 {r.grantedByAdmin ? (
                   <span style={{ fontSize: 11, color: "var(--primary)" }}>
-                    {t(locale, "offered_gift")}{r.currentPeriodEnd ? ` ${t(locale, "offered_until")} ${fmtDate(r.currentPeriodEnd)}` : ` ${t(locale, "offered_unlimited")}`}
+                    {t(locale, "offered_gift")}{r.currentPeriodEnd ? ` ${t(locale, "offered_until")} ${fmtDate(r.currentPeriodEnd, locale)}` : ` ${t(locale, "offered_unlimited")}`}
                   </span>
                 ) : <span />}
                 <button

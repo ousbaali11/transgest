@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { t as tr, type Locale } from "@/lib/i18n";
+import { t as tr, dateLocale, type Locale } from "@/lib/i18n";
 
 type Expense = {
   id: string; category: "CARBURANT" | "PEAGE" | "AUTRES"; date: string; montant: number;
@@ -109,7 +109,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
 
         <select value={f.tripId} onChange={(e) => setF({ ...f, tripId: e.target.value })} style={{ marginBottom: 8 }}>
           <option value="">{tr(locale, "field_linked_trip")}</option>
-          {trips.map((t) => <option key={t.id} value={t.id}>{new Date(t.date).toLocaleDateString("fr-FR")} · {t.depart} → {t.arrivee}</option>)}
+          {trips.map((t) => <option key={t.id} value={t.id}>{new Date(t.date).toLocaleDateString(dateLocale(locale))} · {t.depart} → {t.arrivee}</option>)}
         </select>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
@@ -154,8 +154,10 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
           <div key={e.id} className="card">
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <div>
-                <div style={{ fontWeight: 600 }}>{e.category}</div>
-                <div className="muted">{new Date(e.date).toLocaleDateString("fr-FR")}{e.quantite ? ` · ${e.quantite} ${e.unite}` : ""}</div>
+                <div style={{ fontWeight: 600 }}>
+                  {e.category === "CARBURANT" ? tr(locale, "category_fuel") : e.category === "PEAGE" ? tr(locale, "category_toll") : tr(locale, "category_other")}
+                </div>
+                <div className="muted">{new Date(e.date).toLocaleDateString(dateLocale(locale))}{e.quantite ? ` · ${e.quantite} ${e.unite}` : ""}</div>
               </div>
               <strong>{fmtDH(e.montant)}</strong>
             </div>

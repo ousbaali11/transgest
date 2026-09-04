@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Languages } from "lucide-react";
 import { locales, localeInfo, type Locale } from "@/lib/i18n";
 
 export default function LanguageSwitcher({ current }: { current: Locale }) {
@@ -31,9 +32,9 @@ export default function LanguageSwitcher({ current }: { current: Locale }) {
         onClick={() => setOpen((v) => !v)}
         aria-label={localeInfo[current].label}
         title={localeInfo[current].label}
-        style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", border: "none", cursor: "pointer", fontSize: 16, lineHeight: 1 }}
+        style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", border: "none", cursor: "pointer" }}
       >
-        {localeInfo[current].flag}
+        <Languages size={17} color="#fff" />
       </button>
 
       {open && (
@@ -42,7 +43,7 @@ export default function LanguageSwitcher({ current }: { current: Locale }) {
           <div
             style={{
               position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", borderRadius: 10,
-              boxShadow: "0 8px 24px rgba(0,0,0,0.15)", overflow: "hidden", zIndex: 60, minWidth: 160,
+              boxShadow: "0 8px 24px rgba(0,0,0,0.15)", overflow: "hidden", zIndex: 60, minWidth: 140,
             }}
           >
             {locales.map((loc) => (
@@ -51,12 +52,11 @@ export default function LanguageSwitcher({ current }: { current: Locale }) {
                 onClick={() => choose(loc)}
                 disabled={busy}
                 style={{
-                  display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", border: "none",
+                  display: "block", width: "100%", padding: "10px 14px", border: "none",
                   background: loc === current ? "var(--primary-10)" : "#fff", cursor: "pointer", textAlign: "left", fontSize: 14,
                   color: "var(--text)", fontWeight: loc === current ? 600 : 400,
                 }}
               >
-                <span style={{ fontSize: 17 }}>{localeInfo[loc].flag}</span>
                 {localeInfo[loc].label}
               </button>
             ))}

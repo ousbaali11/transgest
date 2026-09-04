@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireActiveOrg } from "@/lib/require-active-org";
 import ScreenHeader from "@/components/ScreenHeader";
 import { getLocale } from "@/lib/get-locale";
-import { t } from "@/lib/i18n";
+import { t, dateLocale } from "@/lib/i18n";
 
 function fmtDH(n: number) {
   return n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DH";
@@ -69,7 +69,7 @@ export default async function TripBenefitPage({ params }: { params: { id: string
         <strong>{t(locale, "trip_section")}</strong>
         <div style={{ marginTop: 10, fontSize: 14 }}>
           <div style={{ padding: "4px 0" }}>{trip.depart} → {trip.arrivee}</div>
-          <div className="muted" style={{ padding: "4px 0" }}>{new Date(trip.date).toLocaleDateString("fr-FR")} · {trip.truck.immat} · {trip.driver?.name || t(locale, "not_assigned")}</div>
+          <div className="muted" style={{ padding: "4px 0" }}>{new Date(trip.date).toLocaleDateString(dateLocale(locale))} · {trip.truck.immat} · {trip.driver?.name || t(locale, "not_assigned")}</div>
           <div className="muted" style={{ padding: "4px 0" }}>{trip.client?.name || t(locale, "no_client")}</div>
         </div>
       </div>

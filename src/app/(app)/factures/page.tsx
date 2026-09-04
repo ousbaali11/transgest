@@ -4,7 +4,7 @@ import { requireActiveOrg } from "@/lib/require-active-org";
 import ScreenHeader from "@/components/ScreenHeader";
 import InvoiceStatusToggle from "./InvoiceStatusToggle";
 import { getLocale } from "@/lib/get-locale";
-import { t } from "@/lib/i18n";
+import { t, dateLocale } from "@/lib/i18n";
 
 function fmtDH(n: number) {
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DH";
@@ -68,7 +68,7 @@ export default async function FacturesPage({ searchParams }: { searchParams: { s
           <div key={inv.id} className="card" style={{ display: "flex", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontWeight: 600 }}>#{inv.number}</div>
-              <div className="muted">{inv.client?.name || "—"} · {new Date(inv.date).toLocaleDateString("fr-FR")}</div>
+              <div className="muted">{inv.client?.name || "—"} · {new Date(inv.date).toLocaleDateString(dateLocale(locale))}</div>
               <a href={`/api/invoices/${inv.id}/pdf`} style={{ fontSize: 12, display: "inline-block", marginTop: 6 }}>{t(locale, "download_pdf")}</a>
             </div>
             <div style={{ textAlign: "right" }}>

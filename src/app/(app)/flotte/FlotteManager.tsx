@@ -75,7 +75,7 @@ export default function FlotteManager({ initialTrucks, initialDrivers, locale }:
     setDriverError("");
     try {
       const body = isOwnerSelf
-        ? { name: "Moi-même", isOwnerSelf: true }
+        ? { name: t(locale, "myself_label"), isOwnerSelf: true }
         : { ...newDriver, truckId: newDriver.truckId || null };
       const res = await fetch("/api/drivers", {
         method: "POST",

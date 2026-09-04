@@ -5,11 +5,11 @@ import SubscriptionActions from "./SubscriptionActions";
 import { Truck, Users, Package, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { getLocale } from "@/lib/get-locale";
-import { t } from "@/lib/i18n";
+import { t, dateLocale, type Locale } from "@/lib/i18n";
 
-function fmtDate(d: Date | null) {
+function fmtDate(d: Date | null, locale: Locale) {
   if (!d) return null;
-  return new Date(d).toLocaleDateString("fr-FR");
+  return new Date(d).toLocaleDateString(dateLocale(locale));
 }
 
 export default async function ReglagesPage() {
@@ -29,10 +29,10 @@ export default async function ReglagesPage() {
             <div style={{ fontWeight: 700, color: "var(--primary)" }}>{plan?.label || "—"}</div>
             <div style={{ fontSize: 13 }}>
               {org.grantedByAdmin
-                ? `${t(locale, "offered_by_admin")}${org.currentPeriodEnd ? ` — ${t(locale, "until")} ${fmtDate(org.currentPeriodEnd)}` : ` — ${t(locale, "unlimited_access")}`}`
+                ? `${t(locale, "offered_by_admin")}${org.currentPeriodEnd ? ` — ${t(locale, "until")} ${fmtDate(org.currentPeriodEnd, locale)}` : ` — ${t(locale, "unlimited_access")}`}`
                 : org.cancelAtPeriodEnd
-                ? `${t(locale, "cancelled_access_until")} ${fmtDate(org.currentPeriodEnd)}`
-                : `${t(locale, "renewal_on")} ${fmtDate(org.currentPeriodEnd)}`}
+                ? `${t(locale, "cancelled_access_until")} ${fmtDate(org.currentPeriodEnd, locale)}`
+                : `${t(locale, "renewal_on")} ${fmtDate(org.currentPeriodEnd, locale)}`}
             </div>
           </div>
           {org.grantedByAdmin ? (

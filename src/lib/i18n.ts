@@ -4,14 +4,19 @@ export type Locale = (typeof locales)[number];
 export const DEFAULT_LOCALE: Locale = "fr";
 export const LOCALE_COOKIE = "locale";
 
-export const localeInfo: Record<Locale, { label: string; flag: string; dir: "ltr" | "rtl" }> = {
-  fr: { label: "Français", flag: "🇫🇷", dir: "ltr" },
-  en: { label: "English", flag: "🇬🇧", dir: "ltr" },
-  ary: { label: "الدارجة", flag: "🇲🇦", dir: "rtl" },
+export const localeInfo: Record<Locale, { label: string; dir: "ltr" | "rtl" }> = {
+  fr: { label: "Français", dir: "ltr" },
+  en: { label: "English", dir: "ltr" },
+  ary: { label: "الدارجة", dir: "rtl" },
 };
 
 export function isLocale(v: string | undefined | null): v is Locale {
   return !!v && (locales as readonly string[]).includes(v);
+}
+
+/** Locale à utiliser pour le formatage des dates (mois, jours...) selon la langue choisie. */
+export function dateLocale(locale: Locale): string {
+  return locale === "en" ? "en-GB" : locale === "ary" ? "ar-MA" : "fr-FR";
 }
 
 /**
@@ -112,6 +117,8 @@ const dict = {
   category_fuel: { fr: "Carburant", en: "Fuel", ary: "الغازوال" },
   category_toll: { fr: "Péage", en: "Toll", ary: "الطريق السيار" },
   category_other: { fr: "Autres", en: "Other", ary: "خرين" },
+  myself_label: { fr: "Moi-même", en: "Myself", ary: "أنا نفسي" },
+  default_org_name: { fr: "Mon entreprise", en: "My company", ary: "الشركة ديالي" },
   field_linked_trip: { fr: "Voyage lié (optionnel)", en: "Linked trip (optional)", ary: "السفرية المرتبطة (اختياري)" },
   field_quantity_l: { fr: "Quantité (L)", en: "Quantity (L)", ary: "الكمية (لتر)" },
   field_unit_price: { fr: "Prix unitaire (DH/L)", en: "Unit price", ary: "تمن اللتر" },

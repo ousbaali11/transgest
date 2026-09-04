@@ -3,7 +3,7 @@ import { Route, Wallet, Fuel, TrendingUp, BarChart3, Gauge, Receipt, Plus } from
 import { prisma } from "@/lib/prisma";
 import { requireActiveOrg } from "@/lib/require-active-org";
 import { getLocale } from "@/lib/get-locale";
-import { t as tr } from "@/lib/i18n";
+import { t as tr, dateLocale, type Locale } from "@/lib/i18n";
 import RevenueChart from "@/components/RevenueChart";
 import SeedDemoButton from "./SeedDemoButton";
 
@@ -11,8 +11,8 @@ function fmtDH(n: number) {
   return n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DH";
 }
 
-function monthLabel(d: Date) {
-  return d.toLocaleDateString("fr-FR", { month: "short", year: "2-digit" });
+function monthLabel(d: Date, locale: Locale) {
+  return d.toLocaleDateString(dateLocale(locale), { month: "short", year: "2-digit" });
 }
 
 function docAlerts(trucks: { immat: string; assuranceExpiry: Date | null; visiteTechniqueExpiry: Date | null; vignetteExpiry: Date | null }[]) {
@@ -70,7 +70,7 @@ export default async function DashboardPage() {
   const buckets: { key: string; label: string; ca: number; dep: number }[] = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    buckets.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: monthLabel(d), ca: 0, dep: 0 });
+    buckets.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: monthLabel(d, locale), ca: 0, dep: 0 });
   }
   trips6mo.forEach((t) => {
     const key = `${t.date.getFullYear()}-${t.date.getMonth()}`;
@@ -230,7 +230,7 @@ export default async function DashboardPage() {
           <div key={t.id} className="card" style={{ display: "flex", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontWeight: 600 }}>{t.depart} → {t.arrivee}</div>
-              <div className="muted">{t.date.toLocaleDateString("fr-FR")} · {t.driver?.name || tr(locale, "not_assigned")}</div>
+              <div className="muted">{t.date.toLocaleDateString(dateLocale(locale))} · {t.driver?.name || tr(locale, "not_assigned")}</div>
             </div>
             <strong>{fmtDH(Number(t.prixTransport))}</strong>
           </div>

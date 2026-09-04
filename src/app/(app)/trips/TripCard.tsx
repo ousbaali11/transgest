@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { t as tr, type Locale } from "@/lib/i18n";
+import { t as tr, dateLocale, type Locale } from "@/lib/i18n";
 
 type Option = { id: string; name?: string; immat?: string };
 type CustomFieldDef = { id: string; label: string; type: "TEXT" | "NUMBER" };
@@ -139,7 +139,7 @@ export default function TripCard({
         <Link href={`/trips/${trip.id}`} style={{ textDecoration: "none" }}>
           <strong style={{ color: "var(--text)" }}>{trip.depart} → {trip.arrivee}</strong>
         </Link>
-        <span className="muted">{new Date(trip.date).toLocaleDateString("fr-FR")}</span>
+        <span className="muted">{new Date(trip.date).toLocaleDateString(dateLocale(locale))}</span>
       </div>
       <div className="muted" style={{ margin: "4px 0" }}>{truckLabel} · {driverLabel} · {clientLabel}</div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

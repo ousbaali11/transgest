@@ -4,6 +4,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { signSession, setSessionCookie } from "@/lib/session";
 import { handleApiError } from "@/lib/guards";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -45,7 +47,7 @@ export async function POST(req: NextRequest) {
       // Première connexion avec cet email : nouveau propriétaire, on crée son
       // organisation. (Si un chauffeur existant avait cet email... les
       // chauffeurs n'ont pas d'email de connexion, donc pas de conflit possible.)
-      const org = await prisma.organization.create({ data: { name: "Mon entreprise" } });
+      const org = await prisma.organization.create({ data: { name: t(getLocale(), "default_org_name") } });
       user = await prisma.user.create({ data: { email, role: "OWNER", organizationId: org.id } });
     }
 

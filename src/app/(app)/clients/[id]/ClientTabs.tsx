@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { t as tr, type Locale } from "@/lib/i18n";
+import { t as tr, dateLocale, type Locale } from "@/lib/i18n";
 
 type Trip = { id: string; date: string; depart: string; arrivee: string; prixTransport: number; benefice: number };
 type Invoice = { id: string; number: string; date: string; status: string; montant: number };
@@ -42,7 +42,7 @@ export default function ClientTabs({ trips, invoices, locale }: { trips: Trip[];
                 <strong>{fmtDH(t.prixTransport)}</strong>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-                <span className="muted" style={{ fontSize: 12 }}>{new Date(t.date).toLocaleDateString("fr-FR")}</span>
+                <span className="muted" style={{ fontSize: 12 }}>{new Date(t.date).toLocaleDateString(dateLocale(locale))}</span>
                 <span style={{ fontSize: 12, color: t.benefice >= 0 ? "#2E7D53" : "#C0392B" }}>{tr(locale, "profit_label")}{fmtDH(t.benefice)}</span>
               </div>
             </Link>
@@ -55,7 +55,7 @@ export default function ClientTabs({ trips, invoices, locale }: { trips: Trip[];
           <div key={inv.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: "1px solid var(--line)" }}>
             <div>
               <div>#{inv.number}</div>
-              <div className="muted" style={{ fontSize: 12 }}>{new Date(inv.date).toLocaleDateString("fr-FR")}</div>
+              <div className="muted" style={{ fontSize: 12 }}>{new Date(inv.date).toLocaleDateString(dateLocale(locale))}</div>
             </div>
             <div style={{ textAlign: "right" }}>
               <strong>{fmtDH(inv.montant)}</strong>
