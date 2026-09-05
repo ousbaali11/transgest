@@ -22,6 +22,7 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
   const detectedCountry = org.countryCode || countryFromHeaders(headers());
   const currency = currencyForCountry(detectedCountry);
   const locale = getLocale();
+  const isManualPaymentCountry = !!detectedCountry && settings.manualPaymentCountries.includes(detectedCountry);
 
   if (session.role === "DRIVER") {
     return (
@@ -51,6 +52,8 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
         initialCurrency={currency}
         stripeEnabled={settings.stripeEnabled}
         paypalEnabled={settings.paypalEnabled}
+        isManualPaymentCountry={isManualPaymentCountry}
+        manualPaymentContact={settings.manualPaymentContact}
         locale={locale}
       />
     </div>

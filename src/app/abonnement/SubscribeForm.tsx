@@ -14,9 +14,10 @@ type Plan = {
 type Interval = "monthly" | "annual";
 
 export default function SubscribeForm({
-  plans, initialCurrency, stripeEnabled, paypalEnabled, locale,
+  plans, initialCurrency, stripeEnabled, paypalEnabled, isManualPaymentCountry, manualPaymentContact, locale,
 }: {
-  plans: Plan[]; initialCurrency: Currency; stripeEnabled: boolean; paypalEnabled: boolean; locale: Locale;
+  plans: Plan[]; initialCurrency: Currency; stripeEnabled: boolean; paypalEnabled: boolean;
+  isManualPaymentCountry: boolean; manualPaymentContact: string | null; locale: Locale;
 }) {
   const router = useRouter();
   const [currency, setCurrency] = useState<Currency>(initialCurrency);
@@ -113,6 +114,12 @@ export default function SubscribeForm({
               <button className="btn" disabled={busy !== null} onClick={() => subscribeFree(plan.key)}>
                 {busy === plan.key ? "…" : t(locale, "continue_free")}
               </button>
+            ) : isManualPaymentCountry ? (
+              <div style={{ background: "var(--primary-10)", borderRadius: 8, padding: 12 }}>
+                <strong style={{ display: "block", fontSize: 13, marginBottom: 4 }}>{t(locale, "manual_payment_notice_title")}</strong>
+                <p className="muted" style={{ fontSize: 12, marginBottom: manualPaymentContact ? 8 : 0 }}>{t(locale, "manual_payment_notice_desc")}</p>
+                {manualPaymentContact && <p style={{ fontSize: 14, fontWeight: 600 }}>{manualPaymentContact}</p>}
+              </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {canStripe && (

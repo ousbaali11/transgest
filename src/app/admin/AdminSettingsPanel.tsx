@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { t, type Locale } from "@/lib/i18n";
+import { COUNTRIES, countryName } from "@/lib/countries";
 
-type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; themePrimary: string; themeAccent: string; forcedPlanId: string | null; stripeEnabled: boolean; paypalEnabled: boolean };
+type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; themePrimary: string; themeAccent: string; forcedPlanId: string | null; stripeEnabled: boolean; paypalEnabled: boolean; manualPaymentCountries: string[]; manualPaymentContact: string | null };
 type Plan = {
   id: string; key: string; label: string; priceMAD: number; visible: boolean;
   priceMonthlyMAD: number | null; priceAnnualMAD: number | null;
@@ -49,6 +50,19 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
     } finally {
       setBusy(false);
     }
+  }
+
+  const [countryToAdd, setCountryToAdd] = useState("");
+  const [contactDraft, setContactDraft] = useState(settings.manualPaymentContact || "");
+
+  function addManualCountry() {
+    if (!countryToAdd || settings.manualPaymentCountries.includes(countryToAdd)) return;
+    saveSettings({ manualPaymentCountries: [...settings.manualPaymentCountries, countryToAdd] });
+    setCountryToAdd("");
+  }
+
+  function removeManualCountry(code: string) {
+    saveSettings({ manualPaymentCountries: settings.manualPaymentCountries.filter((c) => c !== code) });
   }
 
   async function togglePlanVisible(plan: Plan) {
@@ -302,6 +316,45 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
             </button>
           </div>
         ))}
+      </div>
+
+      <div className="card">
+        <strong>{t(locale, "manual_payment_title")}</strong>
+        <p className="muted" style={{ fontSize: 12, marginTop: 6, marginBottom: 10 }}>
+          {t(locale, "manual_payment_desc")}
+        </p>
+        <label className="field">
+          <span className="field-label">{t(locale, "manual_payment_contact_label")}</span>
+          <input
+            value={contactDraft}
+            onChange={(e) => setContactDraft(e.target.value)}
+            onBlur={() => { if (contactDraft !== (settings.manualPaymentContact || "")) saveSettings({ manualPaymentContact: contactDraft || null }); }}
+            placeholder={t(locale, "manual_payment_contact_placeholder")}
+          />
+        </label>
+        <div style={{ display: "flex", gap: 8, marginTop: 4, marginBottom: 10 }}>
+          <select value={countryToAdd} onChange={(e) => setCountryToAdd(e.target.value)} style={{ flex: 1 }}>
+            <option value="">{t(locale, "manual_payment_add_country")}</option>
+            {COUNTRIES.filter((c) => !settings.manualPaymentCountries.includes(c.code)).map((c) => (
+              <option key={c.code} value={c.code}>{c.name}</option>
+            ))}
+          </select>
+          <button className="btn" style={{ width: "auto", padding: "6px 16px" }} disabled={!countryToAdd || busy} onClick={addManualCountry}>
+            {t(locale, "add_action")}
+          </button>
+        </div>
+        {settings.manualPaymentCountries.length === 0 ? (
+          <p className="muted" style={{ fontSize: 12 }}>{t(locale, "manual_payment_empty")}</p>
+        ) : (
+          settings.manualPaymentCountries.map((code) => (
+            <div key={code} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderTop: "1px solid var(--line)" }}>
+              <span style={{ fontSize: 14 }}>{countryName(code)}</span>
+              <button className="btn btn-danger" style={{ width: "auto", padding: "3px 10px", fontSize: 11 }} disabled={busy} onClick={() => removeManualCountry(code)}>
+                {t(locale, "delete")}
+              </button>
+            </div>
+          ))
+        )}
       </div>
 
       <div className="card">

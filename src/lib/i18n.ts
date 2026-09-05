@@ -347,6 +347,27 @@ const dict = {
   delete_conflict_error: { fr: "Impossible de supprimer : cet élément est encore utilisé ailleurs (voyage, dépense ou facture liée).", en: "Cannot delete: this item is still used elsewhere (a linked trip, expense or invoice).", ary: "ما يمكنش نحيدو: هاد العنصر مازال مستعمل شي حاجة أخرى (سفرية، مصروف، ولا فاكتورة مرتبطة)." },
   not_found_error: { fr: "Cet élément n'existe plus — il a peut-être déjà été supprimé.", en: "This item no longer exists — it may have already been deleted.", ary: "هاد العنصر ماعادش كاين — يمكن تحيد من قبل." },
   duplicate_value_error: { fr: "Cette valeur est déjà utilisée par un autre élément.", en: "This value is already used by another item.", ary: "هاد القيمة مستعملة من قبل من عنصر آخر." },
+
+  // Paiement manuel (pays non couverts par Stripe/PayPal)
+  manual_payment_title: { fr: "Pays en paiement manuel", en: "Manual payment countries", ary: "البلدان بالخلاص اليدوي" },
+  manual_payment_desc: {
+    fr: "Pour les visiteurs de ces pays, Stripe et PayPal sont remplacés par un message les invitant à vous contacter directement pour activer leur abonnement (ex : virement bancaire arrangé de gré à gré).",
+    en: "For visitors from these countries, Stripe and PayPal are replaced by a message inviting them to contact you directly to activate their subscription (e.g. a bank transfer arranged directly).",
+    ary: "بالنسبة للزوار ديال هاد البلدان، Stripe و PayPal كيتبدلو برسالة كتقول ليهم يتواصلو معاك مباشرة باش يفعلو الاشتراك ديالهم.",
+  },
+  manual_payment_contact_label: { fr: "Coordonnées à afficher (email, WhatsApp...)", en: "Contact details to show (email, WhatsApp...)", ary: "معلومات التواصل اللي غادي تبان (إيمايل، واتساب...)" },
+  manual_payment_contact_placeholder: { fr: "ex : contact@moncamion.ma ou WhatsApp +33...", en: "e.g. contact@moncamion.ma or WhatsApp +33...", ary: "مثلا: contact@moncamion.ma ولا واتساب +33..." },
+  manual_payment_add_country: { fr: "Ajouter un pays…", en: "Add a country…", ary: "زيد بلاد…" },
+  manual_payment_empty: { fr: "Aucun pays configuré pour l'instant.", en: "No country configured yet.", ary: "ماكاين حتى بلاد دابا." },
+  add_action: { fr: "Ajouter", en: "Add", ary: "زيد" },
+
+  // Abonnement — contact manuel
+  manual_payment_notice_title: { fr: "Paiement par carte non disponible dans votre pays", en: "Card payment not available in your country", ary: "الخلاص بالكارط ماشي متوفر فبلادك" },
+  manual_payment_notice_desc: {
+    fr: "Contactez-nous directement pour activer votre abonnement — nous trouverons ensemble une solution de paiement adaptée.",
+    en: "Contact us directly to activate your subscription — we'll find a suitable payment solution together.",
+    ary: "تواصل معانا مباشرة باش نفعلو الاشتراك ديالك — غادي نلقاو معا حل ديال الخلاص يناسبك.",
+  },
 } as const;
 
 export type TKey = keyof typeof dict;

@@ -24,6 +24,8 @@ model PlatformSettings {
   forcedPlanId String?
   stripeEnabled Boolean @default(false) // visible sur /abonnement uniquement une fois activé
   paypalEnabled Boolean @default(false)
+  manualPaymentCountries String[] @default([]) // codes pays (ISO 3166-1 alpha-2) où Stripe/PayPal posent problème — affiche "Contactez-nous" à la place
+  manualPaymentContact   String?  // coordonnées affichées à ces visiteurs (email, WhatsApp...), au choix de l'admin
   updatedAt    DateTime @updatedAt
 
   forcedPlan Plan? @relation(fields: [forcedPlanId], references: [id])
