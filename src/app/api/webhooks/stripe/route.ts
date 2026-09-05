@@ -101,6 +101,27 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      case "invoice.payment_failed": {
+        // Signal explicite et immédiat d'un prélèvement récurrent qui a
+        // échoué (carte refusée, expirée...) — en plus de
+        // customer.subscription.updated qui reflète le même changement,
+        // mais avec un peu de latence. Les deux mettent à jour le même
+        // champ, aucun risque de conflit à les avoir tous les deux.
+        const invoice = event.data.object as Stripe.Invoice;
+        const subId = invoice.subscription;
+        if (subId) {
+          const sub = await stripe.subscriptions.retrieve(typeof subId === "string" ? subId : subId.id);
+          const organizationId = sub.metadata?.organizationId;
+          if (organizationId) {
+            const org = await prisma.organization.findUnique({ where: { id: organizationId } });
+            if (org && !org.grantedByAdmin) {
+              await prisma.organization.update({ where: { id: organizationId }, data: { subscriptionStatus: "PAST_DUE" } });
+            }
+          }
+        }
+        break;
+      }
+
       default:
         break;
     }

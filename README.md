@@ -65,13 +65,17 @@ Ouvrez `http://localhost:3000` :
    `sk_test_` en mode test, `sk_live_` une fois prêt) → `STRIPE_SECRET_KEY`
 3. Créez votre produit : **Catalogue de produits → Ajouter un produit** →
    nommez-le (ex : "MonCamion Pro") → ajoutez **deux prix récurrents** sur ce
-   même produit : un mensuel, un annuel (bouton "Ajouter un autre prix")
+   même produit : un mensuel, un annuel (bouton "Ajouter un autre prix").
+   **Point essentiel** : pour chaque prix, sélectionnez bien **"Récurrent"**
+   (pas "Ponctuel/One-off") avec la bonne périodicité — c'est ce réglage,
+   pas du code, qui déclenche le prélèvement automatique à chaque échéance
 4. Copiez l'ID de chaque prix (commence par `price_...`, visible sous le nom
    du prix dans la liste) — vous les collerez dans Admin > Réglages >
    Abonnements > "Configurer les prix et identifiants de paiement"
 5. **Webhooks** → **Ajouter un endpoint** → URL : `https://votre-site.vercel.app/api/webhooks/stripe`
    → événements à écouter : `checkout.session.completed`,
-   `customer.subscription.updated`, `customer.subscription.deleted`
+   `customer.subscription.updated`, `customer.subscription.deleted`,
+   `invoice.payment_failed`
 6. Copiez le **secret de signature** de ce endpoint (commence par `whsec_`)
    → `STRIPE_WEBHOOK_SECRET`
 7. Dans `.env` (et sur Vercel) : `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
@@ -93,7 +97,9 @@ Ouvrez `http://localhost:3000` :
    utilisez directement l'API (voir ci-dessous) — PayPal ne propose pas
    toujours cette étape dans son tableau de bord standard selon les comptes
 4. Créez un **plan récurrent** par formule/périodicité (mensuel, annuel) —
-   l'ID généré commence par `P-...`
+   dans les "billing_cycles" du plan, l'intervalle (`MONTH`/`YEAR`) et
+   `total_cycles: 0` (0 = se répète jusqu'à résiliation) définissent le
+   prélèvement automatique — l'ID généré commence par `P-...`
 5. Dans Admin > Réglages > Abonnements, collez ces Plan ID PayPal dans la
    formule correspondante
 6. **Webhooks** : **Apps & Credentials → votre app → Add Webhook** → URL :
