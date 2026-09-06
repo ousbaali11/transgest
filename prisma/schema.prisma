@@ -138,6 +138,18 @@ model EmailCode {
   @@index([ip, createdAt])
 }
 
+// Journal des tentatives de connexion admin échouées, pour limiter le
+// brute-force sur le mot de passe (l'admin peut offrir des abonnements
+// gratuits — un mot de passe deviné serait un contournement de paiement
+// via la porte d'entrée officielle, pas un bug de code).
+model AdminLoginAttempt {
+  id        String   @id @default(cuid())
+  ip        String
+  createdAt DateTime @default(now())
+
+  @@index([ip, createdAt])
+}
+
 model Truck {
   id                    String    @id @default(cuid())
   organizationId        String

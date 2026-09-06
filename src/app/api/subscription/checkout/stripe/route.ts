@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireOwnerSession, handleApiError, HttpError } from "@/lib/guards";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 import { getStripe } from "@/lib/stripe";
 import { getPlatformSettings } from "@/lib/settings";
 
@@ -22,6 +24,13 @@ export async function POST(req: NextRequest) {
 
     const plan = await prisma.plan.findUnique({ where: { key: planKey } });
     if (!plan) throw new HttpError(404, "Formule introuvable");
+    // Respecte les réglages admin (formule masquée / formule forcée pour
+    // tous) même si la requête est envoyée directement à l'API plutôt que
+    // via le bouton — sans quoi ces réglages n'auraient aucun effet réel.
+    if (!plan.visible) throw new HttpError(400, t(getLocale(), "plan_unavailable_error"));
+    if (settings.forcedPlanId && settings.forcedPlanId !== plan.id) {
+      throw new HttpError(400, t(getLocale(), "plan_unavailable_error"));
+    }
 
     const priceId = interval === "monthly" ? plan.stripePriceIdMonthly : plan.stripePriceIdAnnual;
     if (!priceId) throw new HttpError(400, "Cette formule n'a pas de prix Stripe configuré pour cette périodicité.");

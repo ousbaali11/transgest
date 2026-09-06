@@ -369,6 +369,7 @@ const dict = {
     ary: "تواصل معانا مباشرة باش نفعلو الاشتراك ديالك — غادي نلقاو معا حل ديال الخلاص يناسبك.",
   },
   subscription_inactive_error: { fr: "Abonnement inactif. Réactivez votre abonnement pour continuer.", en: "Inactive subscription. Reactivate your subscription to continue.", ary: "الاشتراك ماشي فعال. جدد الاشتراك ديالك باش تكمل." },
+  plan_unavailable_error: { fr: "Cette formule n'est plus disponible.", en: "This plan is no longer available.", ary: "هاد الصيغة ماعادش متوفرة." },
 } as const;
 
 export type TKey = keyof typeof dict;
