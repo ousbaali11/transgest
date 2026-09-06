@@ -13,8 +13,11 @@ export async function GET() {
   try {
     const session = await requireOrgSession();
     await assertOrgActive(session.organizationId);
+    // Même cloisonnement que pour les voyages/dépenses : un chauffeur ne
+    // voit que les factures liées à des voyages qu'il a lui-même saisis.
+    const driverScope = session.role === "DRIVER" ? { trip: { createdByUserId: session.userId } } : {};
     const invoices = await prisma.invoice.findMany({
-      where: { organizationId: session.organizationId },
+      where: { organizationId: session.organizationId, ...driverScope },
       include: { trip: true, client: true },
       orderBy: { date: "desc" },
     });
@@ -33,6 +36,13 @@ export async function POST(req: NextRequest) {
 
     const trip = await prisma.trip.findUnique({ where: { id: parsed.data.tripId } });
     if (!trip || trip.organizationId !== session.organizationId) {
+      return NextResponse.json({ error: "Voyage introuvable" }, { status: 404 });
+    }
+    // Même règle que pour modifier un voyage : un chauffeur ne peut générer
+    // une facture que pour un voyage qu'il a lui-même saisi — sinon la
+    // facture créée ne lui serait ensuite même plus visible (Factures est
+    // filtré sur ce même critère), ce qui serait un comportement confus.
+    if (session.role === "DRIVER" && trip.createdByUserId !== session.userId) {
       return NextResponse.json({ error: "Voyage introuvable" }, { status: 404 });
     }
 

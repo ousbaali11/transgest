@@ -154,8 +154,10 @@ export default function TripCard({
             </span>
             <a href={`/api/invoices/${invoice.id}/pdf`} style={{ fontSize: 11 }}>PDF</a>
           </span>
-        ) : (
+        ) : canEdit ? (
           <button className="btn btn-ghost" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} disabled={busy} onClick={generateInvoice}>{tr(locale, "invoice_generate")}</button>
+        ) : (
+          <span />
         )}
         <div style={{ display: "flex", gap: 6 }}>
           {canEdit && (

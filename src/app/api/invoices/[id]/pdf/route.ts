@@ -17,6 +17,11 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     if (!invoice || invoice.organizationId !== session.organizationId) {
       throw new HttpError(404, "Facture introuvable");
     }
+    // Un chauffeur ne peut télécharger que les factures des voyages qu'il a
+    // lui-même saisis — pas celles de ses collègues.
+    if (session.role === "DRIVER" && invoice.trip.createdByUserId !== session.userId) {
+      throw new HttpError(404, "Facture introuvable");
+    }
 
     const settings = await getPlatformSettings();
 

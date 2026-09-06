@@ -17,17 +17,22 @@ const TABS = [
 ] as const;
 
 export default async function FacturesPage({ searchParams }: { searchParams: { status?: string } }) {
-  const { org } = await requireActiveOrg();
+  const { org, session } = await requireActiveOrg();
   const locale = getLocale();
   const activeTab = searchParams.status === "PAYEE" || searchParams.status === "EN_ATTENTE" ? searchParams.status : "all";
+  // Un chauffeur ne voit que les factures des voyages qu'IL a lui-même
+  // saisis — pas celles de ses collègues ni celles saisies par le
+  // propriétaire pour lui (même règle que pour les voyages et dépenses).
+  const driverScope = session.role === "DRIVER" ? { trip: { createdByUserId: session.userId } } : {};
+  const isOwner = session.role === "OWNER";
 
   const [invoices, allInvoices] = await Promise.all([
     prisma.invoice.findMany({
-      where: { organizationId: org.id, ...(activeTab !== "all" ? { status: activeTab } : {}) },
+      where: { organizationId: org.id, ...driverScope, ...(activeTab !== "all" ? { status: activeTab } : {}) },
       include: { trip: true, client: true },
       orderBy: { date: "desc" },
     }),
-    prisma.invoice.findMany({ where: { organizationId: org.id }, select: { status: true } }),
+    prisma.invoice.findMany({ where: { organizationId: org.id, ...driverScope }, select: { status: true } }),
   ]);
 
   const counts = {
@@ -73,7 +78,13 @@ export default async function FacturesPage({ searchParams }: { searchParams: { s
             </div>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontWeight: 700, marginBottom: 4 }}>{fmtDH(Number(inv.trip.prixTransport))}</div>
-              <InvoiceStatusToggle id={inv.id} status={inv.status} locale={locale} />
+              {isOwner ? (
+                <InvoiceStatusToggle id={inv.id} status={inv.status} locale={locale} />
+              ) : (
+                <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999, background: inv.status === "PAYEE" ? "#E4F3EA" : "#FDF1DF", color: inv.status === "PAYEE" ? "#2E7D53" : "#B5791C" }}>
+                  {inv.status === "PAYEE" ? t(locale, "invoice_paid") : t(locale, "invoice_pending")}
+                </span>
+              )}
             </div>
           </div>
         ))

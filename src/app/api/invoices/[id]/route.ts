@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOrgSession, handleApiError, HttpError } from "@/lib/guards";
+import { requireOwnerSession, handleApiError, HttpError } from "@/lib/guards";
 import { assertOrgActive } from "@/lib/require-active-org";
 
 const patchSchema = z.object({ status: z.enum(["EN_ATTENTE", "PAYEE"]) });
 
+// Réservé au propriétaire : confirmer qu'une facture est payée est une
+// décision financière, pas quelque chose qu'un chauffeur devrait pouvoir
+// faire — y compris pour les factures de ses propres voyages.
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await requireOrgSession();
+    const session = await requireOwnerSession();
     await assertOrgActive(session.organizationId);
     const invoice = await prisma.invoice.findUnique({ where: { id: params.id } });
     if (!invoice || invoice.organizationId !== session.organizationId) {
