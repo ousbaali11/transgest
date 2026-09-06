@@ -370,6 +370,8 @@ const dict = {
   },
   subscription_inactive_error: { fr: "Abonnement inactif. Réactivez votre abonnement pour continuer.", en: "Inactive subscription. Reactivate your subscription to continue.", ary: "الاشتراك ماشي فعال. جدد الاشتراك ديالك باش تكمل." },
   plan_unavailable_error: { fr: "Cette formule n'est plus disponible.", en: "This plan is no longer available.", ary: "هاد الصيغة ماعادش متوفرة." },
+  free_plan_active: { fr: "Formule gratuite — sans date d'expiration", en: "Free plan — no expiry date", ary: "الصيغة المجانية — بلا تاريخ انتهاء" },
+  cannot_cancel_admin_grant: { fr: "Cet abonnement a été offert par l'administrateur et ne peut pas être résilié ici.", en: "This subscription was offered by the admin and cannot be cancelled here.", ary: "هاد الاشتراك هداه الإدارة وما يمكنش يتفسخ من هنا." },
 } as const;
 
 export type TKey = keyof typeof dict;

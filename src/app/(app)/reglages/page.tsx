@@ -32,7 +32,9 @@ export default async function ReglagesPage() {
                 ? `${t(locale, "offered_by_admin")}${org.currentPeriodEnd ? ` — ${t(locale, "until")} ${fmtDate(org.currentPeriodEnd, locale)}` : ` — ${t(locale, "unlimited_access")}`}`
                 : org.cancelAtPeriodEnd
                 ? `${t(locale, "cancelled_access_until")} ${fmtDate(org.currentPeriodEnd, locale)}`
-                : `${t(locale, "renewal_on")} ${fmtDate(org.currentPeriodEnd, locale)}`}
+                : org.currentPeriodEnd
+                ? `${t(locale, "renewal_on")} ${fmtDate(org.currentPeriodEnd, locale)}`
+                : t(locale, "free_plan_active")}
             </div>
           </div>
           {org.grantedByAdmin ? (
