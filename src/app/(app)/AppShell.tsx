@@ -82,7 +82,7 @@ export default function AppShell({
       <div style={{ flex: 1, paddingBottom: 76 }}>{children}</div>
 
       {/* Barre du bas */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#fff", borderTop: "1px solid var(--line)", display: "flex", maxWidth: 480, margin: "0 auto", zIndex: 40 }}>
+      <div className="app-width-responsive" style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#fff", borderTop: "1px solid var(--line)", display: "flex", zIndex: 40 }}>
         {TABS.map((tab) => {
           const active = pathname.startsWith(tab.href);
           return (
@@ -108,7 +108,8 @@ export default function AppShell({
           onClick={() => setPlusOpen(false)}
         >
           <div
-            style={{ background: "#fff", borderRadius: "16px 16px 0 0", padding: 20, width: "100%", maxWidth: 480, margin: "0 auto" }}
+            className="app-width-responsive"
+            style={{ background: "#fff", borderRadius: "16px 16px 0 0", padding: 20, width: "100%" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>

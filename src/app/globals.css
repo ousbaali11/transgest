@@ -25,6 +25,26 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
 
 .container { max-width: 480px; margin: 0 auto; padding: 24px 16px 64px; }
 
+/* Tablette et plus large : la colonne unique pensée pour le téléphone
+   laissait énormément d'espace vide de chaque côté sur un écran plus
+   grand — on l'élargit progressivement plutôt que de la garder figée. */
+@media (min-width: 640px) {
+  .container { max-width: 640px; padding: 28px 24px 64px; }
+}
+@media (min-width: 1024px) {
+  .container { max-width: 760px; }
+}
+
+/* Même logique pour la barre du bas et la feuille "Plus" de AppShell.tsx,
+   qui doivent rester alignées avec la largeur du contenu au-dessus. */
+.app-width-responsive { max-width: 480px; margin: 0 auto; }
+@media (min-width: 640px) {
+  .app-width-responsive { max-width: 640px; }
+}
+@media (min-width: 1024px) {
+  .app-width-responsive { max-width: 760px; }
+}
+
 .card {
   background: #fff;
   border: 1px solid var(--line);
@@ -75,6 +95,9 @@ input:focus, select:focus, textarea:focus {
 .muted { color: var(--muted); font-size: 13px; }
 
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+@media (min-width: 640px) {
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
+}
 .stat-card { border-radius: 12px; padding: 14px; background: var(--primary); color: #fff; }
 .stat-card .label { font-size: 12px; opacity: 0.8; }
 .stat-card .value { font-family: var(--font-display); font-size: 20px; font-weight: 700; margin-top: 4px; }
