@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOrgSession, handleApiError, HttpError } from "@/lib/guards";
+import { assertOrgActive } from "@/lib/require-active-org";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
 import { getPlatformSettings } from "@/lib/settings";
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   try {
     const session = await requireOrgSession();
+    await assertOrgActive(session.organizationId);
 
     const invoice = await prisma.invoice.findUnique({
       where: { id: params.id },

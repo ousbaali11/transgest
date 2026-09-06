@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireOrgSession, handleApiError } from "@/lib/guards";
+import { assertOrgActive } from "@/lib/require-active-org";
 
 const createSchema = z.object({
   truckId: z.string().min(1),
@@ -24,6 +25,7 @@ const createSchema = z.object({
 export async function GET(req: NextRequest) {
   try {
     const session = await requireOrgSession();
+    await assertOrgActive(session.organizationId);
     const { searchParams } = new URL(req.url);
     const driverId = searchParams.get("driverId") || undefined;
 
@@ -41,6 +43,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await requireOrgSession();
+    await assertOrgActive(session.organizationId);
     const parsed = createSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 

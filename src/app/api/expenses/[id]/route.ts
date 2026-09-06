@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOrgSession, handleApiError, HttpError } from "@/lib/guards";
+import { assertOrgActive } from "@/lib/require-active-org";
 import type { SessionPayload } from "@/lib/session";
 
 async function assertAccess(session: Extract<SessionPayload, { role: "OWNER" | "DRIVER" }>, id: string) {
@@ -15,6 +16,7 @@ async function assertAccess(session: Extract<SessionPayload, { role: "OWNER" | "
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await requireOrgSession();
+    await assertOrgActive(session.organizationId);
     await assertAccess(session, params.id);
     const body = await req.json();
     if (body.date) body.date = new Date(body.date);
@@ -29,6 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await requireOrgSession();
+    await assertOrgActive(session.organizationId);
     await assertAccess(session, params.id);
     await prisma.expense.delete({ where: { id: params.id } });
     return NextResponse.json({ ok: true });

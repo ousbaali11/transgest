@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireOrgSession, handleApiError, HttpError } from "@/lib/guards";
+import { assertOrgActive } from "@/lib/require-active-org";
 
 const patchSchema = z.object({ status: z.enum(["EN_ATTENTE", "PAYEE"]) });
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await requireOrgSession();
+    await assertOrgActive(session.organizationId);
     const invoice = await prisma.invoice.findUnique({ where: { id: params.id } });
     if (!invoice || invoice.organizationId !== session.organizationId) {
       throw new HttpError(404, "Facture introuvable");

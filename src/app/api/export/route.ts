@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireOrgSession, handleApiError } from "@/lib/guards";
+import { assertOrgActive } from "@/lib/require-active-org";
 import { buildOrganizationWorkbook } from "@/lib/export-workbook";
 import { getPlatformSettings } from "@/lib/settings";
 
 export async function GET() {
   try {
     const session = await requireOrgSession();
+    await assertOrgActive(session.organizationId);
     const settings = await getPlatformSettings();
     const buffer = await buildOrganizationWorkbook(session.organizationId, settings.appName);
 

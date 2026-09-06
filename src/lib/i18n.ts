@@ -368,6 +368,7 @@ const dict = {
     en: "Contact us directly to activate your subscription — we'll find a suitable payment solution together.",
     ary: "تواصل معانا مباشرة باش نفعلو الاشتراك ديالك — غادي نلقاو معا حل ديال الخلاص يناسبك.",
   },
+  subscription_inactive_error: { fr: "Abonnement inactif. Réactivez votre abonnement pour continuer.", en: "Inactive subscription. Reactivate your subscription to continue.", ary: "الاشتراك ماشي فعال. جدد الاشتراك ديالك باش تكمل." },
 } as const;
 
 export type TKey = keyof typeof dict;

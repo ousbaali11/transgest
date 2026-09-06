@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireOrgSession, requireOwnerSession, handleApiError, HttpError } from "@/lib/guards";
+import { assertOrgActive } from "@/lib/require-active-org";
 
 const createSchema = z.object({
   target: z.enum(["TRIP", "EXPENSE"]),
@@ -12,6 +13,7 @@ const createSchema = z.object({
 export async function GET() {
   try {
     const session = await requireOrgSession();
+    await assertOrgActive(session.organizationId);
     const fields = await prisma.customFieldDefinition.findMany({
       where: { organizationId: session.organizationId },
     });
@@ -24,6 +26,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const session = await requireOwnerSession();
+    await assertOrgActive(session.organizationId);
     const parsed = createSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
     const field = await prisma.customFieldDefinition.create({
@@ -38,6 +41,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const session = await requireOwnerSession();
+    await assertOrgActive(session.organizationId);
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "id manquant" }, { status: 400 });

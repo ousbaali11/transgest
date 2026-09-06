@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireOrgSession, requireOwnerSession, handleApiError, HttpError } from "@/lib/guards";
+import { assertOrgActive } from "@/lib/require-active-org";
 import { generateAccessCode } from "@/lib/access-code";
 
 const createSchema = z.object({
@@ -15,6 +16,7 @@ const createSchema = z.object({
 export async function GET() {
   try {
     const session = await requireOrgSession();
+    await assertOrgActive(session.organizationId);
     const drivers = await prisma.driver.findMany({
       where: { organizationId: session.organizationId },
       orderBy: { createdAt: "desc" },
@@ -31,6 +33,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const session = await requireOwnerSession();
+    await assertOrgActive(session.organizationId);
     const parsed = createSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 
