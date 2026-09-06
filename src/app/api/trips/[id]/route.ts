@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOrgSession, handleApiError, HttpError } from "@/lib/guards";
 import { assertOrgActive } from "@/lib/require-active-org";
 import type { SessionPayload } from "@/lib/session";
+import { createSchema } from "../route";
 
 /**
  * Vérifie que le voyage appartient à l'organisation, et — pour un chauffeur —
@@ -25,11 +26,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const session = await requireOrgSession();
     await assertOrgActive(session.organizationId);
     await assertAccess(session, params.id);
-    const body = await req.json();
-    if (body.date) body.date = new Date(body.date);
-    // Un chauffeur ne peut pas réattribuer un voyage à quelqu'un d'autre.
-    if (session.role === "DRIVER") body.driverId = session.driverId;
-    const trip = await prisma.trip.update({ where: { id: params.id }, data: body });
+    // Liste blanche stricte : sans elle, un chauffeur pourrait par exemple
+    // envoyer createdByUserId pour s'attribuer un voyage saisi par le
+    // propriétaire et contourner la restriction ci-dessus, ou organizationId
+    // pour déplacer le voyage vers une autre organisation.
+    const parsed = createSchema.partial().safeParse(await req.json());
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+    const data: Omit<typeof parsed.data, "date"> & { date?: Date } = { ...parsed.data, date: undefined };
+    if (parsed.data.date) data.date = new Date(parsed.data.date);
+    if (session.role === "DRIVER") data.driverId = session.driverId;
+    const trip = await prisma.trip.update({ where: { id: params.id }, data });
     return NextResponse.json(trip);
   } catch (e) {
     return handleApiError(e);

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOrgSession, requireOwnerSession, handleApiError } from "@/lib/guards";
 import { assertOrgActive } from "@/lib/require-active-org";
 
-const createSchema = z.object({
+export const createSchema = z.object({
   immat: z.string().min(1),
   marque: z.string().optional(),
   modele: z.string().optional(),

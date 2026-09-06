@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOwnerSession, handleApiError, HttpError } from "@/lib/guards";
 import { assertOrgActive } from "@/lib/require-active-org";
+import { createSchema } from "../route";
 
 async function assertOwnership(organizationId: string, id: string) {
   const client = await prisma.client.findUnique({ where: { id } });
@@ -13,7 +14,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const session = await requireOwnerSession();
     await assertOrgActive(session.organizationId);
     await assertOwnership(session.organizationId, params.id);
-    const client = await prisma.client.update({ where: { id: params.id }, data: await req.json() });
+    // Liste blanche stricte : sans elle, un champ comme organizationId
+    // envoyé dans la requête serait appliqué tel quel par Prisma, ce qui
+    // permettrait de déplacer ce client vers une autre organisation.
+    const parsed = createSchema.partial().safeParse(await req.json());
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+    const client = await prisma.client.update({ where: { id: params.id }, data: parsed.data });
     return NextResponse.json(client);
   } catch (e) {
     return handleApiError(e);

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOrgSession, handleApiError } from "@/lib/guards";
 import { assertOrgActive } from "@/lib/require-active-org";
 
-const createSchema = z.object({
+export const createSchema = z.object({
   tripId: z.string().optional().nullable(),
   truckId: z.string().optional().nullable(),
   driverId: z.string().optional().nullable(),

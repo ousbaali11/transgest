@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOrgSession, handleApiError, HttpError } from "@/lib/guards";
 import { assertOrgActive } from "@/lib/require-active-org";
 import type { SessionPayload } from "@/lib/session";
+import { createSchema } from "../route";
 
 async function assertAccess(session: Extract<SessionPayload, { role: "OWNER" | "DRIVER" }>, id: string) {
   const expense = await prisma.expense.findUnique({ where: { id } });
@@ -18,10 +19,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const session = await requireOrgSession();
     await assertOrgActive(session.organizationId);
     await assertAccess(session, params.id);
-    const body = await req.json();
-    if (body.date) body.date = new Date(body.date);
-    if (session.role === "DRIVER") body.driverId = session.driverId;
-    const expense = await prisma.expense.update({ where: { id: params.id }, data: body });
+    const parsed = createSchema.partial().safeParse(await req.json());
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+    const data: Omit<typeof parsed.data, "date"> & { date?: Date } = { ...parsed.data, date: undefined };
+    if (parsed.data.date) data.date = new Date(parsed.data.date);
+    if (session.role === "DRIVER") data.driverId = session.driverId;
+    const expense = await prisma.expense.update({ where: { id: params.id }, data });
     return NextResponse.json(expense);
   } catch (e) {
     return handleApiError(e);
