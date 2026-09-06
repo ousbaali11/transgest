@@ -23,7 +23,7 @@ export default async function FacturesPage({ searchParams }: { searchParams: { s
   // Un chauffeur ne voit que les factures des voyages qu'IL a lui-même
   // saisis — pas celles de ses collègues ni celles saisies par le
   // propriétaire pour lui (même règle que pour les voyages et dépenses).
-  const driverScope = session.role === "DRIVER" ? { trip: { createdByUserId: session.userId } } : {};
+  const driverScope = session.role === "DRIVER" ? { trip: { OR: [{ driverId: session.driverId }, { createdByUserId: session.userId }] } } : {};
   const isOwner = session.role === "OWNER";
 
   const [invoices, allInvoices] = await Promise.all([

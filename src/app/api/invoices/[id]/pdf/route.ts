@@ -19,7 +19,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     }
     // Un chauffeur ne peut télécharger que les factures des voyages qu'il a
     // lui-même saisis — pas celles de ses collègues.
-    if (session.role === "DRIVER" && invoice.trip.createdByUserId !== session.userId) {
+    if (session.role === "DRIVER" && invoice.trip.driverId !== session.driverId && invoice.trip.createdByUserId !== session.userId) {
       throw new HttpError(404, "Facture introuvable");
     }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOrgSession, requireOwnerSession, handleApiError } from "@/lib/guards";
+import { requireOwnerSession, handleApiError } from "@/lib/guards";
 import { assertOrgActive } from "@/lib/require-active-org";
 
 export const createSchema = z.object({
@@ -15,7 +15,7 @@ export const createSchema = z.object({
 
 export async function GET() {
   try {
-    const session = await requireOrgSession();
+    const session = await requireOwnerSession();
     await assertOrgActive(session.organizationId);
     const clients = await prisma.client.findMany({
       where: { organizationId: session.organizationId },

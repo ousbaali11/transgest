@@ -31,6 +31,10 @@ export default function TripCard({
   // Un chauffeur ne peut modifier que ce qu'il a lui-même saisi — pas ce que
   // le propriétaire a entré, même si le voyage lui est attribué.
   const canEdit = !isDriverViewer || trip.createdByUserId === currentUserId;
+  // Générer une facture est permis pour tout voyage qui LE CONCERNE : les
+  // siens, ou ceux qui lui sont attribués par le propriétaire — moins
+  // restrictif que canEdit, qui reste réservé à ce qu'il a lui-même saisi.
+  const canInvoice = !isDriverViewer || trip.driverId === currentDriverId || trip.createdByUserId === currentUserId;
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -154,7 +158,7 @@ export default function TripCard({
             </span>
             <a href={`/api/invoices/${invoice.id}/pdf`} style={{ fontSize: 11 }}>PDF</a>
           </span>
-        ) : canEdit ? (
+        ) : canInvoice ? (
           <button className="btn btn-ghost" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} disabled={busy} onClick={generateInvoice}>{tr(locale, "invoice_generate")}</button>
         ) : (
           <span />

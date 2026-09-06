@@ -14,7 +14,14 @@ export default async function TripsPage() {
 
   const [trips, trucks, drivers, clients, customFields] = await Promise.all([
     prisma.trip.findMany({
-      where: { organizationId: org.id },
+      // Un chauffeur voit les voyages qui le CONCERNENT : ceux qui lui sont
+      // assignés (même saisis par le propriétaire) et ceux qu'il a
+      // lui-même saisis — mais ne peut MODIFIER que ces derniers (voir
+      // assertAccess dans /api/trips/[id]).
+      where: {
+        organizationId: org.id,
+        ...(session.role === "DRIVER" ? { OR: [{ driverId: session.driverId }, { createdByUserId: session.userId }] } : {}),
+      },
       include: { truck: true, driver: true, client: true, expenses: true, invoice: true },
       orderBy: { date: "desc" },
       take: 50,

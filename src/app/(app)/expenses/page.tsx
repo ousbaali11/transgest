@@ -10,7 +10,14 @@ export default async function ExpensesPage() {
   const currentDriverId = session.role === "DRIVER" ? session.driverId : null;
   const locale = getLocale();
   const [expenses, trucks, drivers, trips, customFields] = await Promise.all([
-    prisma.expense.findMany({ where: { organizationId: org.id }, orderBy: { date: "desc" }, take: 100 }),
+    prisma.expense.findMany({
+      where: {
+        organizationId: org.id,
+        ...(session.role === "DRIVER" ? { OR: [{ driverId: session.driverId }, { createdByUserId: session.userId }] } : {}),
+      },
+      orderBy: { date: "desc" },
+      take: 100,
+    }),
     prisma.truck.findMany({ where: { organizationId: org.id } }),
     prisma.driver.findMany({ where: { organizationId: org.id } }),
     prisma.trip.findMany({ where: { organizationId: org.id }, orderBy: { date: "desc" }, take: 50 }),

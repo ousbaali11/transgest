@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireOrgSession, requireOwnerSession, handleApiError, HttpError } from "@/lib/guards";
+import { requireOwnerSession, handleApiError, HttpError } from "@/lib/guards";
 import { assertOrgActive } from "@/lib/require-active-org";
 import { generateAccessCode } from "@/lib/access-code";
 
@@ -15,16 +15,13 @@ const createSchema = z.object({
 
 export async function GET() {
   try {
-    const session = await requireOrgSession();
+    const session = await requireOwnerSession();
     await assertOrgActive(session.organizationId);
     const drivers = await prisma.driver.findMany({
       where: { organizationId: session.organizationId },
       orderBy: { createdAt: "desc" },
     });
-    // Un chauffeur ne voit jamais le code d'accès d'un collègue — seul le
-    // propriétaire (qui gère leur attribution) doit pouvoir les consulter.
-    const safeDrivers = session.role === "OWNER" ? drivers : drivers.map(({ accessCode: _accessCode, ...d }) => d);
-    return NextResponse.json(safeDrivers);
+    return NextResponse.json(drivers);
   } catch (e) {
     return handleApiError(e);
   }

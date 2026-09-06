@@ -37,18 +37,23 @@ export default async function DashboardPage() {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const sixMonthsAgoStart = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  // Un chauffeur ne doit voir que SES propres chiffres (voyages qui lui
+  // sont assignés OU qu'il a lui-même saisis), jamais le chiffre d'affaires
+  // ou le classement de toute l'entreprise.
+  const driverTripScope = session.role === "DRIVER" ? { OR: [{ driverId: session.driverId }, { createdByUserId: session.userId }] } : {};
+  const driverExpenseScope = session.role === "DRIVER" ? { OR: [{ driverId: session.driverId }, { createdByUserId: session.userId }] } : {};
 
   const [trips6mo, expenses6mo, trucks, totalTripsCount, recentTrips] = await Promise.all([
     prisma.trip.findMany({
-      where: { organizationId: org.id, date: { gte: sixMonthsAgoStart } },
+      where: { organizationId: org.id, date: { gte: sixMonthsAgoStart }, ...driverTripScope },
       include: { driver: true },
       orderBy: { date: "desc" },
     }),
-    prisma.expense.findMany({ where: { organizationId: org.id, date: { gte: sixMonthsAgoStart } } }),
+    prisma.expense.findMany({ where: { organizationId: org.id, date: { gte: sixMonthsAgoStart }, ...driverExpenseScope } }),
     prisma.truck.findMany({ where: { organizationId: org.id } }),
-    prisma.trip.count({ where: { organizationId: org.id } }),
+    prisma.trip.count({ where: { organizationId: org.id, ...driverTripScope } }),
     prisma.trip.findMany({
-      where: { organizationId: org.id },
+      where: { organizationId: org.id, ...driverTripScope },
       include: { truck: true, driver: true },
       orderBy: { date: "desc" },
       take: 4,
@@ -63,7 +68,9 @@ export default async function DashboardPage() {
   const benefice = ca - dep;
   const distanceMonth = monthTrips.reduce((s, t) => s + Math.max(0, (t.kmArrivee || 0) - (t.kmDepart || 0)), 0);
   const carburantLMonth = monthExpenses.filter((e) => e.category === "CARBURANT").reduce((s, e) => s + (e.quantite || 0), 0);
-  const facturesMonth = await prisma.invoice.count({ where: { organizationId: org.id, date: { gte: monthStart } } });
+  const facturesMonth = await prisma.invoice.count({
+    where: { organizationId: org.id, date: { gte: monthStart }, ...(session.role === "DRIVER" ? { trip: { OR: [{ driverId: session.driverId }, { createdByUserId: session.userId }] } } : {}) },
+  });
   const alerts = docAlerts(trucks);
 
   // Graphique CA vs Dépenses des 6 derniers mois
@@ -185,7 +192,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {leaderboard.length > 0 && (
+      {isOwner && leaderboard.length > 0 && (
         <div className="card">
           <strong>Classement chauffeurs — ce mois</strong>
           <div style={{ marginTop: 10 }}>
