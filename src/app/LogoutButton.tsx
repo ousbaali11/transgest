@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LogoutButton({ redirectTo, label = "Déconnexion" }: { redirectTo: string; label?: string }) {
   const router = useRouter();
+  const [busy, setBusy] = useState(false);
   async function logout() {
+    setBusy(true);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch (e) {
@@ -18,7 +21,7 @@ export default function LogoutButton({ redirectTo, label = "Déconnexion" }: { r
     }
   }
   return (
-    <button className="btn btn-ghost" style={{ width: "auto", padding: "6px 12px" }} onClick={logout}>
+    <button className="btn btn-ghost" style={{ width: "auto", padding: "6px 12px" }} onClick={logout} disabled={busy}>
       {label}
     </button>
   );

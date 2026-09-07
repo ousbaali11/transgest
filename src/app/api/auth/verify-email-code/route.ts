@@ -39,9 +39,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Code incorrect" }, { status: 400 });
     }
 
-    await prisma.emailCode.delete({ where: { id: otp.id } });
-
-    let user = await prisma.user.findUnique({ where: { email } });
+    // Ces deux opérations sont indépendantes (supprimer le code utilisé,
+    // chercher l'utilisateur) — les lancer en parallèle plutôt qu'à la
+    // suite économise un aller-retour réseau vers la base de données à
+    // chaque connexion.
+    const [, user0] = await Promise.all([
+      prisma.emailCode.delete({ where: { id: otp.id } }),
+      prisma.user.findUnique({ where: { email } }),
+    ]);
+    let user = user0;
 
     if (!user) {
       // Première connexion avec cet email : nouveau propriétaire, on crée son

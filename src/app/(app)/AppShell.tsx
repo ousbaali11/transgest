@@ -15,6 +15,7 @@ export default function AppShell({
   const pathname = usePathname();
   const router = useRouter();
   const [plusOpen, setPlusOpen] = useState(false);
+  const [logoutBusy, setLogoutBusy] = useState(false);
 
   const TABS = [
     { href: "/dashboard", label: t(locale, "nav_home"), icon: Home },
@@ -24,6 +25,7 @@ export default function AppShell({
   ];
 
   async function logout() {
+    setLogoutBusy(true);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch (e) {
@@ -69,6 +71,7 @@ export default function AppShell({
           </Link>
           <button
             onClick={logout}
+            disabled={logoutBusy}
             aria-label={t(locale, "nav_logout")}
             title={t(locale, "nav_logout")}
             style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex", border: "none", cursor: "pointer" }}

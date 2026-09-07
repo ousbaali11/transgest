@@ -31,21 +31,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Trop de tentatives, redemandez un nouveau code." }, { status: 429 });
     }
 
-    const valid = await bcrypt.compare(code, reset.codeHash);
+    // La vérification du code et la recherche du compte admin sont
+    // indépendantes — les lancer en parallèle économise un aller-retour.
+    const [valid, admin] = await Promise.all([
+      bcrypt.compare(code, reset.codeHash),
+      prisma.user.findFirst({ where: { role: "PLATFORM_ADMIN", email } }),
+    ]);
     if (!valid) {
       await prisma.adminResetCode.update({ where: { id: reset.id }, data: { attempts: { increment: 1 } } });
       return NextResponse.json({ error: "Code incorrect" }, { status: 400 });
     }
-
-    const admin = await prisma.user.findFirst({ where: { role: "PLATFORM_ADMIN", email } });
     if (!admin) {
       return NextResponse.json({ error: "Compte introuvable" }, { status: 404 });
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
-    await prisma.user.update({ where: { id: admin.id }, data: { passwordHash } });
     // À usage unique : supprime le code pour empêcher toute réutilisation.
-    await prisma.adminResetCode.delete({ where: { id: reset.id } });
+    // Indépendant de la mise à jour du mot de passe — en parallèle aussi.
+    await Promise.all([
+      prisma.user.update({ where: { id: admin.id }, data: { passwordHash } }),
+      prisma.adminResetCode.delete({ where: { id: reset.id } }),
+    ]);
 
     return NextResponse.json({ ok: true });
   } catch (e) {
