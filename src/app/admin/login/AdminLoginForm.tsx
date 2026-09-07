@@ -116,7 +116,7 @@ export default function AdminLoginForm({
 
   return (
     <div style={{ minHeight: "100vh" }}>
-      <LandingHeader appName={appName} logoEmoji={logoEmoji} logoType={logoType} logoImage={logoImage} locale={locale} onHome={backToLogin} />
+      <LandingHeader appName={appName} logoEmoji={logoEmoji} logoType={logoType} logoImage={logoImage} locale={locale} onHome={() => router.push("/login")} />
       <div className="container">
       <h1 style={{ fontSize: 20, marginTop: 40, marginBottom: 4 }}>
         {mode === "login" ? t(locale, "admin_area_title") : t(locale, "forgot_password_title")}
