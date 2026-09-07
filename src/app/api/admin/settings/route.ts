@@ -18,7 +18,8 @@ const patchSchema = z.object({
   stripeEnabled: z.boolean().optional(),
   paypalEnabled: z.boolean().optional(),
   manualPaymentCountries: z.array(z.string()).optional(),
-  manualPaymentContact: z.string().nullable().optional(),
+  contactEmail: z.string().nullable().optional(),
+  contactWhatsapp: z.string().nullable().optional(),
 });
 
 export async function GET() {

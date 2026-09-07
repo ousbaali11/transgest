@@ -352,8 +352,24 @@ const dict = {
     en: "For visitors from these countries, Stripe and PayPal are replaced by a message inviting them to contact you directly to activate their subscription (e.g. a bank transfer arranged directly).",
     ary: "بالنسبة للزوار ديال هاد البلدان، Stripe و PayPal كيتبدلو برسالة كتقول ليهم يتواصلو معاك مباشرة باش يفعلو الاشتراك ديالهم.",
   },
-  manual_payment_contact_label: { fr: "Coordonnées à afficher (email, WhatsApp...)", en: "Contact details to show (email, WhatsApp...)", ary: "معلومات التواصل اللي غادي تبان (إيمايل، واتساب...)" },
-  manual_payment_contact_placeholder: { fr: "ex : contact@moncamion.ma ou WhatsApp +33...", en: "e.g. contact@moncamion.ma or WhatsApp +33...", ary: "مثلا: contact@moncamion.ma ولا واتساب +33..." },
+  contact_email_label: { fr: "Email de contact", en: "Contact email", ary: "الإيمايل ديال التواصل" },
+  contact_whatsapp_label: { fr: "Numéro WhatsApp (avec indicatif)", en: "WhatsApp number (with country code)", ary: "رقم واتساب (مع الأندكاتيف)" },
+
+  // Nous contacter (écran d'abonnement)
+  contact_us_title: { fr: "Nous contacter", en: "Contact us", ary: "تواصل معانا" },
+  contact_form_toggle: { fr: "Envoyer une demande par formulaire", en: "Send a request via form", ary: "صيفط طلب بالفورمولار" },
+  contact_form_desc: { fr: "Laissez vos coordonnées, nous vous recontactons pour activer votre abonnement.", en: "Leave your details, we'll get back to you to activate your subscription.", ary: "خلي لينا المعلومات ديالك، غادي نعاودو نتواصلو معاك باش نفعلو الاشتراك ديالك." },
+  field_first_name: { fr: "Prénom", en: "First name", ary: "الاسم الشخصي" },
+  field_last_name: { fr: "Nom", en: "Last name", ary: "الاسم العائلي" },
+  field_country: { fr: "Pays", en: "Country", ary: "البلاد" },
+  field_subject: { fr: "Objet", en: "Subject", ary: "الموضوع" },
+  field_message: { fr: "Message", en: "Message", ary: "الرسالة" },
+  contact_form_submit: { fr: "Envoyer la demande", en: "Send request", ary: "صيفط الطلب" },
+  contact_form_success: { fr: "Votre demande a été envoyée — nous vous recontactons rapidement.", en: "Your request has been sent — we'll get back to you soon.", ary: "الطلب ديالك تصيفط — غادي نتواصلو معاك دغيا." },
+
+  // Espace admin — demandes de contact
+  admin_contact_requests_title: { fr: "Demandes de contact", en: "Contact requests", ary: "طلبات التواصل" },
+  admin_contact_requests_empty: { fr: "Aucune demande pour l'instant.", en: "No requests yet.", ary: "ماكاين حتى طلب دابا." },
   manual_payment_add_country: { fr: "Ajouter un pays…", en: "Add a country…", ary: "زيد بلاد…" },
   manual_payment_empty: { fr: "Aucun pays configuré pour l'instant.", en: "No country configured yet.", ary: "ماكاين حتى بلاد دابا." },
   add_action: { fr: "Ajouter", en: "Add", ary: "زيد" },

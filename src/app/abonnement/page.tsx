@@ -55,7 +55,8 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
         stripeEnabled={settings.stripeEnabled}
         paypalEnabled={settings.paypalEnabled}
         isManualPaymentCountry={isManualPaymentCountry}
-        manualPaymentContact={settings.manualPaymentContact}
+        contactEmail={settings.contactEmail}
+        contactWhatsapp={settings.contactWhatsapp}
         locale={locale}
       />
     </div>

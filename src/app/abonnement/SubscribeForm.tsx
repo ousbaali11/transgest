@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Mail } from "lucide-react";
 import { formatMoney, type Currency } from "@/lib/currency";
 import { t, type Locale } from "@/lib/i18n";
+import WhatsappIcon from "@/components/WhatsappIcon";
+import ContactSection from "./ContactSection";
 
 type Plan = {
   id: string; key: string; label: string; priceMAD: number; tagline: string | null;
@@ -14,10 +17,10 @@ type Plan = {
 type Interval = "monthly" | "annual";
 
 export default function SubscribeForm({
-  plans, initialCurrency, stripeEnabled, paypalEnabled, isManualPaymentCountry, manualPaymentContact, locale,
+  plans, initialCurrency, stripeEnabled, paypalEnabled, isManualPaymentCountry, contactEmail, contactWhatsapp, locale,
 }: {
   plans: Plan[]; initialCurrency: Currency; stripeEnabled: boolean; paypalEnabled: boolean;
-  isManualPaymentCountry: boolean; manualPaymentContact: string | null; locale: Locale;
+  isManualPaymentCountry: boolean; contactEmail: string | null; contactWhatsapp: string | null; locale: Locale;
 }) {
   const router = useRouter();
   const [currency, setCurrency] = useState<Currency>(initialCurrency);
@@ -117,8 +120,17 @@ export default function SubscribeForm({
             ) : isManualPaymentCountry ? (
               <div style={{ background: "var(--primary-10)", borderRadius: 8, padding: 12 }}>
                 <strong style={{ display: "block", fontSize: 13, marginBottom: 4 }}>{t(locale, "manual_payment_notice_title")}</strong>
-                <p className="muted" style={{ fontSize: 12, marginBottom: manualPaymentContact ? 8 : 0 }}>{t(locale, "manual_payment_notice_desc")}</p>
-                {manualPaymentContact && <p style={{ fontSize: 14, fontWeight: 600 }}>{manualPaymentContact}</p>}
+                <p className="muted" style={{ fontSize: 12, marginBottom: (contactEmail || contactWhatsapp) ? 8 : 0 }}>{t(locale, "manual_payment_notice_desc")}</p>
+                {contactEmail && (
+                  <a href={`mailto:${contactEmail}`} style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text)", textDecoration: "none", fontSize: 14, fontWeight: 600, marginTop: 4 }}>
+                    <Mail size={16} color="var(--primary)" /> {contactEmail}
+                  </a>
+                )}
+                {contactWhatsapp && (
+                  <a href={`https://wa.me/${contactWhatsapp.replace(/[^0-9]/g, "")}`} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text)", textDecoration: "none", fontSize: 14, fontWeight: 600, marginTop: 4 }}>
+                    <WhatsappIcon size={16} /> {contactWhatsapp}
+                  </a>
+                )}
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -140,6 +152,8 @@ export default function SubscribeForm({
           </div>
         );
       })}
+
+      <ContactSection contactEmail={contactEmail} contactWhatsapp={contactWhatsapp} locale={locale} />
     </div>
   );
 }

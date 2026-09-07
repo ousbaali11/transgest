@@ -4,6 +4,7 @@ import { getSession } from "@/lib/session";
 import { getPlatformSettings } from "@/lib/settings";
 import AdminUsersTable from "./AdminUsersTable";
 import AdminSettingsPanel from "./AdminSettingsPanel";
+import AdminContactRequests from "./AdminContactRequests";
 import LogoutButton from "../LogoutButton";
 import { getLocale } from "@/lib/get-locale";
 import { t } from "@/lib/i18n";
@@ -19,6 +20,7 @@ export default async function AdminPage() {
   });
   const settings = await getPlatformSettings();
   const plans = await prisma.plan.findMany();
+  const contactRequests = await prisma.contactRequest.findMany({ orderBy: { createdAt: "desc" }, take: 100 });
 
   const rows = organizations.map((org) => ({
     organizationId: org.id,
@@ -48,6 +50,7 @@ export default async function AdminPage() {
       </div>
 
       <AdminUsersTable rows={JSON.parse(JSON.stringify(rows))} plans={plans} locale={locale} />
+      <AdminContactRequests requests={JSON.parse(JSON.stringify(contactRequests))} locale={locale} />
       <AdminSettingsPanel initialSettings={JSON.parse(JSON.stringify(settings))} initialPlans={JSON.parse(JSON.stringify(plans))} locale={locale} />
     </div>
   );

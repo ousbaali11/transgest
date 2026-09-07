@@ -6,7 +6,7 @@ import { t, type Locale } from "@/lib/i18n";
 import { COUNTRIES, countryName } from "@/lib/countries";
 import CollapsibleCard from "@/components/CollapsibleCard";
 
-type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; themePrimary: string; themeAccent: string; forcedPlanId: string | null; stripeEnabled: boolean; paypalEnabled: boolean; manualPaymentCountries: string[]; manualPaymentContact: string | null };
+type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; themePrimary: string; themeAccent: string; forcedPlanId: string | null; stripeEnabled: boolean; paypalEnabled: boolean; manualPaymentCountries: string[]; contactEmail: string | null; contactWhatsapp: string | null };
 type Plan = {
   id: string; key: string; label: string; priceMAD: number; visible: boolean;
   priceMonthlyMAD: number | null; priceAnnualMAD: number | null;
@@ -54,7 +54,8 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
   }
 
   const [countryToAdd, setCountryToAdd] = useState("");
-  const [contactDraft, setContactDraft] = useState(settings.manualPaymentContact || "");
+  const [contactEmailDraft, setContactEmailDraft] = useState(settings.contactEmail || "");
+  const [contactWhatsappDraft, setContactWhatsappDraft] = useState(settings.contactWhatsapp || "");
 
   function addManualCountry() {
     if (!countryToAdd || settings.manualPaymentCountries.includes(countryToAdd)) return;
@@ -320,12 +321,22 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
           {t(locale, "manual_payment_desc")}
         </p>
         <label className="field">
-          <span className="field-label">{t(locale, "manual_payment_contact_label")}</span>
+          <span className="field-label">{t(locale, "contact_email_label")}</span>
           <input
-            value={contactDraft}
-            onChange={(e) => setContactDraft(e.target.value)}
-            onBlur={() => { if (contactDraft !== (settings.manualPaymentContact || "")) saveSettings({ manualPaymentContact: contactDraft || null }); }}
-            placeholder={t(locale, "manual_payment_contact_placeholder")}
+            type="email"
+            value={contactEmailDraft}
+            onChange={(e) => setContactEmailDraft(e.target.value)}
+            onBlur={() => { if (contactEmailDraft !== (settings.contactEmail || "")) saveSettings({ contactEmail: contactEmailDraft || null }); }}
+            placeholder="contact@camiondesk.com"
+          />
+        </label>
+        <label className="field">
+          <span className="field-label">{t(locale, "contact_whatsapp_label")}</span>
+          <input
+            value={contactWhatsappDraft}
+            onChange={(e) => setContactWhatsappDraft(e.target.value)}
+            onBlur={() => { if (contactWhatsappDraft !== (settings.contactWhatsapp || "")) saveSettings({ contactWhatsapp: contactWhatsappDraft || null }); }}
+            placeholder="+212600000000"
           />
         </label>
         <div style={{ display: "flex", gap: 8, marginTop: 4, marginBottom: 10 }}>
