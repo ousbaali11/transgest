@@ -8,9 +8,9 @@ import LandingHeader from "@/components/LandingHeader";
 type Mode = "login" | "forgot-request" | "forgot-reset";
 
 export default function AdminLoginForm({
-  locale, appName, logoEmoji, logoType, logoImage,
+  locale, appName, logoEmoji, logoType, logoImage, uiTheme,
 }: {
-  locale: Locale; appName: string; logoEmoji: string; logoType: string; logoImage: string | null;
+  locale: Locale; appName: string; logoEmoji: string; logoType: string; logoImage: string | null; uiTheme: string;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("login");
@@ -115,8 +115,8 @@ export default function AdminLoginForm({
   }
 
   return (
-    <div style={{ minHeight: "100vh" }}>
-      <LandingHeader appName={appName} logoEmoji={logoEmoji} logoType={logoType} logoImage={logoImage} locale={locale} onHome={() => router.push("/login")} />
+    <div className={uiTheme === "advanced" ? "app-advanced" : ""} style={{ minHeight: "100vh" }}>
+      <LandingHeader appName={appName} logoEmoji={logoEmoji} logoType={logoType} logoImage={logoImage} locale={locale} uiTheme={uiTheme} onHome={() => router.push("/login")} />
       <div className="container">
       <h1 style={{ fontSize: 20, marginTop: 40, marginBottom: 4 }}>
         {mode === "login" ? t(locale, "admin_area_title") : t(locale, "forgot_password_title")}

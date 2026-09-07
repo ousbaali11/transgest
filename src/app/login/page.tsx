@@ -12,6 +12,7 @@ export default async function LoginPage() {
       logoEmoji={settings.logoEmoji}
       logoType={settings.logoType}
       logoImage={settings.logoImage}
+      uiTheme={settings.uiTheme}
       locale={locale}
     />
   );

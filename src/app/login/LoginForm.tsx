@@ -19,7 +19,7 @@ const FEATURES = [
   { icon: Smartphone, key: "landing_feature_devices" as const },
 ];
 
-export default function LoginForm({ appName, logoEmoji, logoType, logoImage, locale }: { appName: string; logoEmoji: string; logoType: string; logoImage: string | null; locale: Locale }) {
+export default function LoginForm({ appName, logoEmoji, logoType, logoImage, uiTheme, locale }: { appName: string; logoEmoji: string; logoType: string; logoImage: string | null; uiTheme: string; locale: Locale }) {
   const router = useRouter();
   const [role, setRole] = useState<Role>("select");
 
@@ -141,8 +141,8 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, loc
   }
 
   return (
-    <div style={{ minHeight: "100vh" }}>
-      <LandingHeader appName={appName} logoEmoji={logoEmoji} logoType={logoType} logoImage={logoImage} locale={locale} onHome={goHome} />
+    <div className={uiTheme === "advanced" ? "app-advanced" : ""} style={{ minHeight: "100vh" }}>
+      <LandingHeader appName={appName} logoEmoji={logoEmoji} logoType={logoType} logoImage={logoImage} locale={locale} uiTheme={uiTheme} onHome={goHome} />
 
       <div className="container">
         {role === "select" && (

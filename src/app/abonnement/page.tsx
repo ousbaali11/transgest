@@ -37,8 +37,8 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
 
   if (session.role === "DRIVER") {
     return (
-      <div style={{ minHeight: "100vh" }}>
-        <LandingHeader appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} locale={locale} logoutRedirectTo="/login" />
+      <div className={settings.uiTheme === "advanced" ? "app-advanced" : ""} style={{ minHeight: "100vh" }}>
+        <LandingHeader appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} locale={locale} uiTheme={settings.uiTheme} logoutRedirectTo="/login" />
         <div className="container">
           <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>{t(locale, "subscription_inactive_title")}</h1>
           <div className="card" style={{ marginTop: 20, textAlign: "center" }}>
@@ -52,8 +52,8 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
   }
 
   return (
-    <div style={{ minHeight: "100vh" }}>
-      <LandingHeader appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} locale={locale} logoutRedirectTo="/login" />
+    <div className={settings.uiTheme === "advanced" ? "app-advanced" : ""} style={{ minHeight: "100vh" }}>
+      <LandingHeader appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} locale={locale} uiTheme={settings.uiTheme} logoutRedirectTo="/login" />
       <div className="container">
         <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>
           {searchParams.reason === "locked" ? t(locale, "account_locked_title") : searchParams.reason === "expired" ? t(locale, "subscription_expired_title") : t(locale, "choose_plan_title")}

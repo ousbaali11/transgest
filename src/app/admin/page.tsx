@@ -36,8 +36,8 @@ export default async function AdminPage() {
   }));
 
   return (
-    <div style={{ minHeight: "100vh" }}>
-      <LandingHeader appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} locale={locale} logoutRedirectTo="/admin/login" />
+    <div className={settings.uiTheme === "advanced" ? "app-advanced" : ""} style={{ minHeight: "100vh" }}>
+      <LandingHeader appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} locale={locale} uiTheme={settings.uiTheme} logoutRedirectTo="/admin/login" />
       <div className="container">
         <h1 style={{ fontSize: 20, margin: "20px 0" }}>{t(locale, "admin_dashboard_title")}</h1>
 

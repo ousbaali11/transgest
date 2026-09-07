@@ -24,15 +24,21 @@ import { t, type Locale } from "@/lib/i18n";
  * `logoutRedirectTo` active un bouton de déconnexion à la place du bouton
  * Accueil — utilisé sur l'écran d'abonnement bloqué, où l'utilisateur est
  * déjà connecté et où "Accueil" n'aurait pas de sens.
+ *
+ * `uiTheme` bascule uniquement l'apparence (fond clair avec bordure au
+ * lieu de la barre pleine couleur) — même contenu, mêmes actions.
  */
 export default function LandingHeader({
-  appName, logoEmoji, logoType, logoImage, locale, showHome = true, onHome, logoutRedirectTo,
+  appName, logoEmoji, logoType, logoImage, locale, showHome = true, onHome, logoutRedirectTo, uiTheme = "classic",
 }: {
   appName: string; logoEmoji: string; logoType: string; logoImage: string | null; locale: Locale;
-  showHome?: boolean; onHome?: () => void; logoutRedirectTo?: string;
+  showHome?: boolean; onHome?: () => void; logoutRedirectTo?: string; uiTheme?: string;
 }) {
   const router = useRouter();
   const [logoutBusy, setLogoutBusy] = useState(false);
+  const advanced = uiTheme === "advanced";
+  const iconColor = advanced ? "#1A1A1E" : "#fff";
+  const iconBg = advanced ? "#F7F7F8" : "rgba(255,255,255,0.12)";
 
   async function logout() {
     setLogoutBusy(true);
@@ -47,7 +53,14 @@ export default function LandingHeader({
   }
 
   return (
-    <div dir="ltr" style={{ padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--primary)" }}>
+    <div
+      dir="ltr"
+      style={{
+        padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between",
+        background: advanced ? "#fff" : "var(--primary)",
+        borderBottom: advanced ? "1px solid #E7E7E9" : "none",
+      }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {logoType === "image" && logoImage ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -55,7 +68,7 @@ export default function LandingHeader({
         ) : (
           <span style={{ fontSize: 26, lineHeight: 1 }}>{logoEmoji}</span>
         )}
-        <span style={{ color: "#fff", fontWeight: 700, fontSize: 16, fontFamily: "var(--font-display)" }}>{appName}</span>
+        <span style={{ color: advanced ? "#1A1A1E" : "#fff", fontWeight: 700, fontSize: 16, fontFamily: "var(--font-display)" }}>{appName}</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <LanguageSwitcher current={locale} />
@@ -65,9 +78,9 @@ export default function LandingHeader({
             disabled={logoutBusy}
             aria-label={t(locale, "nav_logout")}
             title={t(locale, "nav_logout")}
-            style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex", border: "none", cursor: "pointer" }}
+            style={{ padding: 8, borderRadius: 999, background: iconBg, display: "flex", border: "none", cursor: "pointer" }}
           >
-            <LogOut size={17} color="#fff" />
+            <LogOut size={17} color={iconColor} />
           </button>
         ) : showHome ? (
           onHome ? (
@@ -75,18 +88,18 @@ export default function LandingHeader({
               onClick={onHome}
               aria-label={t(locale, "nav_home")}
               title={t(locale, "nav_home")}
-              style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex", border: "none", cursor: "pointer" }}
+              style={{ padding: 8, borderRadius: 999, background: iconBg, display: "flex", border: "none", cursor: "pointer" }}
             >
-              <Home size={17} color="#fff" />
+              <Home size={17} color={iconColor} />
             </button>
           ) : (
             <Link
               href="/login"
               aria-label={t(locale, "nav_home")}
               title={t(locale, "nav_home")}
-              style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex" }}
+              style={{ padding: 8, borderRadius: 999, background: iconBg, display: "flex" }}
             >
-              <Home size={17} color="#fff" />
+              <Home size={17} color={iconColor} />
             </Link>
           )
         ) : null}
