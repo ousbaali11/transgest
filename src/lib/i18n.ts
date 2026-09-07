@@ -427,6 +427,7 @@ const dict = {
   appearance_active: { fr: "Active", en: "Active", ary: "مفعلة" },
   appearance_note: { fr: "Le changement s'applique immédiatement pour tout le monde, y compris vous-même.", en: "The change applies immediately for everyone, including yourself.", ary: "التغيير كيتفعل مباشرة لجميع الناس، حتى نتا." },
   close_action: { fr: "Fermer", en: "Close", ary: "سد" },
+  dashboard_revenue_vs_expenses: { fr: "Chiffre d'affaires vs dépenses", en: "Revenue vs expenses", ary: "رقم الأعمال مقابل المصاريف" },
 } as const;
 
 export type TKey = keyof typeof dict;

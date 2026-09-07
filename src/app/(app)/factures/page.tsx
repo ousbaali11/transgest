@@ -50,13 +50,13 @@ export default async function FacturesPage({ searchParams }: { searchParams: { s
     <div className="container">
       <ScreenHeader title={t(locale, "nav_invoices")} />
 
-      <div style={{ display: "flex", gap: 20, borderBottom: "1px solid var(--line)", marginBottom: 12 }}>
+      <div style={{ display: "flex", gap: 20, borderBottom: "1px solid var(--line)", marginBottom: 12, overflowX: "auto" }}>
         {TABS.map((tab) => (
           <Link
             key={tab.key}
             href={tab.key === "all" ? "/factures" : `/factures?status=${tab.key}`}
             style={{
-              textDecoration: "none", padding: "8px 0", fontWeight: 600, fontSize: 14,
+              textDecoration: "none", padding: "8px 0", fontWeight: 600, fontSize: 14, whiteSpace: "nowrap", flexShrink: 0,
               color: activeTab === tab.key ? "var(--primary)" : "var(--muted)",
               borderBottom: activeTab === tab.key ? "2px solid var(--primary)" : "2px solid transparent",
             }}

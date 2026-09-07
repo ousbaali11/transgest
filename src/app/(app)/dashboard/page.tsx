@@ -134,12 +134,12 @@ export default async function DashboardPage() {
           </div>
           <div className="value">{monthTrips.length}</div>
         </div>
-        <div className="stat-card" style={{ background: "var(--accent)" }}>
+        <div className="stat-card" style={{ background: "var(--accent)", color: "#fff" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div className="label">{tr(locale, "dashboard_revenue")}</div>
-            <Wallet size={15} style={{ opacity: 0.85 }} />
+            <div className="label" style={{ color: "#fff" }}>{tr(locale, "dashboard_revenue")}</div>
+            <Wallet size={15} style={{ opacity: 0.85 }} color="#fff" />
           </div>
-          <div className="value">{fmtDH(ca)}</div>
+          <div className="value" style={{ color: "#fff" }}>{fmtDH(ca)}</div>
         </div>
         <div className="stat-card" style={{ background: "#fff", color: "var(--text)", border: "1px solid var(--line)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -159,7 +159,7 @@ export default async function DashboardPage() {
 
       <div className="card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <strong>Chiffre d'affaires vs dépenses</strong>
+          <strong>{tr(locale, "dashboard_revenue_vs_expenses")}</strong>
           <BarChart3 size={15} color="var(--muted)" />
         </div>
         <RevenueChart data={buckets} />
