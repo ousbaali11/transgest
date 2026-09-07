@@ -121,15 +121,31 @@ export default function SubscribeForm({
               <div style={{ background: "var(--primary-10)", borderRadius: 8, padding: 12 }}>
                 <strong style={{ display: "block", fontSize: 13, marginBottom: 4 }}>{t(locale, "manual_payment_notice_title")}</strong>
                 <p className="muted" style={{ fontSize: 12, marginBottom: (contactEmail || contactWhatsapp) ? 8 : 0 }}>{t(locale, "manual_payment_notice_desc")}</p>
-                {contactEmail && (
-                  <a href={`mailto:${contactEmail}`} style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text)", textDecoration: "none", fontSize: 14, fontWeight: 600, marginTop: 4 }}>
-                    <Mail size={16} color="var(--primary)" /> {contactEmail}
-                  </a>
-                )}
-                {contactWhatsapp && (
-                  <a href={`https://wa.me/${contactWhatsapp.replace(/[^0-9]/g, "")}`} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text)", textDecoration: "none", fontSize: 14, fontWeight: 600, marginTop: 4 }}>
-                    <WhatsappIcon size={16} /> {contactWhatsapp}
-                  </a>
+                {(contactEmail || contactWhatsapp) && (
+                  <div style={{ display: "flex", flexDirection: "row", gap: 10, marginTop: 4 }}>
+                    {contactEmail && (
+                      <a
+                        href={`mailto:${contactEmail}`}
+                        aria-label={contactEmail}
+                        title={contactEmail}
+                        style={{ width: 36, height: 36, borderRadius: 999, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}
+                      >
+                        <Mail size={17} color="var(--primary)" />
+                      </a>
+                    )}
+                    {contactWhatsapp && (
+                      <a
+                        href={`https://wa.me/${contactWhatsapp.replace(/[^0-9]/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={contactWhatsapp}
+                        title={contactWhatsapp}
+                        style={{ width: 36, height: 36, borderRadius: 999, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}
+                      >
+                        <WhatsappIcon size={17} />
+                      </a>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (

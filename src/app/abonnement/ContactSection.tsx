@@ -53,17 +53,27 @@ export default function ContactSection({
       <strong>{t(locale, "contact_us_title")}</strong>
 
       {(contactEmail || contactWhatsapp) && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+        <div style={{ display: "flex", flexDirection: "row", gap: 12, marginTop: 12 }}>
           {contactEmail && (
-            <a href={`mailto:${contactEmail}`} style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text)", textDecoration: "none" }}>
-              <Mail size={18} color="var(--primary)" />
-              <span>{contactEmail}</span>
+            <a
+              href={`mailto:${contactEmail}`}
+              aria-label={contactEmail}
+              title={contactEmail}
+              style={{ width: 40, height: 40, borderRadius: 999, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <Mail size={19} color="var(--primary)" />
             </a>
           )}
           {whatsappHref && (
-            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text)", textDecoration: "none" }}>
-              <WhatsappIcon size={18} />
-              <span>{contactWhatsapp}</span>
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={contactWhatsapp || "WhatsApp"}
+              title={contactWhatsapp || "WhatsApp"}
+              style={{ width: 40, height: 40, borderRadius: 999, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <WhatsappIcon size={19} />
             </a>
           )}
         </div>
