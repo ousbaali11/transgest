@@ -101,3 +101,84 @@ input:focus, select:focus, textarea:focus {
 .stat-card { border-radius: 12px; padding: 14px; background: var(--primary); color: #fff; }
 .stat-card .label { font-size: 12px; opacity: 0.8; }
 .stat-card .value { font-family: var(--font-display); font-size: 20px; font-weight: 700; margin-top: 4px; }
+
+/* ==========================================================================
+   Interface "Avancée" — palette claire et neutre, navigation en menu
+   latéral. Purement visuel : aucune classe ici ne touche à une logique,
+   uniquement à AppShellAdvanced.tsx (la disposition) et au contenu des
+   pages déjà existant, réutilisé tel quel. Tout est scopé sous
+   .app-advanced pour ne jamais affecter l'interface "Classique".
+   ========================================================================== */
+.app-advanced {
+  --adv-bg: #F7F7F8;
+  --adv-surface: #FFFFFF;
+  --adv-border: #E7E7E9;
+  --adv-text: #1A1A1E;
+  --adv-text-muted: #71717A;
+  min-height: 100vh;
+  background: var(--adv-bg);
+  color: var(--adv-text);
+}
+
+/* Barre latérale — bureau/tablette large uniquement */
+.adv-sidebar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 240px;
+  background: var(--adv-surface);
+  border-right: 1px solid var(--adv-border);
+  flex-direction: column;
+  padding: 20px 12px;
+  overflow-y: auto;
+  z-index: 30;
+}
+.adv-sidebar-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 8px;
+  color: var(--adv-text-muted); text-decoration: none;
+  font-size: 14px; font-weight: 500;
+  margin-bottom: 2px;
+}
+.adv-sidebar-link.active { background: var(--primary-10); color: var(--primary); font-weight: 600; }
+.adv-sidebar-link:hover:not(.active) { background: var(--adv-bg); }
+
+/* Barre du haut — mobile/tablette étroite uniquement (remplace la barre
+   latérale, qui écraserait le contenu sur un petit écran) */
+.adv-mobile-topbar {
+  display: flex;
+  align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--adv-surface);
+  border-bottom: 1px solid var(--adv-border);
+  position: sticky; top: 0; z-index: 30;
+}
+
+.adv-content { padding: 24px; max-width: 1100px; }
+@media (min-width: 900px) {
+  .adv-sidebar { display: flex; }
+  .adv-mobile-topbar { display: none; }
+  .adv-content { margin-left: 240px; }
+}
+
+/* Cartes/stats réinterprétées dans une teinte plus neutre et spacieuse
+   pour ce thème (le contenu et sa structure restent identiques). */
+.app-advanced .card {
+  background: var(--adv-surface);
+  border: 1px solid var(--adv-border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: none;
+}
+.app-advanced .stat-card {
+  background: var(--adv-surface);
+  border: 1px solid var(--adv-border);
+  color: var(--adv-text);
+}
+.app-advanced .stat-card .label { color: var(--adv-text-muted); opacity: 1; }
+.app-advanced .stat-card .value { color: var(--adv-text); }
+
+/* Groupes de boutons : jamais rigides — retour à la ligne systématique
+   pour ne jamais déborder sur petit écran. */
+.app-advanced .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }

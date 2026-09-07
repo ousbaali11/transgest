@@ -416,6 +416,17 @@ const dict = {
   // Vérification par code pour les actions admin sensibles
   admin_action_code_desc: { fr: "Par sécurité, un code de vérification est requis — envoyé à votre email de contact configuré.", en: "For security, a verification code is required — sent to your configured contact email.", ary: "للأمان، خاصنا كود ديال التحقق — كيتصيفط للإيمايل ديال التواصل اللي صيفطتي." },
   admin_delete_request_confirm: { fr: "Supprimer cette demande ?", en: "Delete this request?", ary: "تحيد هاد الطلب؟" },
+
+  // Apparence (interface classique / avancée)
+  appearance_title: { fr: "Apparence", en: "Appearance", ary: "الشكل" },
+  appearance_desc: { fr: "Choisissez l'interface utilisée par tous les visiteurs du site — un changement purement visuel, aucune fonctionnalité n'est affectée.", en: "Choose the interface used by all site visitors — a purely visual change, no feature is affected.", ary: "ختار الواجهة اللي غادي تستعمل عند جميع الزوار — تغيير بصري فقط، ما كيأثرش على أي خاصية." },
+  appearance_classic: { fr: "Classique", en: "Classic", ary: "كلاسيك" },
+  appearance_classic_desc: { fr: "Barre du haut et navigation en bas d'écran.", en: "Top bar and bottom navigation.", ary: "بار فوق ونافيگاسيون تحت." },
+  appearance_advanced: { fr: "Avancée", en: "Advanced", ary: "متطورة" },
+  appearance_advanced_desc: { fr: "Menu latéral, mise en page plus spacieuse.", en: "Sidebar menu, more spacious layout.", ary: "مينو جانبي، تصميم أوسع." },
+  appearance_active: { fr: "Active", en: "Active", ary: "مفعلة" },
+  appearance_note: { fr: "Le changement s'applique immédiatement pour tout le monde, y compris vous-même.", en: "The change applies immediately for everyone, including yourself.", ary: "التغيير كيتفعل مباشرة لجميع الناس، حتى نتا." },
+  close_action: { fr: "Fermer", en: "Close", ary: "سد" },
 } as const;
 
 export type TKey = keyof typeof dict;

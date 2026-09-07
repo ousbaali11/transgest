@@ -8,7 +8,7 @@ import CollapsibleCard from "@/components/CollapsibleCard";
 import AdminActionCodeGate from "@/components/AdminActionCodeGate";
 import AdminSubscriptionsPanel from "./AdminSubscriptionsPanel";
 
-type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; themePrimary: string; themeAccent: string; forcedPlanId: string | null; stripeEnabled: boolean; paypalEnabled: boolean; manualPaymentCountries: string[]; contactEmail: string | null; contactWhatsapp: string | null };
+type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; uiTheme: string; themePrimary: string; themeAccent: string; forcedPlanId: string | null; stripeEnabled: boolean; paypalEnabled: boolean; manualPaymentCountries: string[]; contactEmail: string | null; contactWhatsapp: string | null };
 type Plan = {
   id: string; key: string; label: string; priceMAD: number; visible: boolean;
   priceMonthlyMAD: number | null; priceAnnualMAD: number | null;
@@ -159,6 +159,35 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
         <button className="btn" disabled={busy} onClick={() => saveSettings({ appName: settings.appName, logoEmoji: settings.logoEmoji })}>
           {t(locale, "save_brand")}
         </button>
+      </CollapsibleCard>
+
+      <CollapsibleCard title={t(locale, "appearance_title")}>
+        <p className="muted" style={{ fontSize: 12, marginTop: 6, marginBottom: 12 }}>
+          {t(locale, "appearance_desc")}
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {([
+            { value: "classic", label: t(locale, "appearance_classic"), desc: t(locale, "appearance_classic_desc") },
+            { value: "advanced", label: t(locale, "appearance_advanced"), desc: t(locale, "appearance_advanced_desc") },
+          ] as const).map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => saveSettings({ uiTheme: opt.value })}
+              style={{
+                textAlign: "left", padding: 14, borderRadius: 10, cursor: "pointer",
+                border: settings.uiTheme === opt.value ? "2px solid var(--primary)" : "1px solid var(--line)",
+                background: settings.uiTheme === opt.value ? "var(--primary-10)" : "#fff",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <strong style={{ fontSize: 14 }}>{opt.label}</strong>
+                {settings.uiTheme === opt.value && <span style={{ fontSize: 11, fontWeight: 600, color: "var(--primary)" }}>{t(locale, "appearance_active")}</span>}
+              </div>
+              <p className="muted" style={{ fontSize: 12, marginTop: 2 }}>{opt.desc}</p>
+            </button>
+          ))}
+        </div>
+        <p className="muted" style={{ fontSize: 11, marginTop: 10 }}>{t(locale, "appearance_note")}</p>
       </CollapsibleCard>
 
       <CollapsibleCard title={t(locale, "theme_title")}>
