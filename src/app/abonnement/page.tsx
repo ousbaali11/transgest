@@ -40,10 +40,12 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
   return (
     <div className="container">
       <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>
-        {searchParams.reason === "expired" ? t(locale, "subscription_expired_title") : t(locale, "choose_plan_title")}
+        {searchParams.reason === "locked" ? t(locale, "account_locked_title") : searchParams.reason === "expired" ? t(locale, "subscription_expired_title") : t(locale, "choose_plan_title")}
       </h1>
       <p className="muted" style={{ textAlign: "center", marginBottom: 24 }}>
-        {searchParams.reason === "expired"
+        {searchParams.reason === "locked"
+          ? t(locale, "account_locked_desc")
+          : searchParams.reason === "expired"
           ? t(locale, "subscription_expired_desc")
           : t(locale, "choose_plan_desc")}
       </p>

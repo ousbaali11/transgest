@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
               cancelAtPeriodEnd: false,
               canceledAt: null,
               grantedByAdmin: false,
+              lockedByAdmin: false, // un vrai paiement lève automatiquement un verrou admin éventuel
               stripeSubscriptionId: sub.id,
               paymentProvider: "stripe",
             },

@@ -27,7 +27,9 @@ export default async function AdminPage() {
     planLabel: org.plan?.label || t(locale, "no_plan"),
     status: org.subscriptionStatus,
     grantedByAdmin: org.grantedByAdmin,
+    lockedByAdmin: org.lockedByAdmin,
     currentPeriodEnd: org.currentPeriodEnd,
+    createdAt: org.createdAt,
     trips: org._count.trips,
   }));
 

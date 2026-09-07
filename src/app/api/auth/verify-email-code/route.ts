@@ -47,7 +47,20 @@ export async function POST(req: NextRequest) {
       // Première connexion avec cet email : nouveau propriétaire, on crée son
       // organisation. (Si un chauffeur existant avait cet email... les
       // chauffeurs n'ont pas d'email de connexion, donc pas de conflit possible.)
-      const org = await prisma.organization.create({ data: { name: t(getLocale(), "default_org_name") } });
+      //
+      // Accès gratuit et illimité dès la création — pas d'écran d'abonnement
+      // à l'inscription. C'est l'admin qui décide au cas par cas, plus tard,
+      // de verrouiller un compte pour le faire passer à l'offre payante
+      // (voir isOrgActive() et /api/admin/lock).
+      const freePlan = await prisma.plan.findUnique({ where: { key: "free" } });
+      const org = await prisma.organization.create({
+        data: {
+          name: t(getLocale(), "default_org_name"),
+          planId: freePlan?.id,
+          subscriptionStatus: "ACTIVE",
+          currentPeriodEnd: null,
+        },
+      });
       user = await prisma.user.create({ data: { email, role: "OWNER", organizationId: org.id } });
     }
 

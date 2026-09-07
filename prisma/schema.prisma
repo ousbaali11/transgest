@@ -71,6 +71,11 @@ model Organization {
   cancelAtPeriodEnd   Boolean            @default(false)
   canceledAt          DateTime?
   grantedByAdmin      Boolean            @default(false)
+  // Verrou explicite posé par l'admin (indépendant du cycle de l'abonnement
+  // ci-dessus) : bloque l'accès immédiatement, quel que soit le statut par
+  // ailleurs, jusqu'à ce que l'admin le retire lui-même ou que le
+  // propriétaire paie un abonnement. Voir isOrgActive().
+  lockedByAdmin       Boolean            @default(false)
   countryCode         String? // pays déclaré à l'inscription, utilisé pour la devise affichée
 
   // Identifiants côté prestataires de paiement — utilisés pour retrouver

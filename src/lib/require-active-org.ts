@@ -13,7 +13,12 @@ import type { Organization } from "@prisma/client";
  * cette logique ailleurs : toute divergence entre les deux recréerait la
  * faille où l'API reste utilisable après expiration côté pages.
  */
-export function isOrgActive(org: Pick<Organization, "subscriptionStatus" | "currentPeriodEnd">): boolean {
+export function isOrgActive(org: Pick<Organization, "subscriptionStatus" | "currentPeriodEnd" | "lockedByAdmin">): boolean {
+  // Le verrou admin prime sur tout le reste, y compris un abonnement payant
+  // par ailleurs valide — c'est une décision manuelle et délibérée de
+  // l'admin, qui doit toujours avoir le dernier mot.
+  if (org.lockedByAdmin) return false;
+
   const now = new Date();
   // Seuls ACTIVE et CANCELING (résilié mais encore dans la période payée)
   // donnent accès — PAST_DUE (paiement en échec) et NONE/EXPIRED bloquent
@@ -37,6 +42,7 @@ export async function requireActiveOrg() {
   if (!org) redirect("/login");
 
   if (!isOrgActive(org)) {
+    if (org.lockedByAdmin) redirect("/abonnement?reason=locked");
     const hadSubscriptionBefore = org.subscriptionStatus !== "NONE";
     redirect(hadSubscriptionBefore ? "/abonnement?reason=expired" : "/abonnement");
   }

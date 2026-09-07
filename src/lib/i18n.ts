@@ -388,6 +388,14 @@ const dict = {
   reset_password_action: { fr: "Réinitialiser le mot de passe", en: "Reset password", ary: "جدد الكلمة السرية" },
   password_reset_success: { fr: "Mot de passe réinitialisé — vous pouvez vous connecter.", en: "Password reset — you can now log in.", ary: "الكلمة السرية تجددات — تقدر دابا تدخل." },
   back_to_login: { fr: "← Retour à la connexion", en: "← Back to login", ary: "← رجوع للدخول" },
+
+  // Verrouillage de compte par l'admin
+  created_on: { fr: "créé le", en: "created on", ary: "تصاوب نهار" },
+  account_locked_badge: { fr: "Compte verrouillé", en: "Account locked", ary: "الكونط مسدود" },
+  lock_account: { fr: "Verrouiller", en: "Lock", ary: "سد" },
+  unlock_account: { fr: "Déverrouiller", en: "Unlock", ary: "حل" },
+  account_locked_title: { fr: "Votre compte a été verrouillé", en: "Your account has been locked", ary: "الكونط ديالك تسد" },
+  account_locked_desc: { fr: "Contactez l'administrateur, ou choisissez un abonnement ci-dessous pour retrouver l'accès.", en: "Contact the administrator, or choose a subscription below to regain access.", ary: "تواصل مع الإدارة، ولا ختار اشتراك تحت باش ترجع تدخل." },
 } as const;
 
 export type TKey = keyof typeof dict;

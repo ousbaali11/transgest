@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { t, type Locale } from "@/lib/i18n";
 import { COUNTRIES, countryName } from "@/lib/countries";
+import CollapsibleCard from "@/components/CollapsibleCard";
 
 type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; themePrimary: string; themeAccent: string; forcedPlanId: string | null; stripeEnabled: boolean; paypalEnabled: boolean; manualPaymentCountries: string[]; manualPaymentContact: string | null };
 type Plan = {
@@ -155,8 +156,7 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
           <p className="error-text" style={{ margin: 0 }}>{settingsError}</p>
         </div>
       )}
-      <div className="card">
-        <strong>{t(locale, "brand_title")}</strong>
+      <CollapsibleCard title={t(locale, "brand_title")}>
         <label className="field" style={{ marginTop: 10 }}>
           <span className="field-label">{t(locale, "app_name_field")}</span>
           <input value={settings.appName} onChange={(e) => setSettings({ ...settings, appName: e.target.value })} />
@@ -209,10 +209,9 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
         <button className="btn" disabled={busy} onClick={() => saveSettings({ appName: settings.appName, logoEmoji: settings.logoEmoji })}>
           {t(locale, "save_brand")}
         </button>
-      </div>
+      </CollapsibleCard>
 
-      <div className="card">
-        <strong>{t(locale, "theme_title")}</strong>
+      <CollapsibleCard title={t(locale, "theme_title")}>
         <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
           {PRESETS.map((p) => (
             <button
@@ -223,10 +222,9 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
             />
           ))}
         </div>
-      </div>
+      </CollapsibleCard>
 
-      <div className="card">
-        <strong>{t(locale, "subscriptions_title")}</strong>
+      <CollapsibleCard title={t(locale, "subscriptions_title")}>
         {plans.map((p) => (
           <div key={p.id} style={{ padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 8 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -294,10 +292,9 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
         <p className="muted" style={{ fontSize: 11, marginTop: 8 }}>
           {t(locale, "hide_free_note")}
         </p>
-      </div>
+      </CollapsibleCard>
 
-      <div className="card">
-        <strong>{t(locale, "payment_methods_title")}</strong>
+      <CollapsibleCard title={t(locale, "payment_methods_title")}>
         <p className="muted" style={{ fontSize: 12, marginTop: 6, marginBottom: 10 }}>
           {t(locale, "payment_methods_desc")}
         </p>
@@ -316,10 +313,9 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
             </button>
           </div>
         ))}
-      </div>
+      </CollapsibleCard>
 
-      <div className="card">
-        <strong>{t(locale, "manual_payment_title")}</strong>
+      <CollapsibleCard title={t(locale, "manual_payment_title")}>
         <p className="muted" style={{ fontSize: 12, marginTop: 6, marginBottom: 10 }}>
           {t(locale, "manual_payment_desc")}
         </p>
@@ -355,10 +351,9 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
             </div>
           ))
         )}
-      </div>
+      </CollapsibleCard>
 
-      <div className="card">
-        <strong>{t(locale, "security_change_password")}</strong>
+      <CollapsibleCard title={t(locale, "security_change_password")}>
         <label className="field" style={{ marginTop: 10 }}>
           <span className="field-label">{t(locale, "current_password")}</span>
           <div style={{ position: "relative" }}>
@@ -379,7 +374,7 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
         </label>
         <button className="btn" disabled={!curPwd || !newPwd} onClick={changePassword}>{t(locale, "update_password")}</button>
         {pwdMsg && <p className={pwdOk ? "muted" : "error-text"} style={{ marginTop: 8 }}>{pwdMsg}</p>}
-      </div>
+      </CollapsibleCard>
     </>
   );
 }

@@ -11,7 +11,9 @@ type Row = {
   planLabel: string;
   status: string;
   grantedByAdmin: boolean;
+  lockedByAdmin: boolean;
   currentPeriodEnd: string | Date | null;
+  createdAt: string | Date;
   trips: number;
 };
 type Plan = { id: string; key: string; label: string };
@@ -39,6 +41,30 @@ export default function AdminUsersTable({ rows, plans, locale }: { rows: Row[]; 
   const [duration, setDuration] = useState("30");
   const [busy, setBusy] = useState(false);
   const [grantError, setGrantError] = useState("");
+  const [lockBusyId, setLockBusyId] = useState<string | null>(null);
+  const [lockError, setLockError] = useState("");
+
+  async function toggleLock(organizationId: string, currentlyLocked: boolean) {
+    setLockBusyId(organizationId);
+    setLockError("");
+    try {
+      const res = await fetch("/api/admin/lock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ organizationId, locked: !currentlyLocked }),
+      });
+      if (res.ok) {
+        router.refresh();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setLockError(data.error || t(locale, "error_generic"));
+      }
+    } catch {
+      setLockError(t(locale, "server_unreachable_short"));
+    } finally {
+      setLockBusyId(null);
+    }
+  }
 
   async function saveGrant() {
     if (!grantTarget) return;
@@ -99,30 +125,46 @@ export default function AdminUsersTable({ rows, plans, locale }: { rows: Row[]; 
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <div>
                   <div style={{ fontWeight: 600 }}>{r.email}</div>
-                  <div className="muted" style={{ fontSize: 12 }}>{r.planLabel} · {r.trips} {t(locale, "trips_suffix")}</div>
+                  <div className="muted" style={{ fontSize: 12 }}>
+                    {r.planLabel} · {r.trips} {t(locale, "trips_suffix")} · {t(locale, "created_on")} {fmtDate(r.createdAt, locale)}
+                  </div>
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "#F1F1EF", color: STATUS_COLOR[r.status] }}>
                   {statusLabel(locale, r.status)}
                 </span>
               </div>
+              {r.lockedByAdmin && (
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#C0392B", marginTop: 4 }}>🔒 {t(locale, "account_locked_badge")}</div>
+              )}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
                 {r.grantedByAdmin ? (
                   <span style={{ fontSize: 11, color: "var(--primary)" }}>
                     {t(locale, "offered_gift")}{r.currentPeriodEnd ? ` ${t(locale, "offered_until")} ${fmtDate(r.currentPeriodEnd, locale)}` : ` ${t(locale, "offered_unlimited")}`}
                   </span>
                 ) : <span />}
-                <button
-                  className="btn"
-                  style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: r.grantedByAdmin ? "var(--primary)" : "#F1F1EF", color: r.grantedByAdmin ? "#fff" : "var(--text)" }}
-                  onClick={() => { setGrantTarget(r); setGrantError(""); }}
-                >
-                  {r.grantedByAdmin ? t(locale, "modify_offer") : t(locale, "offer_subscription")}
-                </button>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button
+                    className="btn"
+                    style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: r.lockedByAdmin ? "#2E7D53" : "#FBE9E7", color: r.lockedByAdmin ? "#fff" : "#C0392B" }}
+                    disabled={lockBusyId === r.organizationId}
+                    onClick={() => toggleLock(r.organizationId, r.lockedByAdmin)}
+                  >
+                    {lockBusyId === r.organizationId ? "…" : r.lockedByAdmin ? t(locale, "unlock_account") : t(locale, "lock_account")}
+                  </button>
+                  <button
+                    className="btn"
+                    style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: r.grantedByAdmin ? "var(--primary)" : "#F1F1EF", color: r.grantedByAdmin ? "#fff" : "var(--text)" }}
+                    onClick={() => { setGrantTarget(r); setGrantError(""); }}
+                  >
+                    {r.grantedByAdmin ? t(locale, "modify_offer") : t(locale, "offer_subscription")}
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
+      {lockError && <p className="error-text" style={{ marginTop: 8 }}>{lockError}</p>}
       <p className="muted" style={{ fontSize: 11, marginTop: 8 }}>
         {t(locale, "admin_users_note")}
       </p>
