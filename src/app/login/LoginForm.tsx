@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Route, TrendingUp, Receipt, Download, Users, Smartphone } from "lucide-react";
 import { formatAccessCode } from "@/lib/access-code";
 import { t, type Locale } from "@/lib/i18n";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import LandingHeader from "@/components/LandingHeader";
 
 type Role = "select" | "owner" | "driver";
 type OwnerStep = "email" | "code";
@@ -35,13 +35,6 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, loc
 
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-
-  function backToSelect() {
-    setRole("select");
-    setOwnerStep("email");
-    setError("");
-    setDriverCode("");
-  }
 
   async function sendEmailCode() {
     setError("");
@@ -140,19 +133,7 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, loc
 
   return (
     <div style={{ minHeight: "100vh" }}>
-      {/* Barre du haut : logo, nom du site, sélecteur de langue */}
-      <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--primary)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {logoType === "image" && logoImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoImage} alt={appName} style={{ width: 28, height: 28, objectFit: "contain" }} />
-          ) : (
-            <span style={{ fontSize: 26, lineHeight: 1 }}>{logoEmoji}</span>
-          )}
-          <span style={{ color: "#fff", fontWeight: 700, fontSize: 16, fontFamily: "var(--font-display)" }}>{appName}</span>
-        </div>
-        <LanguageSwitcher current={locale} />
-      </div>
+      <LandingHeader appName={appName} logoEmoji={logoEmoji} logoType={logoType} logoImage={logoImage} locale={locale} />
 
       <div className="container">
         {role === "select" && (
@@ -195,7 +176,6 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, loc
               </label>
               {error && <p className="error-text">{error}</p>}
               <button className="btn" onClick={sendEmailCode} disabled={busy || !email}>{busy ? t(locale, "loading") : t(locale, "login_receive_code")}</button>
-              <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={backToSelect}>← {t(locale, "back")}</button>
             </>
           )}
 
@@ -244,7 +224,6 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, loc
               <button className="btn" onClick={driverLogin} disabled={busy || driverCode.replace(/\s+/g, "").length !== 8}>
                 {busy ? t(locale, "loading") : t(locale, "login_connect")}
               </button>
-              <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={backToSelect}>← {t(locale, "back")}</button>
             </>
           )}
         </div>

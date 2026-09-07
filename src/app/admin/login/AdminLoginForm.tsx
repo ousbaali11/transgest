@@ -3,10 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { t, type Locale } from "@/lib/i18n";
+import LandingHeader from "@/components/LandingHeader";
 
 type Mode = "login" | "forgot-request" | "forgot-reset";
 
-export default function AdminLoginForm({ locale }: { locale: Locale }) {
+export default function AdminLoginForm({
+  locale, appName, logoEmoji, logoType, logoImage,
+}: {
+  locale: Locale; appName: string; logoEmoji: string; logoType: string; logoImage: string | null;
+}) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("login");
 
@@ -110,7 +115,9 @@ export default function AdminLoginForm({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div className="container">
+    <div style={{ minHeight: "100vh" }}>
+      <LandingHeader appName={appName} logoEmoji={logoEmoji} logoType={logoType} logoImage={logoImage} locale={locale} />
+      <div className="container">
       <h1 style={{ fontSize: 20, marginTop: 40, marginBottom: 4 }}>
         {mode === "login" ? t(locale, "admin_area_title") : t(locale, "forgot_password_title")}
       </h1>
@@ -212,6 +219,7 @@ export default function AdminLoginForm({ locale }: { locale: Locale }) {
           <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={backToLogin}>{t(locale, "back_to_login")}</button>
         </>
       )}
+      </div>
     </div>
   );
 }
