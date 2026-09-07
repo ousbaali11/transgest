@@ -6,6 +6,7 @@ import { Mail } from "lucide-react";
 import { formatMoney, type Currency } from "@/lib/currency";
 import { t, type Locale } from "@/lib/i18n";
 import WhatsappIcon from "@/components/WhatsappIcon";
+import PaypalIcon from "@/components/PaypalIcon";
 import ContactSection from "./ContactSection";
 
 type Plan = {
@@ -156,8 +157,14 @@ export default function SubscribeForm({
                   </button>
                 )}
                 {canPaypal && (
-                  <button className="btn" style={{ background: "#0070BA" }} disabled={busy !== null} onClick={() => checkout("paypal", plan.key)}>
-                    {busy === `paypal-${plan.key}` ? "…" : t(locale, "pay_with_paypal")}
+                  <button
+                    className="btn"
+                    aria-label={t(locale, "pay_with_paypal")}
+                    style={{ background: "#FFC439", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    disabled={busy !== null}
+                    onClick={() => checkout("paypal", plan.key)}
+                  >
+                    {busy === `paypal-${plan.key}` ? "…" : <PaypalIcon fontSize={18} />}
                   </button>
                 )}
                 {!canStripe && !canPaypal && (
