@@ -6,7 +6,7 @@ import { getPlatformSettings } from "@/lib/settings";
 import { currencyForCountry, countryFromHeaders } from "@/lib/currency";
 import { getLocale } from "@/lib/get-locale";
 import { t } from "@/lib/i18n";
-import LogoutButton from "../LogoutButton";
+import LandingHeader from "@/components/LandingHeader";
 import SubscribeForm from "./SubscribeForm";
 
 export default async function AbonnementPage({ searchParams }: { searchParams: { reason?: string } }) {
@@ -27,44 +27,44 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
 
   if (session.role === "DRIVER") {
     return (
-      <div className="container">
-        <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>{t(locale, "subscription_inactive_title")}</h1>
-        <div className="card" style={{ marginTop: 20, textAlign: "center" }}>
-          <p className="muted">
-            {t(locale, "subscription_inactive_driver_desc")}
-          </p>
-        </div>
-        <div style={{ textAlign: "center", marginTop: 16 }}>
-          <LogoutButton redirectTo="/login" label={t(locale, "nav_logout")} />
+      <div style={{ minHeight: "100vh" }}>
+        <LandingHeader appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} locale={locale} logoutRedirectTo="/login" />
+        <div className="container">
+          <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>{t(locale, "subscription_inactive_title")}</h1>
+          <div className="card" style={{ marginTop: 20, textAlign: "center" }}>
+            <p className="muted">
+              {t(locale, "subscription_inactive_driver_desc")}
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container">
-      <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>
-        {searchParams.reason === "locked" ? t(locale, "account_locked_title") : searchParams.reason === "expired" ? t(locale, "subscription_expired_title") : t(locale, "choose_plan_title")}
-      </h1>
-      <p className="muted" style={{ textAlign: "center", marginBottom: 24 }}>
-        {searchParams.reason === "locked"
-          ? t(locale, "account_locked_desc")
-          : searchParams.reason === "expired"
-          ? t(locale, "subscription_expired_desc")
-          : t(locale, "choose_plan_desc")}
-      </p>
-      <SubscribeForm
-        plans={JSON.parse(JSON.stringify(availablePlans))}
-        initialCurrency={currency}
-        stripeEnabled={settings.stripeEnabled}
-        paypalEnabled={settings.paypalEnabled}
-        isManualPaymentCountry={isManualPaymentCountry}
-        contactEmail={settings.contactEmail}
-        contactWhatsapp={settings.contactWhatsapp}
-        locale={locale}
-      />
-      <div style={{ textAlign: "center", marginTop: 16 }}>
-        <LogoutButton redirectTo="/login" label={t(locale, "nav_logout")} />
+    <div style={{ minHeight: "100vh" }}>
+      <LandingHeader appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} locale={locale} logoutRedirectTo="/login" />
+      <div className="container">
+        <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>
+          {searchParams.reason === "locked" ? t(locale, "account_locked_title") : searchParams.reason === "expired" ? t(locale, "subscription_expired_title") : t(locale, "choose_plan_title")}
+        </h1>
+        <p className="muted" style={{ textAlign: "center", marginBottom: 24 }}>
+          {searchParams.reason === "locked"
+            ? t(locale, "account_locked_desc")
+            : searchParams.reason === "expired"
+            ? t(locale, "subscription_expired_desc")
+            : t(locale, "choose_plan_desc")}
+        </p>
+        <SubscribeForm
+          plans={JSON.parse(JSON.stringify(availablePlans))}
+          initialCurrency={currency}
+          stripeEnabled={settings.stripeEnabled}
+          paypalEnabled={settings.paypalEnabled}
+          isManualPaymentCountry={isManualPaymentCountry}
+          contactEmail={settings.contactEmail}
+          contactWhatsapp={settings.contactWhatsapp}
+          locale={locale}
+        />
       </div>
     </div>
   );

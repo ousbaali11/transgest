@@ -1,28 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { Home } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Home, LogOut } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { t, type Locale } from "@/lib/i18n";
 
 /**
  * Barre du haut commune aux écrans de connexion (propriétaire/chauffeur ET
- * admin) — logo, nom du site, sélecteur de langue, retour à l'accueil.
- * Centralisée ici pour ne jamais désynchroniser LoginForm.tsx et
- * AdminLoginForm.tsx, qui doivent avoir exactement la même barre.
+ * admin) ET à l'écran d'abonnement bloqué — logo, nom du site, sélecteur
+ * de langue, et Accueil OU Déconnexion selon le contexte. Centralisée ici
+ * pour ne jamais désynchroniser ces différentes pages, qui doivent avoir
+ * exactement la même barre.
  *
- * Le bouton Accueil accepte un callback `onHome` optionnel : les deux
- * pages qui utilisent cette barre gèrent leurs étapes (choix
- * propriétaire/chauffeur, mot de passe oublié...) comme un simple état
- * React, sans changer d'URL — un lien classique vers "/login" ne fait donc
- * rien puisque l'utilisateur y est déjà. `onHome` permet à la page
- * d'appeler sa propre fonction de réinitialisation d'état à la place.
+ * Le bouton Accueil accepte un callback `onHome` optionnel : LoginForm et
+ * AdminLoginForm gèrent leurs étapes (choix propriétaire/chauffeur, mot de
+ * passe oublié...) comme un simple état React, sans changer d'URL — un
+ * lien classique vers "/login" ne fait donc rien puisque l'utilisateur y
+ * est déjà. `onHome` permet à la page d'appeler sa propre fonction de
+ * réinitialisation d'état à la place.
+ *
+ * `logoutRedirectTo` active un bouton de déconnexion à la place du bouton
+ * Accueil — utilisé sur l'écran d'abonnement bloqué, où l'utilisateur est
+ * déjà connecté et où "Accueil" n'aurait pas de sens.
  */
 export default function LandingHeader({
-  appName, logoEmoji, logoType, logoImage, locale, showHome = true, onHome,
+  appName, logoEmoji, logoType, logoImage, locale, showHome = true, onHome, logoutRedirectTo,
 }: {
-  appName: string; logoEmoji: string; logoType: string; logoImage: string | null; locale: Locale; showHome?: boolean; onHome?: () => void;
+  appName: string; logoEmoji: string; logoType: string; logoImage: string | null; locale: Locale;
+  showHome?: boolean; onHome?: () => void; logoutRedirectTo?: string;
 }) {
+  const router = useRouter();
+  const [logoutBusy, setLogoutBusy] = useState(false);
+
+  async function logout() {
+    setLogoutBusy(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {
+      console.error("Échec de la déconnexion :", e);
+    } finally {
+      router.push(logoutRedirectTo || "/login");
+      router.refresh();
+    }
+  }
+
   return (
     <div dir="ltr" style={{ padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--primary)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -36,7 +59,17 @@ export default function LandingHeader({
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <LanguageSwitcher current={locale} />
-        {showHome && (
+        {logoutRedirectTo ? (
+          <button
+            onClick={logout}
+            disabled={logoutBusy}
+            aria-label={t(locale, "nav_logout")}
+            title={t(locale, "nav_logout")}
+            style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex", border: "none", cursor: "pointer" }}
+          >
+            <LogOut size={17} color="#fff" />
+          </button>
+        ) : showHome ? (
           onHome ? (
             <button
               onClick={onHome}
@@ -56,7 +89,7 @@ export default function LandingHeader({
               <Home size={17} color="#fff" />
             </Link>
           )
-        )}
+        ) : null}
       </div>
     </div>
   );
