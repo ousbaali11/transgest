@@ -372,6 +372,25 @@ const dict = {
   plan_unavailable_error: { fr: "Cette formule n'est plus disponible.", en: "This plan is no longer available.", ary: "هاد الصيغة ماعادش متوفرة." },
   free_plan_active: { fr: "Formule gratuite — sans date d'expiration", en: "Free plan — no expiry date", ary: "الصيغة المجانية — بلا تاريخ انتهاء" },
   cannot_cancel_admin_grant: { fr: "Cet abonnement a été offert par l'administrateur et ne peut pas être résilié ici.", en: "This subscription was offered by the admin and cannot be cancelled here.", ary: "هاد الاشتراك هداه الإدارة وما يمكنش يتفسخ من هنا." },
+
+  // Page d'accueil — argumentaire avant connexion
+  landing_headline: { fr: "La gestion de flotte simplifiée pour les transporteurs", en: "Simple fleet management for truckers", ary: "تسيير الفلوطة بسهولة للمقاولين ديال النقل" },
+  landing_subheadline: { fr: "Suivez vos voyages, dépenses et factures depuis votre téléphone, où que vous soyez.", en: "Track your trips, expenses and invoices from your phone, wherever you are.", ary: "تبع السفريات، المصاريف، والفاكتورات ديالك من التيليفون ديالك، فين ما كنتي." },
+  landing_feature_trips: { fr: "Suivi de chaque voyage, client et trajet", en: "Track every trip, client and route", ary: "تتبع كل سفرية، زبون، وطريق" },
+  landing_feature_profit: { fr: "Calcul automatique de vos revenus et bénéfices", en: "Automatic revenue and profit calculation", ary: "حساب أوتوماتيكي ديال الدخل والربح ديالك" },
+  landing_feature_invoices: { fr: "Factures professionnelles générées en un clic", en: "Professional invoices generated in one click", ary: "فاكتورات احترافية فكليك واحد" },
+  landing_feature_export: { fr: "Export Excel complet à tout moment", en: "Full Excel export anytime", ary: "تصدير Excel كامل فأي وقت" },
+  landing_feature_drivers: { fr: "Accès simple et sécurisé pour vos chauffeurs", en: "Simple, secure access for your drivers", ary: "دخول سهل وآمن للشوافر ديالك" },
+  landing_feature_devices: { fr: "Fonctionne sur téléphone, tablette et ordinateur", en: "Works on phone, tablet and computer", ary: "خدام على التيليفون، التابليت، والكومبيوتر" },
+
+  // Mot de passe oublié (admin)
+  forgot_password_link: { fr: "Mot de passe oublié ?", en: "Forgot password?", ary: "نسيتي الكلمة السرية؟" },
+  forgot_password_title: { fr: "Réinitialiser le mot de passe", en: "Reset password", ary: "جدد الكلمة السرية" },
+  forgot_password_desc: { fr: "Entrez votre email, vous recevrez un code pour choisir un nouveau mot de passe.", en: "Enter your email, you'll receive a code to choose a new password.", ary: "دخل الإيمايل ديالك، غادي توصلك كود باش تختار كلمة سرية جديدة." },
+  forgot_password_sent_desc: { fr: "Si cet email correspond à un compte, un code a été envoyé.", en: "If this email matches an account, a code has been sent.", ary: "إلا كان هاد الإيمايل صحيح، توصل ليه الكود." },
+  reset_password_action: { fr: "Réinitialiser le mot de passe", en: "Reset password", ary: "جدد الكلمة السرية" },
+  password_reset_success: { fr: "Mot de passe réinitialisé — vous pouvez vous connecter.", en: "Password reset — you can now log in.", ary: "الكلمة السرية تجددات — تقدر دابا تدخل." },
+  back_to_login: { fr: "← Retour à la connexion", en: "← Back to login", ary: "← رجوع للدخول" },
 } as const;
 
 export type TKey = keyof typeof dict;

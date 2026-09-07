@@ -150,6 +150,22 @@ model AdminLoginAttempt {
   @@index([ip, createdAt])
 }
 
+// Codes de réinitialisation du mot de passe admin. Séparé de EmailCode
+// (réservé à la connexion propriétaire, qui crée une organisation à la
+// première utilisation) pour ne jamais mélanger les deux logiques.
+model AdminResetCode {
+  id        String   @id @default(cuid())
+  email     String
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([ip, createdAt])
+}
+
 model Truck {
   id                    String    @id @default(cuid())
   organizationId        String
