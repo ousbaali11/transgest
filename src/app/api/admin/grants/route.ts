@@ -68,6 +68,11 @@ export async function POST(req: NextRequest) {
         cancelAtPeriodEnd: false,
         canceledAt: null,
         grantedByAdmin: true,
+        // Offrir un abonnement est une décision explicite de l'admin de
+        // redonner l'accès — sans lever le verrou ici, le compte restait
+        // bloqué malgré l'offre, ce qui rendait l'action silencieusement
+        // inutile pour un compte verrouillé.
+        lockedByAdmin: false,
         stripeSubscriptionId: null,
         paypalSubscriptionId: null,
         paymentProvider: null,
