@@ -412,6 +412,10 @@ const dict = {
   unlock_account: { fr: "Déverrouiller", en: "Unlock", ary: "حل" },
   account_locked_title: { fr: "Votre compte a été verrouillé", en: "Your account has been locked", ary: "الكونط ديالك تسد" },
   account_locked_desc: { fr: "Contactez l'administrateur, ou choisissez un abonnement ci-dessous pour retrouver l'accès.", en: "Contact the administrator, or choose a subscription below to regain access.", ary: "تواصل مع الإدارة، ولا ختار اشتراك تحت باش ترجع تدخل." },
+
+  // Vérification par code pour les actions admin sensibles
+  admin_action_code_desc: { fr: "Par sécurité, un code de vérification est requis — envoyé à votre email de contact configuré.", en: "For security, a verification code is required — sent to your configured contact email.", ary: "للأمان، خاصنا كود ديال التحقق — كيتصيفط للإيمايل ديال التواصل اللي صيفطتي." },
+  admin_delete_request_confirm: { fr: "Supprimer cette demande ?", en: "Delete this request?", ary: "تحيد هاد الطلب؟" },
 } as const;
 
 export type TKey = keyof typeof dict;

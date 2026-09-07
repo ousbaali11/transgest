@@ -201,6 +201,20 @@ model AdminResetCode {
   @@index([ip, createdAt])
 }
 
+// Vérification par email avant d'accéder à une action admin sensible
+// (consulter/modifier la configuration des abonnements, changer l'email
+// de contact) — distinct de AdminResetCode : le code part vers l'email de
+// CONTACT configuré (PlatformSettings.contactEmail), pas vers l'email de
+// connexion de l'admin, et sert plusieurs actions ("purpose") différentes.
+model AdminActionCode {
+  id        String   @id @default(cuid())
+  purpose   String   // ex: "VIEW_SUBSCRIPTIONS", "CHANGE_CONTACT_EMAIL"
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
 model Truck {
   id                    String    @id @default(cuid())
   organizationId        String

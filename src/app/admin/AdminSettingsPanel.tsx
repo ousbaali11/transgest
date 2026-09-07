@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { t, type Locale } from "@/lib/i18n";
 import { COUNTRIES, countryName } from "@/lib/countries";
 import CollapsibleCard from "@/components/CollapsibleCard";
+import AdminActionCodeGate from "@/components/AdminActionCodeGate";
+import AdminSubscriptionsPanel from "./AdminSubscriptionsPanel";
 
 type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; themePrimary: string; themeAccent: string; forcedPlanId: string | null; stripeEnabled: boolean; paypalEnabled: boolean; manualPaymentCountries: string[]; contactEmail: string | null; contactWhatsapp: string | null };
 type Plan = {
@@ -25,7 +27,6 @@ const PRESETS = [
 export default function AdminSettingsPanel({ initialSettings, initialPlans, locale }: { initialSettings: Settings; initialPlans: Plan[]; locale: Locale }) {
   const router = useRouter();
   const [settings, setSettings] = useState(initialSettings);
-  const [plans, setPlans] = useState(initialPlans);
   const [busy, setBusy] = useState(false);
   const [curPwd, setCurPwd] = useState("");
   const [newPwd, setNewPwd] = useState("");
@@ -55,6 +56,8 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
 
   const [countryToAdd, setCountryToAdd] = useState("");
   const [contactEmailDraft, setContactEmailDraft] = useState(settings.contactEmail || "");
+  const [emailChangeUnlocked, setEmailChangeUnlocked] = useState(false);
+  const [emailChangeRequesting, setEmailChangeRequesting] = useState(false);
   const [contactWhatsappDraft, setContactWhatsappDraft] = useState(settings.contactWhatsapp || "");
 
   function addManualCountry() {
@@ -65,60 +68,6 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
 
   function removeManualCountry(code: string) {
     saveSettings({ manualPaymentCountries: settings.manualPaymentCountries.filter((c) => c !== code) });
-  }
-
-  async function togglePlanVisible(plan: Plan) {
-    setSettingsError("");
-    try {
-      const res = await fetch(`/api/admin/plans/${plan.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ visible: !plan.visible }),
-      });
-      if (res.ok) setPlans(plans.map((p) => (p.id === plan.id ? { ...p, visible: !p.visible } : p)));
-      else setSettingsError(t(locale, "error_generic"));
-    } catch {
-      setSettingsError(t(locale, "server_unreachable_short"));
-    }
-  }
-
-  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
-  const [planDraft, setPlanDraft] = useState<Partial<Plan>>({});
-  const [planSaveMsg, setPlanSaveMsg] = useState("");
-
-  function startEditPlan(plan: Plan) {
-    setEditingPlanId(plan.id);
-    setPlanDraft({ ...plan });
-    setPlanSaveMsg("");
-  }
-
-  async function savePlanDraft() {
-    if (!editingPlanId) return;
-    setBusy(true);
-    setPlanSaveMsg("");
-    try {
-      const res = await fetch(`/api/admin/plans/${editingPlanId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          priceMonthlyMAD: planDraft.priceMonthlyMAD === null || planDraft.priceMonthlyMAD === undefined ? null : Number(planDraft.priceMonthlyMAD),
-          priceAnnualMAD: planDraft.priceAnnualMAD === null || planDraft.priceAnnualMAD === undefined ? null : Number(planDraft.priceAnnualMAD),
-          stripePriceIdMonthly: planDraft.stripePriceIdMonthly || null,
-          stripePriceIdAnnual: planDraft.stripePriceIdAnnual || null,
-          paypalPlanIdMonthly: planDraft.paypalPlanIdMonthly || null,
-          paypalPlanIdAnnual: planDraft.paypalPlanIdAnnual || null,
-        }),
-      });
-      const updated = await res.json();
-      if (res.ok) {
-        setPlans(plans.map((p) => (p.id === editingPlanId ? updated : p)));
-        setEditingPlanId(null);
-      } else {
-        setPlanSaveMsg(updated.error || t(locale, "save_error"));
-      }
-    } finally {
-      setBusy(false);
-    }
   }
 
   function onLogoFile(file: File | undefined) {
@@ -225,75 +174,13 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
         </div>
       </CollapsibleCard>
 
-      <CollapsibleCard title={t(locale, "subscriptions_title")}>
-        {plans.map((p) => (
-          <div key={p.id} style={{ padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 8 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontWeight: 600 }}>{p.label} {p.priceMAD ? `— ${p.priceMAD} DH/${t(locale, "per_month")}` : `— ${t(locale, "free_label")}`}</div>
-                <div className="muted" style={{ fontSize: 12 }}>{t(locale, "visible_label")} : {p.visible ? t(locale, "yes_label") : t(locale, "no_label")} {settings.forcedPlanId === p.id && `· ${t(locale, "forced_for_all")}`}</div>
-              </div>
-              <div style={{ display: "flex", gap: 6 }}>
-                <button className="btn" style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: "#F1F1EF", color: "var(--text)" }} onClick={() => togglePlanVisible(p)}>
-                  {p.visible ? t(locale, "hide") : t(locale, "show_action")}
-                </button>
-                <button
-                  className="btn"
-                  style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: settings.forcedPlanId === p.id ? "var(--primary)" : "#F1F1EF", color: settings.forcedPlanId === p.id ? "#fff" : "var(--text)" }}
-                  onClick={() => saveSettings({ forcedPlanId: settings.forcedPlanId === p.id ? null : p.id })}
-                >
-                  {settings.forcedPlanId === p.id ? t(locale, "active_label") : t(locale, "activate_for_all")}
-                </button>
-              </div>
-            </div>
-
-            {p.priceMAD > 0 && (
-              editingPlanId === p.id ? (
-                <div style={{ marginTop: 10, background: "#F6F4EF", borderRadius: 8, padding: 10 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
-                    <label className="field" style={{ margin: 0 }}>
-                      <span className="field-label">{t(locale, "monthly_price_mad")}</span>
-                      <input type="number" value={planDraft.priceMonthlyMAD ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, priceMonthlyMAD: e.target.value ? Number(e.target.value) : null })} />
-                    </label>
-                    <label className="field" style={{ margin: 0 }}>
-                      <span className="field-label">{t(locale, "annual_price_mad")}</span>
-                      <input type="number" value={planDraft.priceAnnualMAD ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, priceAnnualMAD: e.target.value ? Number(e.target.value) : null })} />
-                    </label>
-                    <label className="field" style={{ margin: 0 }}>
-                      <span className="field-label">{t(locale, "stripe_price_monthly")}</span>
-                      <input placeholder="price_..." value={planDraft.stripePriceIdMonthly ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, stripePriceIdMonthly: e.target.value })} />
-                    </label>
-                    <label className="field" style={{ margin: 0 }}>
-                      <span className="field-label">{t(locale, "stripe_price_annual")}</span>
-                      <input placeholder="price_..." value={planDraft.stripePriceIdAnnual ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, stripePriceIdAnnual: e.target.value })} />
-                    </label>
-                    <label className="field" style={{ margin: 0 }}>
-                      <span className="field-label">{t(locale, "paypal_plan_monthly")}</span>
-                      <input placeholder="P-..." value={planDraft.paypalPlanIdMonthly ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, paypalPlanIdMonthly: e.target.value })} />
-                    </label>
-                    <label className="field" style={{ margin: 0 }}>
-                      <span className="field-label">{t(locale, "paypal_plan_annual")}</span>
-                      <input placeholder="P-..." value={planDraft.paypalPlanIdAnnual ?? ""} onChange={(e) => setPlanDraft({ ...planDraft, paypalPlanIdAnnual: e.target.value })} />
-                    </label>
-                  </div>
-                  {planSaveMsg && <p className="error-text" style={{ marginBottom: 8 }}>{planSaveMsg}</p>}
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button className="btn btn-ghost" onClick={() => setEditingPlanId(null)}>{t(locale, "cancel")}</button>
-                    <button className="btn" disabled={busy} onClick={savePlanDraft}>{busy ? "…" : t(locale, "save")}</button>
-                  </div>
-                </div>
-              ) : (
-                <button type="button" onClick={() => startEditPlan(p)} className="muted" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, textDecoration: "underline", marginTop: 6, padding: 0 }}>
-                  {t(locale, "configure_payment")}
-                </button>
-              )
-            )}
-          </div>
-        ))}
-        <p className="muted" style={{ fontSize: 11, marginTop: 8 }}>
-          {t(locale, "hide_free_note")}
-        </p>
-      </CollapsibleCard>
+      <AdminSubscriptionsPanel
+        initialPlans={initialPlans}
+        forcedPlanId={settings.forcedPlanId}
+        onForcedPlanChange={(planId) => saveSettings({ forcedPlanId: planId })}
+        contactEmailConfigured={!!settings.contactEmail}
+        locale={locale}
+      />
 
       <CollapsibleCard title={t(locale, "payment_methods_title")}>
         <p className="muted" style={{ fontSize: 12, marginTop: 6, marginBottom: 10 }}>
@@ -322,14 +209,40 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
         </p>
         <label className="field">
           <span className="field-label">{t(locale, "contact_email_label")}</span>
-          <input
-            type="email"
-            value={contactEmailDraft}
-            onChange={(e) => setContactEmailDraft(e.target.value)}
-            onBlur={() => { if (contactEmailDraft !== (settings.contactEmail || "")) saveSettings({ contactEmail: contactEmailDraft || null }); }}
-            placeholder="contact@camiondesk.com"
-          />
+          {!settings.contactEmail || emailChangeUnlocked ? (
+            <input
+              type="email"
+              value={contactEmailDraft}
+              onChange={(e) => setContactEmailDraft(e.target.value)}
+              onBlur={() => { if (contactEmailDraft !== (settings.contactEmail || "")) { saveSettings({ contactEmail: contactEmailDraft || null }); setEmailChangeUnlocked(false); } }}
+              placeholder="contact@camiondesk.com"
+            />
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <span style={{ fontSize: 14 }}>{settings.contactEmail}</span>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                style={{ width: "auto", padding: "4px 10px", fontSize: 12 }}
+                onClick={() => setEmailChangeRequesting(true)}
+              >
+                {t(locale, "edit")}
+              </button>
+            </div>
+          )}
         </label>
+        {emailChangeRequesting && !emailChangeUnlocked && (
+          <div className="card" style={{ background: "#F6F4EF", marginBottom: 12 }}>
+            <AdminActionCodeGate
+              purpose="CHANGE_CONTACT_EMAIL"
+              contactEmailConfigured={!!settings.contactEmail}
+              locale={locale}
+              onVerified={() => { setEmailChangeUnlocked(true); setEmailChangeRequesting(false); }}
+            >
+              <></>
+            </AdminActionCodeGate>
+          </div>
+        )}
         <label className="field">
           <span className="field-label">{t(locale, "contact_whatsapp_label")}</span>
           <input
