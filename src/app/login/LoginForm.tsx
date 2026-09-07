@@ -36,6 +36,15 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, loc
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  function goHome() {
+    setRole("select");
+    setOwnerStep("email");
+    setEmail("");
+    setEmailCode("");
+    setDriverCode("");
+    setError("");
+  }
+
   async function sendEmailCode() {
     setError("");
     if (!email.includes("@")) { setError("Adresse email invalide"); return; }
@@ -133,7 +142,7 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, loc
 
   return (
     <div style={{ minHeight: "100vh" }}>
-      <LandingHeader appName={appName} logoEmoji={logoEmoji} logoType={logoType} logoImage={logoImage} locale={locale} />
+      <LandingHeader appName={appName} logoEmoji={logoEmoji} logoType={logoType} logoImage={logoImage} locale={locale} onHome={goHome} />
 
       <div className="container">
         {role === "select" && (
