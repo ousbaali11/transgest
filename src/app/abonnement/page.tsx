@@ -6,6 +6,7 @@ import { getPlatformSettings } from "@/lib/settings";
 import { currencyForCountry, countryFromHeaders } from "@/lib/currency";
 import { getLocale } from "@/lib/get-locale";
 import { t } from "@/lib/i18n";
+import { isOrgActive } from "@/lib/require-active-org";
 import LandingHeader from "@/components/LandingHeader";
 import SubscribeForm from "./SubscribeForm";
 
@@ -15,6 +16,15 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
 
   const org = await prisma.organization.findUnique({ where: { id: session.organizationId } });
   if (!org) redirect("/login");
+
+  // Sans cette vérification, la page se contentait d'afficher "verrouillé"
+  // ou "expiré" indéfiniment d'après le paramètre ?reason= figé au moment
+  // de la redirection initiale — jamais réévalué ensuite. Un compte
+  // débloqué entre-temps (déverrouillé, abonnement offert...) restait donc
+  // bloqué sur cette page jusqu'à ce qu'on navigue ailleurs, même après un
+  // vrai rechargement complet. Ici, on revérifie l'état réel à chaque
+  // chargement et on renvoie vers le tableau de bord si tout est en ordre.
+  if (isOrgActive(org)) redirect("/dashboard");
 
   const settings = await getPlatformSettings();
   const plans = await prisma.plan.findMany({ where: { visible: true } });
