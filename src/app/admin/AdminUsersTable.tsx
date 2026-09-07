@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { t, dateLocale, type Locale } from "@/lib/i18n";
+import CollapsibleCard from "@/components/CollapsibleCard";
 
 type Row = {
   organizationId: string;
@@ -114,8 +115,7 @@ export default function AdminUsersTable({ rows, plans, locale }: { rows: Row[]; 
   }
 
   return (
-    <div className="card">
-      <strong>{t(locale, "users_title")}</strong>
+    <CollapsibleCard title={`${t(locale, "users_title")} (${rows.length})`}>
       {rows.length === 0 ? (
         <p className="muted" style={{ marginTop: 8 }}>{t(locale, "no_accounts_yet")}</p>
       ) : (
@@ -198,6 +198,6 @@ export default function AdminUsersTable({ rows, plans, locale }: { rows: Row[]; 
           </div>
         </div>
       )}
-    </div>
+    </CollapsibleCard>
   );
 }
