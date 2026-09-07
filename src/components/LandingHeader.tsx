@@ -24,7 +24,7 @@ export default function LandingHeader({
   appName: string; logoEmoji: string; logoType: string; logoImage: string | null; locale: Locale; showHome?: boolean; onHome?: () => void;
 }) {
   return (
-    <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--primary)" }}>
+    <div dir="ltr" style={{ padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--primary)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {logoType === "image" && logoImage ? (
           // eslint-disable-next-line @next/next/no-img-element
