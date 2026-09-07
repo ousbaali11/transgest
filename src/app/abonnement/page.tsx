@@ -6,6 +6,7 @@ import { getPlatformSettings } from "@/lib/settings";
 import { currencyForCountry, countryFromHeaders } from "@/lib/currency";
 import { getLocale } from "@/lib/get-locale";
 import { t } from "@/lib/i18n";
+import LogoutButton from "../LogoutButton";
 import SubscribeForm from "./SubscribeForm";
 
 export default async function AbonnementPage({ searchParams }: { searchParams: { reason?: string } }) {
@@ -33,6 +34,9 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
             {t(locale, "subscription_inactive_driver_desc")}
           </p>
         </div>
+        <div style={{ textAlign: "center", marginTop: 16 }}>
+          <LogoutButton redirectTo="/login" label={t(locale, "nav_logout")} />
+        </div>
       </div>
     );
   }
@@ -59,6 +63,9 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
         contactWhatsapp={settings.contactWhatsapp}
         locale={locale}
       />
+      <div style={{ textAlign: "center", marginTop: 16 }}>
+        <LogoutButton redirectTo="/login" label={t(locale, "nav_logout")} />
+      </div>
     </div>
   );
 }
