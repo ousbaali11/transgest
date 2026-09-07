@@ -153,10 +153,6 @@ export default function AdminLoginForm({ locale }: { locale: Locale }) {
               {t(locale, "forgot_password_link")}
             </button>
           </p>
-
-          <p className="muted" style={{ textAlign: "center", marginTop: 16, fontSize: 12 }}>
-            {t(locale, "admin_login_hint")} <code>prisma/seed.ts</code> — README.
-          </p>
         </>
       )}
 

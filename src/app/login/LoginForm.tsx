@@ -30,7 +30,7 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, loc
   const [lastSentEmail, setLastSentEmail] = useState<string | null>(null);
   const [devCode, setDevCode] = useState<string | null>(null);
 
-  // --- Chauffeur : code à 16 chiffres ---
+  // --- Chauffeur : code à 8 caractères ---
   const [driverCode, setDriverCode] = useState("");
 
   const [error, setError] = useState("");
@@ -113,7 +113,7 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, loc
   async function driverLogin() {
     setError("");
     const cleaned = driverCode.replace(/\s+/g, "");
-    if (cleaned.length !== 16) { setError("Le code doit contenir 16 chiffres."); return; }
+    if (cleaned.length !== 8) { setError("Le code doit contenir 8 caractères."); return; }
     setBusy(true);
     try {
       const res = await fetch("/api/auth/driver-login", {
@@ -228,18 +228,20 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, loc
               <label className="field">
                 <span className="field-label">{t(locale, "login_driver_code")}</span>
                 <input
-                  type="tel"
-                  inputMode="numeric"
+                  type="text"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
                   autoComplete="off"
                   value={driverCode}
-                  onChange={(e) => setDriverCode(formatAccessCode(e.target.value.replace(/\D/g, "").slice(0, 16)))}
-                  placeholder="0000 0000 0000 0000"
+                  onChange={(e) => setDriverCode(formatAccessCode(e.target.value.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)))}
+                  placeholder="Ab3D 5fG8"
                   style={{ letterSpacing: 2, fontSize: 18, textAlign: "center" }}
                 />
               </label>
               <p className="muted" style={{ fontSize: 13 }}>{t(locale, "login_driver_hint")}</p>
               {error && <p className="error-text">{error}</p>}
-              <button className="btn" onClick={driverLogin} disabled={busy || driverCode.replace(/\s+/g, "").length !== 16}>
+              <button className="btn" onClick={driverLogin} disabled={busy || driverCode.replace(/\s+/g, "").length !== 8}>
                 {busy ? t(locale, "loading") : t(locale, "login_connect")}
               </button>
               <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={backToSelect}>← {t(locale, "back")}</button>

@@ -61,7 +61,7 @@ const dict = {
   login_receive_code: { fr: "Recevoir le code", en: "Receive code", ary: "صيفط ليا الكود" },
   login_verify: { fr: "Vérifier", en: "Verify", ary: "تأكد" },
   login_resend: { fr: "Renvoyer le code", en: "Resend code", ary: "عاود صيفط الكود" },
-  login_driver_code: { fr: "Code chauffeur (16 chiffres)", en: "Driver code (16 digits)", ary: "كود السائق (16 رقم)" },
+  login_driver_code: { fr: "Code chauffeur (8 caractères)", en: "Driver code (8 characters)", ary: "كود السائق (8 حروف)" },
   login_driver_hint: { fr: "Ce code vous a été communiqué par le propriétaire de la flotte.", en: "This code was given to you by the fleet owner.", ary: "هاد الكود عطاهولك صاحب الفلوطة." },
   login_connect: { fr: "Se connecter", en: "Log in", ary: "دخول" },
   login_admin_area: { fr: "Espace administrateur", en: "Admin area", ary: "فضاء الإدارة" },
@@ -152,9 +152,9 @@ const dict = {
   expires_in_days: { fr: "expire dans {n} j", en: "expires in {n} d", ary: "غادي تفوت من {n} يوم" },
   fleet_drivers: { fr: "Chauffeurs", en: "Drivers", ary: "الشوافر" },
   driver_code_hint: {
-    fr: "Chaque chauffeur reçoit un code à 16 chiffres pour se connecter — communiquez-le-lui directement, aucun SMS n'est envoyé. Il ne voit et ne modifie que ses propres voyages et dépenses.",
-    en: "Each driver gets a 16-digit code to log in — give it to them directly, no SMS is sent. They only see and edit their own trips and expenses.",
-    ary: "كل شافر كيتسنى ليه كود ديال 16 رقم باش يدخل — عطيه ليه بيدك، ماكاين حتى SMS. كيشوف وكيبدل غير السفريات والمصاريف ديالو.",
+    fr: "Chaque chauffeur reçoit un code à 8 caractères pour se connecter — communiquez-le-lui directement, aucun SMS n'est envoyé. Il ne voit et ne modifie que ses propres voyages et dépenses.",
+    en: "Each driver gets an 8-character code to log in — give it to them directly, no SMS is sent. They only see and edit their own trips and expenses.",
+    ary: "كل شافر كيتسنى ليه كود ديال 8 حروف باش يدخل — عطيه ليه بيدك، ماكاين حتى SMS. كيشوف وكيبدل غير السفريات والمصاريف ديالو.",
   },
   add_myself_driver: { fr: "+ Je suis moi-même l'un des chauffeurs", en: "+ I'm one of the drivers myself", ary: "+ أنا نفسي واحد من الشوافر" },
   field_full_name: { fr: "Nom complet", en: "Full name", ary: "الاسم الكامل" },
@@ -258,7 +258,6 @@ const dict = {
   // Connexion admin
   admin_area_title: { fr: "Espace administrateur", en: "Admin area", ary: "فضاء الإدارة" },
   admin_area_desc: { fr: "Réservé à l'éditeur de l'application.", en: "Reserved for the app publisher.", ary: "خاص بمالك التطبيق." },
-  admin_login_hint: { fr: "Identifiants créés par", en: "Credentials created by", ary: "المعلومات ديال الدخول تصاوبو ب" },
 
   // Espace admin — principal
   admin_dashboard_title: { fr: "Espace admin", en: "Admin area", ary: "فضاء الإدارة" },
@@ -323,9 +322,7 @@ const dict = {
     ary: "خبي الصيغة المجانية وفعل \"Pro\" للجميع كيدير الاشتراك الخلاص واجب لكل مستخدم جديد.",
   },
   payment_methods_title: { fr: "Moyens de paiement", en: "Payment methods", ary: "وسايل الخلاص" },
-  payment_methods_desc_1: { fr: "Choisissez ce qui est proposé aux utilisateurs sur l'écran d'abonnement. Configurez", en: "Choose what's offered to users on the subscription screen. Configure", ary: "ختار شنو كيبان للمستخدمين فشاشة الاشتراك. صايب" },
-  payment_methods_desc_2: { fr: "d'abord les identifiants dans", en: "the credentials first in", ary: "معلومات الدخول قبل فـ" },
-  payment_methods_desc_3: { fr: "(voir README) avant d'activer.", en: "(see README) before activating.", ary: "(شوف README) قبل ما تفعل." },
+  payment_methods_desc: { fr: "Choisissez ce qui est proposé aux utilisateurs sur l'écran d'abonnement. Configurez d'abord les identifiants Stripe/PayPal dans les réglages du serveur avant d'activer.", en: "Choose what's offered to users on the subscription screen. Configure the Stripe/PayPal credentials in the server settings first, before activating.", ary: "ختار شنو كيبان للمستخدمين فشاشة الاشتراك. صايب معلومات Stripe/PayPal فإعدادات السيرفر قبل ما تفعل." },
   card_payment_label: { fr: "Paiement par carte (Stripe)", en: "Card payment (Stripe)", ary: "الخلاص بالكارط (Stripe)" },
   paypal_label: { fr: "PayPal", en: "PayPal", ary: "PayPal" },
   enabled_label: { fr: "Activé", en: "Enabled", ary: "مفعل" },

@@ -299,7 +299,7 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
       <div className="card">
         <strong>{t(locale, "payment_methods_title")}</strong>
         <p className="muted" style={{ fontSize: 12, marginTop: 6, marginBottom: 10 }}>
-          {t(locale, "payment_methods_desc_1")} {t(locale, "payment_methods_desc_2")} <code>.env</code> {t(locale, "payment_methods_desc_3")}
+          {t(locale, "payment_methods_desc")}
         </p>
         {([
           { key: "stripeEnabled" as const, label: t(locale, "card_payment_label") },
