@@ -16,7 +16,7 @@ export class HttpError extends Error {
 export async function requireOrgSession() {
   const session = await getSession();
   if (!session || (session.role !== "OWNER" && session.role !== "DRIVER")) {
-    throw new HttpError(401, "Non authentifié");
+    throw new HttpError(401, t(getLocale(), "not_authenticated_error"));
   }
   return session as Extract<SessionPayload, { role: "OWNER" | "DRIVER" }>;
 }
@@ -31,7 +31,11 @@ export async function requireOrgSession() {
 export async function requireOwnerSession() {
   const session = await getSession();
   if (!session || session.role !== "OWNER") {
-    throw new HttpError(session?.role === "DRIVER" ? 403 : 401, session?.role === "DRIVER" ? "Réservé au propriétaire" : "Non authentifié");
+    const locale = getLocale();
+    throw new HttpError(
+      session?.role === "DRIVER" ? 403 : 401,
+      session?.role === "DRIVER" ? t(locale, "owner_only_error") : t(locale, "not_authenticated_error")
+    );
   }
   return session as Extract<SessionPayload, { role: "OWNER" }>;
 }
@@ -40,7 +44,7 @@ export async function requireOwnerSession() {
 export async function requireAdminSession() {
   const session = await getSession();
   if (!session || session.role !== "PLATFORM_ADMIN") {
-    throw new HttpError(401, "Non authentifié");
+    throw new HttpError(401, t(getLocale(), "not_authenticated_error"));
   }
   return session as Extract<SessionPayload, { role: "PLATFORM_ADMIN" }>;
 }
@@ -64,5 +68,5 @@ export function handleApiError(e: unknown) {
     }
   }
   console.error(e);
-  return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  return NextResponse.json({ error: t(getLocale(), "server_error_generic") }, { status: 500 });
 }

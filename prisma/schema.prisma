@@ -209,12 +209,21 @@ model AdminResetCode {
 // CONTACT configuré (PlatformSettings.contactEmail), pas vers l'email de
 // connexion de l'admin, et sert plusieurs actions ("purpose") différentes.
 model AdminActionCode {
-  id        String   @id @default(cuid())
-  purpose   String   // ex: "VIEW_SUBSCRIPTIONS", "CHANGE_CONTACT_EMAIL"
-  codeHash  String
-  attempts  Int      @default(0)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id            String    @id @default(cuid())
+  purpose       String    // ex: "VIEW_SUBSCRIPTIONS", "CHANGE_CONTACT_EMAIL"
+  codeHash      String
+  attempts      Int       @default(0)
+  expiresAt     DateTime
+  // Rempli seulement une fois le code correctement vérifié — c'est CE
+  // champ que les routes sensibles (plans, email de contact) vérifient
+  // côté serveur avant d'autoriser l'action. Sans lui, la vérification par
+  // code n'était qu'un habillage côté interface, jamais réellement
+  // appliqué : n'importe qui avec la session admin pouvait appeler ces
+  // routes directement sans jamais entrer de code.
+  verifiedUntil DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([purpose, verifiedUntil])
 }
 
 model Truck {

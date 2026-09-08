@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   try {
     const parsed = bodySchema.safeParse(await req.json());
     if (!parsed.success) {
-      return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
+      return NextResponse.json({ error: t(getLocale(), "invalid_request_error") }, { status: 400 });
     }
     const email = parsed.data.email.toLowerCase().trim();
     const { code } = parsed.data;
@@ -27,16 +27,16 @@ export async function POST(req: NextRequest) {
     });
 
     if (!otp || otp.expiresAt < new Date()) {
-      return NextResponse.json({ error: "Code expiré, demandez-en un nouveau." }, { status: 400 });
+      return NextResponse.json({ error: t(getLocale(), "code_expired_error") }, { status: 400 });
     }
     if (otp.attempts >= 5) {
-      return NextResponse.json({ error: "Trop de tentatives, demandez un nouveau code." }, { status: 429 });
+      return NextResponse.json({ error: t(getLocale(), "too_many_attempts_error") }, { status: 429 });
     }
 
     const valid = await bcrypt.compare(code, otp.codeHash);
     if (!valid) {
       await prisma.emailCode.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
-      return NextResponse.json({ error: "Code incorrect" }, { status: 400 });
+      return NextResponse.json({ error: t(getLocale(), "incorrect_code_error") }, { status: 400 });
     }
 
     // Ces deux opérations sont indépendantes (supprimer le code utilisé,
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (user.role !== "OWNER" || !user.organizationId) {
-      return NextResponse.json({ error: "Ce compte n'est pas un compte propriétaire." }, { status: 403 });
+      return NextResponse.json({ error: t(getLocale(), "not_owner_account_error") }, { status: 403 });
     }
 
     const token = await signSession({ role: "OWNER", userId: user.id, organizationId: user.organizationId, email });

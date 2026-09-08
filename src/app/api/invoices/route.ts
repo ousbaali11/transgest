@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireOrgSession, handleApiError } from "@/lib/guards";
 import { assertOrgActive } from "@/lib/require-active-org";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 
 const createSchema = z.object({
   tripId: z.string().min(1),
@@ -36,14 +38,14 @@ export async function POST(req: NextRequest) {
 
     const trip = await prisma.trip.findUnique({ where: { id: parsed.data.tripId } });
     if (!trip || trip.organizationId !== session.organizationId) {
-      return NextResponse.json({ error: "Voyage introuvable" }, { status: 404 });
+      return NextResponse.json({ error: t(getLocale(), "trip_not_found_error") }, { status: 404 });
     }
     // Même règle que pour modifier un voyage : un chauffeur ne peut générer
     // une facture que pour un voyage qu'il a lui-même saisi — sinon la
     // facture créée ne lui serait ensuite même plus visible (Factures est
     // filtré sur ce même critère), ce qui serait un comportement confus.
     if (session.role === "DRIVER" && trip.driverId !== session.driverId && trip.createdByUserId !== session.userId) {
-      return NextResponse.json({ error: "Voyage introuvable" }, { status: 404 });
+      return NextResponse.json({ error: t(getLocale(), "trip_not_found_error") }, { status: 404 });
     }
 
     const count = await prisma.invoice.count({ where: { organizationId: session.organizationId } });

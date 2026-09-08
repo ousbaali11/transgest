@@ -17,8 +17,8 @@ export function convertFromMAD(amountMAD: number, currency: Currency): number {
   return Math.round((amountMAD || 0) * (FX_FROM_MAD[currency] || 1));
 }
 
-export function formatMoney(amountMAD: number, currency: Currency): string {
-  if (!amountMAD) return "Gratuit";
+export function formatMoney(amountMAD: number, currency: Currency, freeLabel = "Gratuit"): string {
+  if (!amountMAD) return freeLabel;
   const val = convertFromMAD(amountMAD, currency);
   if (currency === "EUR") return `${val} €`;
   if (currency === "USD") return `$${val}`;

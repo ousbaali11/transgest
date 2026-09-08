@@ -4,6 +4,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { signSession, setSessionCookie } from "@/lib/session";
 import { handleApiError } from "@/lib/guards";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -23,7 +25,7 @@ export async function POST(req: NextRequest) {
   try {
     const parsed = bodySchema.safeParse(await req.json());
     if (!parsed.success) {
-      return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
+      return NextResponse.json({ error: t(getLocale(), "invalid_request_error") }, { status: 400 });
     }
     const { email, password } = parsed.data;
     const ip = getClientIp(req);
@@ -33,7 +35,7 @@ export async function POST(req: NextRequest) {
         where: { ip, createdAt: { gt: new Date(Date.now() - WINDOW_MS) } },
       });
       if (recentFailures >= MAX_ATTEMPTS) {
-        return NextResponse.json({ error: "Trop de tentatives. Réessayez dans quelques minutes." }, { status: 429 });
+        return NextResponse.json({ error: t(getLocale(), "too_many_attempts_error") }, { status: 429 });
       }
     }
 
@@ -43,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     if (!admin || !admin.passwordHash || !(await bcrypt.compare(password, admin.passwordHash))) {
       if (ip !== "unknown") await prisma.adminLoginAttempt.create({ data: { ip } });
-      return NextResponse.json({ error: "Email ou mot de passe incorrect" }, { status: 401 });
+      return NextResponse.json({ error: t(getLocale(), "email_or_password_incorrect_error") }, { status: 401 });
     }
 
     const token = await signSession({ role: "PLATFORM_ADMIN", userId: admin.id, email: admin.email! });

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireOwnerSession, handleApiError } from "@/lib/guards";
 import { getPlatformSettings } from "@/lib/settings";
 import { sendContactRequestNotification } from "@/lib/email";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 
 const bodySchema = z.object({
   firstName: z.string().min(1),
@@ -28,7 +30,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await requireOwnerSession();
     const parsed = bodySchema.safeParse(await req.json());
-    if (!parsed.success) return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
+    if (!parsed.success) return NextResponse.json({ error: t(getLocale(), "invalid_request_error") }, { status: 400 });
 
     const request = await prisma.contactRequest.create({
       data: { ...parsed.data, organizationId: session.organizationId },

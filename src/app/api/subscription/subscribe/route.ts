@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await requireOwnerSession();
     const parsed = bodySchema.safeParse(await req.json());
-    if (!parsed.success) return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
+    if (!parsed.success) return NextResponse.json({ error: t(getLocale(), "invalid_request_error") }, { status: 400 });
 
     const plan = await prisma.plan.findUnique({ where: { key: parsed.data.planKey } });
     if (!plan) throw new HttpError(404, "Formule introuvable");

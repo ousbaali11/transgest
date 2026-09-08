@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession, handleApiError } from "@/lib/guards";
+import { assertActionVerified } from "@/lib/admin-action";
 
 const patchSchema = z.object({
   visible: z.boolean().optional(),
@@ -16,6 +17,7 @@ const patchSchema = z.object({
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireAdminSession();
+    await assertActionVerified("VIEW_SUBSCRIPTIONS");
     const parsed = patchSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 

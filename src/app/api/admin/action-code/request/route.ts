@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAdminSession, handleApiError, HttpError } from "@/lib/guards";
 import { getPlatformSettings } from "@/lib/settings";
 import { sendLoginCodeEmail } from "@/lib/email";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 
 const bodySchema = z.object({
   purpose: z.enum(["VIEW_SUBSCRIPTIONS", "CHANGE_CONTACT_EMAIL"]),
@@ -23,7 +25,7 @@ export async function POST(req: NextRequest) {
   try {
     await requireAdminSession();
     const parsed = bodySchema.safeParse(await req.json());
-    if (!parsed.success) return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
+    if (!parsed.success) return NextResponse.json({ error: t(getLocale(), "invalid_request_error") }, { status: 400 });
 
     const settings = await getPlatformSettings();
     if (!settings.contactEmail) {

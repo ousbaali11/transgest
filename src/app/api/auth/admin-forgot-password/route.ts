@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { sendLoginCodeEmail } from "@/lib/email";
 import { handleApiError } from "@/lib/guards";
 import { getPlatformSettings } from "@/lib/settings";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 
 const bodySchema = z.object({ email: z.string().email() });
 
@@ -31,7 +33,7 @@ export async function POST(req: NextRequest) {
   try {
     const parsed = bodySchema.safeParse(await req.json());
     if (!parsed.success) {
-      return NextResponse.json({ error: "Adresse email invalide" }, { status: 400 });
+      return NextResponse.json({ error: t(getLocale(), "invalid_email_error") }, { status: 400 });
     }
     const email = parsed.data.email.toLowerCase().trim();
     const ip = getClientIp(req);
@@ -41,7 +43,7 @@ export async function POST(req: NextRequest) {
         where: { ip, createdAt: { gt: new Date(Date.now() - IP_WINDOW_MS) } },
       });
       if (countFromIp >= IP_MAX_REQUESTS) {
-        return NextResponse.json({ error: "Trop de demandes depuis cette connexion. Réessayez plus tard." }, { status: 429 });
+        return NextResponse.json({ error: t(getLocale(), "too_many_requests_ip_error") }, { status: 429 });
       }
     }
 

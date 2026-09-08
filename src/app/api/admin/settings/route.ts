@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession, handleApiError } from "@/lib/guards";
+import { assertActionVerified } from "@/lib/admin-action";
 
 // Réservé à l'admin (déjà protégé par requireAdminSession), mais une liste
 // blanche reste la bonne pratique : "singleton" étant un ID fixe connu,
@@ -43,6 +44,18 @@ export async function PATCH(req: NextRequest) {
     await requireAdminSession();
     const parsed = patchSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+
+    // Changer l'email de contact exige une vérification par code — mais
+    // seulement s'il y en avait déjà un configuré (voir la même règle
+    // côté interface dans AdminSettingsPanel : rien à protéger la toute
+    // première fois, puisqu'aucun email de confiance n'existe encore).
+    if (parsed.data.contactEmail !== undefined) {
+      const current = await prisma.platformSettings.findUnique({ where: { id: "singleton" } });
+      if (current?.contactEmail) {
+        await assertActionVerified("CHANGE_CONTACT_EMAIL");
+      }
+    }
+
     const settings = await prisma.platformSettings.update({ where: { id: "singleton" }, data: parsed.data });
     return NextResponse.json(settings);
   } catch (e) {

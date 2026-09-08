@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     if (!settings.paypalEnabled) throw new HttpError(400, "Le paiement par PayPal n'est pas activé.");
 
     const parsed = bodySchema.safeParse(await req.json());
-    if (!parsed.success) return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
+    if (!parsed.success) return NextResponse.json({ error: t(getLocale(), "invalid_request_error") }, { status: 400 });
     const { planKey, interval } = parsed.data;
 
     const plan = await prisma.plan.findUnique({ where: { key: planKey } });

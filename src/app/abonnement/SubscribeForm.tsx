@@ -108,7 +108,7 @@ export default function SubscribeForm({
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
               <strong>{plan.label}</strong>
               <strong style={{ color: "var(--primary)" }}>
-                {formatMoney(priceForInterval, currency)}
+                {formatMoney(priceForInterval, currency, t(locale, "free_label"))}
                 {!isFree && <span className="muted">/{interval === "annual" ? t(locale, "per_year") : t(locale, "per_month")}</span>}
               </strong>
             </div>

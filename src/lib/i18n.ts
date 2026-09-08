@@ -415,6 +415,10 @@ const dict = {
 
   // Vérification par code pour les actions admin sensibles
   admin_action_code_desc: { fr: "Par sécurité, un code de vérification est requis — envoyé à votre email de contact configuré.", en: "For security, a verification code is required — sent to your configured contact email.", ary: "للأمان، خاصنا كود ديال التحقق — كيتصيفط للإيمايل ديال التواصل اللي صيفطتي." },
+  admin_action_verification_required: { fr: "Vérification par code requise avant cette action — retournez à l'écran précédent.", en: "Code verification required before this action — go back to the previous screen.", ary: "خاص تحقق بالكود قبل هاد العملية — رجع للشاشة اللي قبل." },
+  not_authenticated_error: { fr: "Non authentifié", en: "Not authenticated", ary: "ماشي داخل" },
+  owner_only_error: { fr: "Réservé au propriétaire", en: "Owner only", ary: "خاص بصاحب الفلوطة غير" },
+  server_error_generic: { fr: "Erreur serveur", en: "Server error", ary: "خطأ فالسيرفر" },
   admin_delete_request_confirm: { fr: "Supprimer cette demande ?", en: "Delete this request?", ary: "تحيد هاد الطلب؟" },
 
   // Apparence (interface classique / avancée)
@@ -431,6 +435,29 @@ const dict = {
   appearance_accent_blue: { fr: "Bleu clair", en: "Light blue", ary: "أزرق فاتح" },
   close_action: { fr: "Fermer", en: "Close", ary: "سد" },
   dashboard_revenue_vs_expenses: { fr: "Chiffre d'affaires vs dépenses", en: "Revenue vs expenses", ary: "رقم الأعمال مقابل المصاريف" },
+
+  // Messages d'erreur API — auparavant codés en dur en français dans les
+  // routes elles-mêmes (jamais couverts par les audits précédents, qui
+  // portaient sur le texte affiché, pas les réponses d'erreur du serveur).
+  invalid_request_error: { fr: "Requête invalide", en: "Invalid request", ary: "الطلب ماشي صحيح" },
+  invalid_email_error: { fr: "Adresse email invalide", en: "Invalid email address", ary: "الإيمايل ماشي صحيح" },
+  code_expired_error: { fr: "Code expiré, demandez-en un nouveau.", en: "Code expired, request a new one.", ary: "الكود سالا، طلب واحد جديد." },
+  too_many_attempts_error: { fr: "Trop de tentatives, redemandez un nouveau code.", en: "Too many attempts, request a new code.", ary: "بزاف ديال المحاولات، طلب كود جديد." },
+  too_many_requests_ip_error: { fr: "Trop de demandes depuis cette connexion. Réessayez plus tard.", en: "Too many requests from this connection. Try again later.", ary: "بزاف ديال الطلبات من هاد الكونيكسيون. عاود حاول من بعد." },
+  incorrect_code_error: { fr: "Code incorrect", en: "Incorrect code", ary: "الكود ماشي صحيح" },
+  invalid_code_error: { fr: "Code invalide", en: "Invalid code", ary: "الكود ماشي صحيح" },
+  account_not_found_error: { fr: "Compte introuvable", en: "Account not found", ary: "الكونط ماكاينش" },
+  not_owner_account_error: { fr: "Ce compte n'est pas un compte propriétaire.", en: "This account is not an owner account.", ary: "هاد الكونط ماشي ديال صاحب الفلوطة." },
+  driver_code_length_error: { fr: "Le code doit contenir 8 caractères.", en: "The code must contain 8 characters.", ary: "الكود خاصو يكون 8 حروف." },
+  driver_incorrect_code_error: { fr: "Code incorrect. Vérifiez auprès du propriétaire de la flotte.", en: "Incorrect code. Check with the fleet owner.", ary: "الكود ماشي صحيح. تأكد مع صاحب الفلوطة." },
+  driver_no_org_error: { fr: "Compte sans organisation associée", en: "Account with no associated organization", ary: "الكونط ماعندوش شركة مرتبطة بيه" },
+  current_password_incorrect_error: { fr: "Mot de passe actuel incorrect", en: "Current password incorrect", ary: "الكلمة السرية الحالية ماشي صحيحة" },
+  password_min_length_error: { fr: "Le nouveau mot de passe doit contenir au moins 6 caractères.", en: "The new password must be at least 6 characters.", ary: "الكلمة السرية الجديدة خاصها تكون 6 حروف على الأقل." },
+  email_or_password_incorrect_error: { fr: "Email ou mot de passe incorrect", en: "Incorrect email or password", ary: "الإيمايل ولا الكلمة السرية ماشي صحاح" },
+  trip_not_found_error: { fr: "Voyage introuvable", en: "Trip not found", ary: "السفرية ماكايناش" },
+  plan_not_found_error: { fr: "Formule introuvable", en: "Plan not found", ary: "الصيغة ماكايناش" },
+  org_not_found_error: { fr: "Organisation introuvable", en: "Organization not found", ary: "الشركة ماكايناش" },
+  invalid_locale_error: { fr: "Langue invalide", en: "Invalid language", ary: "اللغة ماشي صحيحة" },
 } as const;
 
 export type TKey = keyof typeof dict;

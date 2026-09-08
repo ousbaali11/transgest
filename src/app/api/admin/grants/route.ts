@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAdminSession, handleApiError } from "@/lib/guards";
 import { getStripe } from "@/lib/stripe";
 import { paypalFetch } from "@/lib/paypal";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 
 const bodySchema = z.object({
   organizationId: z.string(),
@@ -47,10 +49,10 @@ export async function POST(req: NextRequest) {
     const { organizationId, planKey, durationDays } = parsed.data;
 
     const plan = await prisma.plan.findUnique({ where: { key: planKey } });
-    if (!plan) return NextResponse.json({ error: "Formule introuvable" }, { status: 404 });
+    if (!plan) return NextResponse.json({ error: t(getLocale(), "plan_not_found_error") }, { status: 404 });
 
     const existingOrg = await prisma.organization.findUnique({ where: { id: organizationId } });
-    if (!existingOrg) return NextResponse.json({ error: "Organisation introuvable" }, { status: 404 });
+    if (!existingOrg) return NextResponse.json({ error: t(getLocale(), "org_not_found_error") }, { status: 404 });
     if (existingOrg.stripeSubscriptionId || existingOrg.paypalSubscriptionId) {
       await cancelExistingPaidSubscription(existingOrg);
     }
