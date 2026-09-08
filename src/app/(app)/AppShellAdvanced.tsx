@@ -84,9 +84,14 @@ export default function AppShellAdvanced({
   );
 
   return (
-    <div className="app-advanced" data-accent={advancedAccent} dir="ltr">
-      {/* Barre latérale — bureau/tablette large */}
-      <aside className="adv-sidebar">
+    <div className="app-advanced" data-accent={advancedAccent}>
+      {/* Barre latérale — bureau/tablette large. dir="ltr" ici uniquement
+          (jamais sur l'enveloppe globale ci-dessus) : la navigation reste
+          dans un sens fixe quelle que soit la langue, mais le contenu de
+          page plus bas (main.adv-content) doit garder le sens normal du
+          document — RTL en Darija — sans quoi tout le texte des pages se
+          retrouverait forcé à gauche même en arabe. */}
+      <aside className="adv-sidebar" dir="ltr">
         <div style={{ padding: "0 12px", marginBottom: 20 }}>{logoBlock}</div>
         {navLinks()}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 12px 0", borderTop: "1px solid var(--adv-border)", marginTop: 12 }}>
@@ -107,13 +112,16 @@ export default function AppShellAdvanced({
           latérale (qui écraserait le contenu), un tiroir reprend les mêmes liens. */}
       <div dir="ltr" className="adv-mobile-topbar">
         {logoBlock}
-        <button
-          onClick={() => setDrawerOpen(true)}
-          aria-label={t(locale, "nav_more")}
-          style={{ padding: 8, borderRadius: 8, background: "var(--adv-bg)", border: "none", cursor: "pointer", display: "flex" }}
-        >
-          <Menu size={20} color="var(--adv-text)" />
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <LanguageSwitcher current={locale} onLight />
+          <button
+            onClick={() => setDrawerOpen(true)}
+            aria-label={t(locale, "nav_more")}
+            style={{ padding: 8, borderRadius: 8, background: "var(--adv-bg)", border: "none", cursor: "pointer", display: "flex" }}
+          >
+            <Menu size={20} color="var(--adv-text)" />
+          </button>
+        </div>
       </div>
 
       {drawerOpen && (
