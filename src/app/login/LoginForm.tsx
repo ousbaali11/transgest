@@ -140,24 +140,35 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, uiT
     }
   }
 
+  const advanced = uiTheme === "advanced";
+
   return (
-    <div className={uiTheme === "advanced" ? "app-advanced" : ""} style={{ minHeight: "100vh" }}>
+    <div className={advanced ? "app-advanced" : ""} style={{ minHeight: "100vh" }}>
       <LandingHeader appName={appName} logoEmoji={logoEmoji} logoType={logoType} logoImage={logoImage} locale={locale} uiTheme={uiTheme} onHome={goHome} />
 
-      <div className="container">
+      <div className="container" style={advanced ? { maxWidth: 720, paddingTop: 12 } : undefined}>
         {role === "select" && (
-          <div style={{ textAlign: "center", margin: "36px 0 32px" }}>
-            <h1 style={{ fontSize: 26, lineHeight: 1.25, marginBottom: 12 }}>{t(locale, "landing_headline")}</h1>
+          <div style={{ textAlign: "center", margin: advanced ? "48px 0 40px" : "36px 0 32px" }}>
+            <h1 style={{ fontSize: advanced ? 30 : 26, lineHeight: 1.25, marginBottom: 12 }}>{t(locale, "landing_headline")}</h1>
             <p className="muted" style={{ fontSize: 15, maxWidth: 440, margin: "0 auto" }}>{t(locale, "landing_subheadline")}</p>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, margin: "28px 0", textAlign: "left" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: advanced ? 12 : 12, margin: "28px 0", textAlign: "left" }}>
               {FEATURES.map((f) => (
-                <div key={f.key} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <f.icon size={14} color="var(--primary)" />
+                advanced ? (
+                  <div key={f.key} style={{ background: "var(--adv-surface)", border: "1px solid var(--adv-border)", borderRadius: 10, padding: 14 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+                      <f.icon size={15} color="var(--primary)" />
+                    </div>
+                    <span style={{ fontSize: 13, lineHeight: 1.4 }}>{t(locale, f.key)}</span>
                   </div>
-                  <span style={{ fontSize: 13, lineHeight: 1.4 }}>{t(locale, f.key)}</span>
-                </div>
+                ) : (
+                  <div key={f.key} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <f.icon size={14} color="var(--primary)" />
+                    </div>
+                    <span style={{ fontSize: 13, lineHeight: 1.4 }}>{t(locale, f.key)}</span>
+                  </div>
+                )
               ))}
             </div>
           </div>
@@ -169,7 +180,7 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, uiT
           </div>
         )}
 
-        <div className="card" style={{ maxWidth: 420, margin: "0 auto" }}>
+        <div className="card" style={{ maxWidth: 420, margin: "0 auto", padding: advanced ? 24 : undefined }}>
           {role === "select" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <button className="btn" onClick={() => setRole("owner")}>{t(locale, "login_owner")}</button>
