@@ -79,7 +79,7 @@ export default function LandingHeader({
         <span style={{ color: advanced ? "#1A1A1E" : "#fff", fontWeight: 700, fontSize: 16, fontFamily: "var(--font-display)" }}>{appName}</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <LanguageSwitcher current={locale} />
+        <LanguageSwitcher current={locale} onLight={advanced} />
         {logoutRedirectTo ? (
           <button
             onClick={logout}

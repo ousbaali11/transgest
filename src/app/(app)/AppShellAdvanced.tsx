@@ -90,7 +90,7 @@ export default function AppShellAdvanced({
         <div style={{ padding: "0 12px", marginBottom: 20 }}>{logoBlock}</div>
         {navLinks()}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 12px 0", borderTop: "1px solid var(--adv-border)", marginTop: 12 }}>
-          <LanguageSwitcher current={locale} />
+          <LanguageSwitcher current={locale} onLight />
           <button
             onClick={logout}
             disabled={logoutBusy}
@@ -134,7 +134,7 @@ export default function AppShellAdvanced({
             </div>
             {navLinks(() => setDrawerOpen(false))}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 12px 0", borderTop: "1px solid var(--adv-border)", marginTop: 12 }}>
-              <LanguageSwitcher current={locale} />
+              <LanguageSwitcher current={locale} onLight />
               <button
                 onClick={logout}
                 disabled={logoutBusy}

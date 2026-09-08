@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Languages } from "lucide-react";
 import { locales, localeInfo, type Locale } from "@/lib/i18n";
 
-export default function LanguageSwitcher({ current }: { current: Locale }) {
+export default function LanguageSwitcher({ current, onLight = false }: { current: Locale; onLight?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -32,9 +32,12 @@ export default function LanguageSwitcher({ current }: { current: Locale }) {
         onClick={() => setOpen((v) => !v)}
         aria-label={localeInfo[current].label}
         title={localeInfo[current].label}
-        style={{ padding: 8, borderRadius: 999, background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", border: "none", cursor: "pointer" }}
+        style={{
+          padding: 8, borderRadius: 999, display: "flex", alignItems: "center", border: "none", cursor: "pointer",
+          background: onLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.12)",
+        }}
       >
-        <Languages size={17} color="#fff" />
+        <Languages size={17} color={onLight ? "#1A1A1E" : "#fff"} />
       </button>
 
       {open && (
