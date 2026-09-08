@@ -8,7 +8,7 @@ import CollapsibleCard from "@/components/CollapsibleCard";
 import AdminActionCodeGate from "@/components/AdminActionCodeGate";
 import AdminSubscriptionsPanel from "./AdminSubscriptionsPanel";
 
-type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; uiTheme: string; themePrimary: string; themeAccent: string; forcedPlanId: string | null; stripeEnabled: boolean; paypalEnabled: boolean; manualPaymentCountries: string[]; contactEmail: string | null; contactWhatsapp: string | null };
+type Settings = { appName: string; logoEmoji: string; logoType: string; logoImage?: string | null; logoSize?: number; uiTheme: string; advancedAccent: string; themePrimary: string; themeAccent: string; forcedPlanId: string | null; stripeEnabled: boolean; paypalEnabled: boolean; manualPaymentCountries: string[]; contactEmail: string | null; contactWhatsapp: string | null };
 type Plan = {
   id: string; key: string; label: string; priceMAD: number; visible: boolean;
   priceMonthlyMAD: number | null; priceAnnualMAD: number | null;
@@ -188,6 +188,30 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
           ))}
         </div>
         <p className="muted" style={{ fontSize: 11, marginTop: 10 }}>{t(locale, "appearance_note")}</p>
+        {settings.uiTheme === "advanced" && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+            <span className="field-label" style={{ display: "block", marginBottom: 8 }}>{t(locale, "appearance_accent_label")}</span>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {([
+                { value: "gray", label: t(locale, "appearance_accent_gray"), swatch: "linear-gradient(180deg, #E9ECF0 0%, #FCFCFD 100%)" },
+                { value: "blue", label: t(locale, "appearance_accent_blue"), swatch: "linear-gradient(180deg, #E1EDFB 0%, #FBFDFF 100%)" },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => saveSettings({ advancedAccent: opt.value })}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, cursor: "pointer",
+                    border: settings.advancedAccent === opt.value ? "2px solid var(--primary)" : "1px solid var(--line)",
+                    background: "#fff",
+                  }}
+                >
+                  <span style={{ width: 20, height: 20, borderRadius: 6, background: opt.swatch, border: "1px solid var(--line)" }} />
+                  <span style={{ fontSize: 13 }}>{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </CollapsibleCard>
 
       <CollapsibleCard title={t(locale, "theme_title")}>

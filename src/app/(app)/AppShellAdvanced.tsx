@@ -20,9 +20,9 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
  * les mêmes liens, pour ne jamais perdre l'accès à une fonctionnalité.
  */
 export default function AppShellAdvanced({
-  appName, logoEmoji, logoType, logoImage, isOwner, locale, children,
+  appName, logoEmoji, logoType, logoImage, isOwner, advancedAccent, locale, children,
 }: {
-  appName: string; logoEmoji: string; logoType: string; logoImage: string | null; isOwner: boolean; locale: Locale; children: React.ReactNode;
+  appName: string; logoEmoji: string; logoType: string; logoImage: string | null; isOwner: boolean; advancedAccent: string; locale: Locale; children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -84,7 +84,7 @@ export default function AppShellAdvanced({
   );
 
   return (
-    <div className="app-advanced" dir="ltr">
+    <div className="app-advanced" data-accent={advancedAccent} dir="ltr">
       {/* Barre latérale — bureau/tablette large */}
       <aside className="adv-sidebar">
         <div style={{ padding: "0 12px", marginBottom: 20 }}>{logoBlock}</div>

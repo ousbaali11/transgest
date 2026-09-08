@@ -133,6 +133,18 @@ input:focus, select:focus, textarea:focus {
   overflow-y: auto;
   z-index: 30;
 }
+/* Teinte de la barre latérale (et de la barre du haut mobile) — choix
+   admin entre gris clair et bleu clair, en dégradé : plus soutenu en
+   haut, qui s'éclaircit vers le bas. Le contenu (cartes, texte) reste
+   blanc/neutre, seule cette bande de navigation change de teinte. */
+[data-accent="gray"] .adv-sidebar,
+[data-accent="gray"] .adv-mobile-topbar {
+  background: linear-gradient(180deg, #E9ECF0 0%, #FCFCFD 100%);
+}
+[data-accent="blue"] .adv-sidebar,
+[data-accent="blue"] .adv-mobile-topbar {
+  background: linear-gradient(180deg, #E1EDFB 0%, #FBFDFF 100%);
+}
 .adv-sidebar-link {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 12px; border-radius: 8px;

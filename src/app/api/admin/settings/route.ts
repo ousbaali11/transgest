@@ -10,6 +10,7 @@ const patchSchema = z.object({
   appName: z.string().min(1).optional(),
   logoType: z.enum(["emoji", "image"]).optional(),
   uiTheme: z.enum(["classic", "advanced"]).optional(),
+  advancedAccent: z.enum(["gray", "blue"]).optional(),
   logoEmoji: z.string().optional(),
   logoImage: z.string().nullable().optional(),
   logoSize: z.number().int().positive().optional(),

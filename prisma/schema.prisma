@@ -17,6 +17,7 @@ model PlatformSettings {
   appName      String   @default("TransGest")
   logoType     String   @default("emoji") // "emoji" | "image"
   uiTheme      String   @default("classic") // "classic" | "advanced" — interface visuelle, aucun impact sur la logique
+  advancedAccent String @default("gray") // "gray" | "blue" — teinte de la barre latérale/du haut en interface Avancée uniquement
   logoEmoji    String   @default("🚛")
   logoImage    String?  @db.Text // data URL ou URL de stockage (Supabase Storage recommandé en prod)
   logoSize     Int      @default(40)

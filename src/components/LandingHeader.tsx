@@ -27,18 +27,26 @@ import { t, type Locale } from "@/lib/i18n";
  *
  * `uiTheme` bascule uniquement l'apparence (fond clair avec bordure au
  * lieu de la barre pleine couleur) — même contenu, mêmes actions.
+ *
+ * `advancedAccent` ("gray" | "blue") : dégradé optionnel appliqué
+ * uniquement quand l'admin utilise cette barre (page Admin) — laisser
+ * vide ailleurs garde un fond blanc uni, comme sur les écrans de connexion.
  */
 export default function LandingHeader({
-  appName, logoEmoji, logoType, logoImage, locale, showHome = true, onHome, logoutRedirectTo, uiTheme = "classic",
+  appName, logoEmoji, logoType, logoImage, locale, showHome = true, onHome, logoutRedirectTo, uiTheme = "classic", advancedAccent,
 }: {
   appName: string; logoEmoji: string; logoType: string; logoImage: string | null; locale: Locale;
-  showHome?: boolean; onHome?: () => void; logoutRedirectTo?: string; uiTheme?: string;
+  showHome?: boolean; onHome?: () => void; logoutRedirectTo?: string; uiTheme?: string; advancedAccent?: string;
 }) {
   const router = useRouter();
   const [logoutBusy, setLogoutBusy] = useState(false);
   const advanced = uiTheme === "advanced";
   const iconColor = advanced ? "#1A1A1E" : "#fff";
-  const iconBg = advanced ? "#F7F7F8" : "rgba(255,255,255,0.12)";
+  const iconBg = advanced ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.12)";
+  const advancedBackground =
+    advancedAccent === "blue" ? "linear-gradient(180deg, #E1EDFB 0%, #FBFDFF 100%)"
+    : advancedAccent === "gray" ? "linear-gradient(180deg, #E9ECF0 0%, #FCFCFD 100%)"
+    : "#fff";
 
   async function logout() {
     setLogoutBusy(true);
@@ -57,7 +65,7 @@ export default function LandingHeader({
       dir="ltr"
       style={{
         padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: advanced ? "#fff" : "var(--primary)",
+        background: advanced ? advancedBackground : "var(--primary)",
         borderBottom: advanced ? "1px solid #E7E7E9" : "none",
       }}
     >

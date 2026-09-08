@@ -25,11 +25,20 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   const isOwner = !!session && "role" in session && session.role === "OWNER";
   const locale = getLocale();
 
-  const Shell = settings.uiTheme === "advanced" ? AppShellAdvanced : AppShell;
+  if (settings.uiTheme === "advanced") {
+    return (
+      <AppShellAdvanced
+        appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage}
+        isOwner={isOwner} advancedAccent={settings.advancedAccent} locale={locale}
+      >
+        {children}
+      </AppShellAdvanced>
+    );
+  }
 
   return (
-    <Shell appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} isOwner={isOwner} locale={locale}>
+    <AppShell appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} isOwner={isOwner} locale={locale}>
       {children}
-    </Shell>
+    </AppShell>
   );
 }
