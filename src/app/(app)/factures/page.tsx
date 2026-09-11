@@ -47,7 +47,7 @@ export default async function FacturesPage({ searchParams }: { searchParams: { s
     t(locale, "invoices_empty_all");
 
   return (
-    <div className="container">
+    <div className="container pm-invoices">
       <ScreenHeader title={t(locale, "nav_invoices")} />
 
       <div style={{ display: "flex", gap: 20, borderBottom: "1px solid var(--line)", marginBottom: 12, overflowX: "auto" }}>
@@ -66,6 +66,7 @@ export default async function FacturesPage({ searchParams }: { searchParams: { s
         ))}
       </div>
 
+      <div className="pm-invoices-list">
       {invoices.length === 0 ? (
         <p className="muted">{emptyMessage}</p>
       ) : (
@@ -89,6 +90,7 @@ export default async function FacturesPage({ searchParams }: { searchParams: { s
           </div>
         ))
       )}
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { getValidSession } from "@/lib/auth";
 import { getPlatformSettings } from "@/lib/settings";
 import { getLocale } from "@/lib/get-locale";
 import LoginForm from "./LoginForm";
+import LoginPremium from "./LoginPremium";
 
 export default async function LoginPage() {
   // Une session valide existe déjà (l'utilisateur ne s'est jamais
@@ -19,6 +20,20 @@ export default async function LoginPage() {
 
   const settings = await getPlatformSettings();
   const locale = getLocale();
+
+  // Interface "Premium" : page d'accueil vitrine dédiée. Classique et
+  // Avancée gardent LoginForm, inchangé.
+  if (settings.uiTheme === "premium") {
+    return (
+      <LoginPremium
+        appName={settings.appName}
+        logoEmoji={settings.logoEmoji}
+        logoType={settings.logoType}
+        logoImage={settings.logoImage}
+        locale={locale}
+      />
+    );
+  }
 
   return (
     <LoginForm

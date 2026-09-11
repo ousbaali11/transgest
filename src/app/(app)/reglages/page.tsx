@@ -19,7 +19,7 @@ export default async function ReglagesPage() {
   const plan = org.planId ? await prisma.plan.findUnique({ where: { id: org.planId } }) : null;
 
   return (
-    <div className="container">
+    <div className="container pm-settings">
       <ScreenHeader title={t(locale, "nav_settings")} backHref="/dashboard" backLabel={t(locale, "back")} />
 
       {isOwner ? (

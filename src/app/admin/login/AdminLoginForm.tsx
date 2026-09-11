@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { t, type Locale } from "@/lib/i18n";
 import LandingHeader from "@/components/LandingHeader";
+import { themeClass } from "@/lib/ui-theme";
 
 type Mode = "login" | "forgot-request" | "forgot-reset";
 
@@ -115,9 +116,9 @@ export default function AdminLoginForm({
   }
 
   return (
-    <div className={uiTheme === "advanced" ? "app-advanced" : ""} style={{ minHeight: "100vh" }}>
+    <div className={themeClass(uiTheme)} style={{ minHeight: "100vh" }}>
       <LandingHeader appName={appName} logoEmoji={logoEmoji} logoType={logoType} logoImage={logoImage} locale={locale} uiTheme={uiTheme} onHome={() => router.push("/login")} />
-      <div className="container">
+      <div className="container pm-narrow">
       <h1 style={{ fontSize: 20, marginTop: 40, marginBottom: 4 }}>
         {mode === "login" ? t(locale, "admin_area_title") : t(locale, "forgot_password_title")}
       </h1>

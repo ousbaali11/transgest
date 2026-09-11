@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession, handleApiError } from "@/lib/guards";
 import { assertActionVerified } from "@/lib/admin-action";
+import { UI_THEMES } from "@/lib/ui-theme";
 import { getLocale } from "@/lib/get-locale";
 import { t } from "@/lib/i18n";
 
@@ -18,7 +19,7 @@ const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 const patchSchema = z.object({
   appName: z.string().min(1).max(60).optional(),
   logoType: z.enum(["emoji", "image"]).optional(),
-  uiTheme: z.enum(["classic", "advanced"]).optional(),
+  uiTheme: z.enum(UI_THEMES).optional(),
   advancedAccent: z.enum(["gray", "blue"]).optional(),
   logoEmoji: z.string().max(8).optional(),
   logoImage: z.string().max(2_000_000).nullable().optional(), // data URL (≈ 900 Ko d'image, limite déjà côté interface)

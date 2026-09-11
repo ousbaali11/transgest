@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { CSSProperties } from "react";
 import "./globals.css";
+import "./premium.css"; // interface "Premium" — scopée sous .app-premium, sans effet sur les deux autres
 import RegisterServiceWorker from "./RegisterServiceWorker";
 import { getPlatformSettings } from "@/lib/settings";
 import { getLocale } from "@/lib/get-locale";

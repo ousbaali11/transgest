@@ -114,12 +114,15 @@ export default async function DashboardPage() {
   const numberLocale = dateLocale(locale);
 
   return (
-    <div className="container">
-      <h1 style={{ fontSize: 20, margin: "20px 0" }}>{tr(locale, "dashboard_greeting")}</h1>
-      <p className="muted" style={{ marginTop: -14, marginBottom: 16 }}>{tr(locale, "dashboard_summary")}</p>
+    // Les classes pm-dash-* ne sont stylées QUE par l'interface Premium
+    // (premium.css : disposition en deux colonnes sur ordinateur) — sans
+    // effet en Classique et Avancée, où aucune règle ne les cible.
+    <div className="container pm-dash">
+      <h1 className="pm-dash-title" style={{ fontSize: 20, margin: "20px 0" }}>{tr(locale, "dashboard_greeting")}</h1>
+      <p className="muted pm-dash-sub" style={{ marginTop: -14, marginBottom: 16 }}>{tr(locale, "dashboard_summary")}</p>
 
       {isOwner && alerts.length > 0 && (
-        <Link href="/flotte" className="card" style={{ display: "block", textDecoration: "none", background: "#FDF1DF", border: "1px solid #F0D9A8" }}>
+        <Link href="/flotte" className="card pm-dash-alert" style={{ display: "block", textDecoration: "none", background: "#FDF1DF", border: "1px solid #F0D9A8" }}>
           <strong style={{ color: "#7A5314" }}>⚠ {tr(locale, "docs_to_renew").replace("{n}", String(alerts.length))}</strong>
           <div style={{ color: "#8A6A2E", fontSize: 13, marginTop: 4 }}>
             {alerts.slice(0, 2).map((a) => `${a.truck} · ${a.label}`).join(" — ")}{alerts.length > 2 ? "…" : ""}
@@ -158,7 +161,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="card">
+      <div className="card pm-dash-chart">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <strong>{tr(locale, "dashboard_revenue_vs_expenses")}</strong>
           <BarChart3 size={15} color="var(--muted)" />
@@ -166,7 +169,7 @@ export default async function DashboardPage() {
         <RevenueChart data={buckets} revenueLabel={tr(locale, "chart_revenue")} expensesLabel={tr(locale, "chart_expenses")} />
       </div>
 
-      <div className="card">
+      <div className="card pm-dash-overview">
         <strong>{tr(locale, "quick_overview")}</strong>
         <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -194,7 +197,7 @@ export default async function DashboardPage() {
       </div>
 
       {isOwner && leaderboard.length > 0 && (
-        <div className="card">
+        <div className="card pm-dash-leaders">
           <strong>{tr(locale, "driver_leaderboard")}</strong>
           <div style={{ marginTop: 10 }}>
             {leaderboard.map((d, i) => (
@@ -211,11 +214,12 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+      <div className="pm-dash-recent-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <strong style={{ fontSize: 14 }}>{tr(locale, "dashboard_recent_trips")}</strong>
         {hasData && <Link href="/trips" style={{ fontSize: 12, fontWeight: 600 }}>{tr(locale, "dashboard_view_all")}</Link>}
       </div>
 
+      <div className="pm-dash-recent">
       {!hasData ? (
         <div className="card" style={{ textAlign: "center", padding: "28px 16px" }}>
           <div style={{ width: 48, height: 48, borderRadius: 999, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
@@ -241,6 +245,7 @@ export default async function DashboardPage() {
           </div>
         ))
       )}
+      </div>
     </div>
   );
 }

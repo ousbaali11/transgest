@@ -103,7 +103,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
 
   return (
     <>
-      <div className="card">
+      <div className="card pm-exp-form">
         <strong>{editingId ? tr(locale, "expenses_edit") : tr(locale, "expenses_new")}</strong>
         <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", border: "1px solid var(--line)", marginTop: 10, marginBottom: 12 }}>
           {(["CARBURANT", "PEAGE", "AUTRES"] as const).map((c) => (
@@ -158,6 +158,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
         </div>
       </div>
 
+      <div className="pm-exp-list">
       {expenses.map((e) => {
         const canEdit = !isDriverViewer || e.createdByUserId === currentUserId;
         return (
@@ -184,6 +185,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
           </div>
         );
       })}
+      </div>
     </>
   );
 }

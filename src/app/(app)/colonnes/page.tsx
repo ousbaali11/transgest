@@ -14,7 +14,7 @@ export default async function ColonnesPage() {
   });
 
   return (
-    <div className="container">
+    <div className="container pm-columns">
       <ScreenHeader title={t(locale, "nav_custom_fields")} backHref="/dashboard" backLabel={t(locale, "back")} />
       <p className="muted" style={{ marginBottom: 16 }}>
         {t(locale, "columns_intro")}

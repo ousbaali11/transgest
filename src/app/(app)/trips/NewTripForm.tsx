@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { t as tr, type Locale } from "@/lib/i18n";
 
 type Option = { id: string; name?: string; immat?: string };
@@ -9,7 +9,22 @@ type CustomFieldDef = { id: string; label: string; type: "TEXT" | "NUMBER" };
 
 export default function NewTripForm({ trucks, drivers, clients, customFields = [], lockedDriverId = null, locale }: { trucks: Option[]; drivers: Option[]; clients: Option[]; customFields?: CustomFieldDef[]; lockedDriverId?: string | null; locale: Locale }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  // "/trips?new=1" (action "Nouveau voyage" de l'en-tête Premium) ouvre le
+  // formulaire directement ; sans ce paramètre, comportement inchangé.
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const [open, setOpen] = useState(searchParams.get("new") === "1");
+
+  // Le paramètre est consommé une seule fois : dès que le formulaire s'est
+  // ouvert grâce à lui, il est retiré de la barre d'adresse (sans
+  // rechargement ni nouvelle requête serveur). Un rechargement de la page
+  // ou un retour plus tard sur l'URL de l'historique ne rouvre donc pas le
+  // formulaire tout seul.
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      window.history.replaceState(window.history.state, "", pathname);
+    }
+  }, [searchParams, pathname]);
   const [busy, setBusy] = useState(false);
   const [f, setF] = useState({
     truckId: trucks[0]?.id || "", driverId: lockedDriverId || "", clientId: "",

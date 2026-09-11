@@ -169,6 +169,7 @@ export default function AdminSettingsPanel({ initialSettings, initialPlans, loca
           {([
             { value: "classic", label: t(locale, "appearance_classic"), desc: t(locale, "appearance_classic_desc") },
             { value: "advanced", label: t(locale, "appearance_advanced"), desc: t(locale, "appearance_advanced_desc") },
+            { value: "premium", label: t(locale, "appearance_premium"), desc: t(locale, "appearance_premium_desc") },
           ] as const).map((opt) => (
             <button
               key={opt.value}

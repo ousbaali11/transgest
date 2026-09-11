@@ -8,6 +8,7 @@ import AdminContactRequests from "./AdminContactRequests";
 import LandingHeader from "@/components/LandingHeader";
 import { getLocale } from "@/lib/get-locale";
 import { t } from "@/lib/i18n";
+import { themeClass } from "@/lib/ui-theme";
 
 export default async function AdminPage() {
   const session = await getValidSession();
@@ -36,9 +37,9 @@ export default async function AdminPage() {
   }));
 
   return (
-    <div className={settings.uiTheme === "advanced" ? "app-advanced" : ""} data-accent={settings.advancedAccent} style={{ minHeight: "100vh" }}>
+    <div className={themeClass(settings.uiTheme)} data-accent={settings.advancedAccent} style={{ minHeight: "100vh" }}>
       <LandingHeader appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} locale={locale} uiTheme={settings.uiTheme} advancedAccent={settings.advancedAccent} logoutRedirectTo="/admin/login" />
-      <div className="container">
+      <div className="container pm-admin">
         <h1 style={{ fontSize: 20, margin: "20px 0" }}>{t(locale, "admin_dashboard_title")}</h1>
 
         <div className="stat-grid">

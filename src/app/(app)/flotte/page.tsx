@@ -19,7 +19,7 @@ export default async function FlottePage() {
   }));
 
   return (
-    <div className="container">
+    <div className="container pm-fleet">
       <ScreenHeader title={t(locale, "nav_fleet")} backHref="/dashboard" backLabel={t(locale, "back")} />
       <FlotteManager
         initialTrucks={JSON.parse(JSON.stringify(trucks))}

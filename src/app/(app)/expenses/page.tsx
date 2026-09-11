@@ -26,7 +26,7 @@ export default async function ExpensesPage() {
   ]);
 
   return (
-    <div className="container">
+    <div className="container pm-expenses">
       <ScreenHeader title={t(locale, "nav_expenses")} />
       <ExpensesManager
         initialExpenses={JSON.parse(JSON.stringify(expenses))}

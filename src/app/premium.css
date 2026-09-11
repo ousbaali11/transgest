@@ -1,0 +1,286 @@
+/* ==========================================================================
+   Interface "Premium" — troisième apparence (Admin > Apparence).
+   En-tête blanc, menu latéral par rubriques (rail d'icônes sur tablette,
+   tiroir + barre du bas sur téléphone), fond neutre clair, cartes blanches
+   à ombre douce. Les accents reprennent les couleurs configurées par
+   l'admin (--primary / --accent). Tout est scopé sous .app-premium : rien
+   ici ne touche aux interfaces Classique et Avancée (globals.css).
+   ========================================================================== */
+.app-premium {
+  --pm-bg: #F4F6FA;
+  --pm-surface: #FFFFFF;
+  --pm-border: #E4E7EE;
+  --pm-text: #111827;
+  --pm-text-soft: #374151;
+  --pm-muted: #6B7280;
+  --pm-header-h: 60px;
+  --pm-sidebar-w: 260px;
+  --pm-rail-w: 72px;
+  min-height: 100vh;
+  background: var(--pm-bg);
+  color: var(--pm-text);
+}
+
+/* --- En-tête ---------------------------------------------------------- */
+.pm-header {
+  position: sticky; top: 0; z-index: 35;
+  height: var(--pm-header-h);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 0 16px;
+  background: var(--pm-surface);
+  border-bottom: 1px solid var(--pm-border);
+}
+.pm-header-side { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pm-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--pm-text); min-width: 0; }
+.pm-brand-name { font-family: var(--font-display); font-weight: 700; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pm-page-title { display: none; font-size: 14px; font-weight: 600; color: var(--pm-muted); white-space: nowrap; }
+.pm-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--pm-border);
+  background: var(--pm-surface); color: var(--pm-text-soft); cursor: pointer; padding: 0;
+}
+.pm-icon-btn:hover { background: var(--pm-bg); }
+.pm-icon-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pm-primary-action {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 36px; padding: 0 12px; border-radius: 8px;
+  background: var(--primary); color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap;
+}
+.pm-primary-action .pm-label { display: none; }
+.pm-user-chip {
+  display: none; align-items: center; gap: 6px;
+  max-width: 220px; height: 36px; padding: 0 10px; border-radius: 999px;
+  background: var(--pm-bg); color: var(--pm-text-soft); font-size: 13px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* --- Menu latéral ------------------------------------------------------ */
+.pm-sidebar {
+  display: none;
+  position: fixed; top: var(--pm-header-h); left: 0; bottom: 0; z-index: 25;
+  width: var(--pm-rail-w);
+  padding: 12px 8px;
+  background: var(--pm-surface);
+  border-right: 1px solid var(--pm-border);
+  overflow-y: auto;
+}
+.pm-group { margin-bottom: 8px; }
+.pm-group-label {
+  display: none;
+  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--pm-muted); padding: 12px 12px 6px;
+}
+.pm-link {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 10px; margin-bottom: 2px; border-radius: 8px;
+  color: var(--pm-text-soft); text-decoration: none; font-size: 14px; font-weight: 500;
+}
+.pm-link .pm-label { display: none; }
+.pm-link.active { background: var(--primary-10); color: var(--primary); font-weight: 600; }
+.pm-link:hover:not(.active) { background: var(--pm-bg); }
+.pm-nav-list .pm-link { justify-content: flex-start; padding: 10px 12px; }
+.pm-nav-list .pm-link .pm-label { display: inline; }
+.pm-nav-list .pm-group-label { display: block; }
+
+/* --- Tiroir mobile ----------------------------------------------------- */
+.pm-drawer-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(17, 24, 39, 0.45); display: flex; }
+.pm-drawer {
+  width: 280px; max-width: 84vw; height: 100%;
+  background: var(--pm-surface); padding: 16px 12px; display: flex; flex-direction: column; overflow-y: auto;
+}
+.pm-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 12px; border-bottom: 1px solid var(--pm-border); margin-bottom: 8px; }
+.pm-drawer-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--pm-border); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pm-user-line { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--pm-text-soft); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* --- Barre du bas (téléphone) ------------------------------------------ */
+.pm-bottombar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  display: flex; background: var(--pm-surface); border-top: 1px solid var(--pm-border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pm-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 0 7px; text-decoration: none; background: none; border: none; cursor: pointer;
+  color: #9CA3AF; font-size: 10px; font-weight: 600; font-family: var(--font-body);
+}
+.pm-tab.active { color: var(--primary); }
+
+/* --- Contenu ------------------------------------------------------------ */
+.pm-content { padding: 20px 16px 92px; }
+/* Pages sans menu latéral (admin, abonnement) : conteneur large avec ses
+   propres marges ; sous le menu (.pm-content), c'est celui-ci qui les porte. */
+.app-premium .container { max-width: 1040px; margin: 0 auto; padding: 24px 16px 64px; }
+.app-premium .pm-content .container { padding: 0; }
+/* Écrans de saisie isolés (connexion admin, choix d'abonnement) : colonne étroite */
+.app-premium .container.pm-narrow { max-width: 560px; }
+.app-premium .pm-content h1 { font-size: 22px; letter-spacing: -0.01em; }
+.app-premium .card {
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+.app-premium .stat-grid { gap: 12px; margin-bottom: 14px; }
+.app-premium .stat-card {
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  color: var(--pm-text);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+.app-premium .stat-card .label { color: var(--pm-muted); opacity: 1; font-size: 12px; font-weight: 500; }
+.app-premium .stat-card .value { color: var(--pm-text); font-size: 22px; }
+.app-premium input, .app-premium select, .app-premium textarea {
+  border-color: var(--pm-border);
+  border-radius: 8px;
+  background: var(--pm-surface);
+}
+.app-premium .btn { border-radius: 8px; }
+.app-premium .btn-ghost { border-color: var(--pm-border); background: var(--pm-surface); }
+.app-premium .btn-danger { border-color: #F2C4C0; }
+.app-premium .muted { color: var(--pm-muted); }
+
+/* --- Tablette : rail d'icônes ------------------------------------------ */
+@media (min-width: 768px) {
+  .pm-sidebar { display: block; }
+  .pm-bottombar, .pm-mobile-only { display: none !important; }
+  .pm-page-title { display: block; }
+  .pm-primary-action .pm-label { display: inline; }
+  .pm-content { margin-left: var(--pm-rail-w); padding: 28px 24px 48px; }
+  .app-premium .stat-grid { grid-template-columns: repeat(4, 1fr); }
+}
+/* --- Ordinateur : menu complet ----------------------------------------- */
+@media (min-width: 1100px) {
+  .pm-sidebar { width: var(--pm-sidebar-w); padding: 16px 12px; }
+  .pm-sidebar .pm-group-label { display: block; }
+  .pm-sidebar .pm-link { justify-content: flex-start; padding: 9px 12px; }
+  .pm-sidebar .pm-link .pm-label { display: inline; }
+  .pm-user-chip { display: inline-flex; }
+  .pm-content { margin-left: var(--pm-sidebar-w); padding: 32px 40px 56px; }
+  .pm-header { padding: 0 24px; }
+}
+
+/* --- Tableau de bord : deux colonnes sur ordinateur ---------------------
+   Colonne principale = chiffres, graphique, voyages récents ; colonne
+   latérale = aperçu rapide et classement. Les classes pm-dash-* sont posées
+   dans dashboard/page.tsx et n'existent visuellement qu'ici. */
+@media (min-width: 1100px) {
+  .app-premium .pm-dash {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    column-gap: 20px;
+    align-items: start;
+    grid-template-areas:
+      "title title"
+      "sub sub"
+      "alert alert"
+      "stats stats"
+      "chart side1"
+      "recenthead side2"
+      "recent side2";
+  }
+  .app-premium .pm-dash-title { grid-area: title; }
+  .app-premium .pm-dash-sub { grid-area: sub; }
+  .app-premium .pm-dash-alert { grid-area: alert; }
+  .app-premium .pm-dash .stat-grid { grid-area: stats; }
+  .app-premium .pm-dash-chart { grid-area: chart; }
+  .app-premium .pm-dash-overview { grid-area: side1; }
+  .app-premium .pm-dash-leaders { grid-area: side2; }
+  .app-premium .pm-dash-recent-head { grid-area: recenthead; }
+  .app-premium .pm-dash-recent { grid-area: recent; }
+}
+
+/* --- Écrans internes : dispositions larges sur ordinateur ---------------
+   Chaque écran garde son contenu (partagé avec Classique et Avancée) ; seuls
+   des conteneurs neutres portent une classe pm-* que ces règles disposent en
+   colonnes à partir de 1100px. Sous cette largeur, tout reste en une colonne. */
+@media (min-width: 1100px) {
+  /* Voyages / Factures : liste de cartes sur deux colonnes */
+  .app-premium .pm-trips-list, .app-premium .pm-invoices-list {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start;
+  }
+  .app-premium .pm-trips-list > .card, .app-premium .pm-invoices-list > .card { margin-bottom: 0; }
+  .app-premium .pm-trips-list > .muted, .app-premium .pm-invoices-list > .muted { grid-column: 1 / -1; }
+
+  /* Dépenses : formulaire de saisie fixe à gauche, historique à droite */
+  .app-premium .pm-expenses { display: grid; grid-template-columns: 400px minmax(0, 1fr); column-gap: 20px; align-items: start; }
+  .app-premium .pm-expenses > :first-child { grid-column: 1 / -1; }
+  .app-premium .pm-exp-form { position: sticky; top: calc(var(--pm-header-h) + 16px); }
+
+  /* Camions & chauffeurs : les deux cartes côte à côte */
+  .app-premium .pm-fleet { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; align-items: start; }
+  .app-premium .pm-fleet > :first-child { grid-column: 1 / -1; }
+
+  /* Colonnes personnalisées : formulaire à gauche, les deux listes à droite */
+  .app-premium .pm-columns { display: grid; grid-template-columns: 400px minmax(0, 1fr); column-gap: 20px; align-items: start; }
+  .app-premium .pm-columns > :first-child, .app-premium .pm-columns > p { grid-column: 1 / -1; }
+  /* nth-of-type(2) : le premier <div> est l'en-tête d'écran, le deuxième la carte du formulaire */
+  .app-premium .pm-columns > div.card:nth-of-type(2) { grid-row: span 2; }
+
+  /* Réglages : abonnement (ou compte chauffeur) à gauche, raccourcis et compte à droite */
+  .app-premium .pm-settings { display: grid; grid-template-columns: minmax(0, 1fr) 380px; column-gap: 20px; align-items: start; }
+  .app-premium .pm-settings > :first-child { grid-column: 1 / -1; }
+  .app-premium .pm-settings > div.card:nth-of-type(2) { grid-row: span 2; }
+
+  /* Panneau admin : sections pliables sur deux colonnes */
+  .app-premium .pm-admin { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; align-items: start; }
+  .app-premium .pm-admin > h1, .app-premium .pm-admin > .stat-grid { grid-column: 1 / -1; }
+}
+
+/* --- Page d'accueil "Premium" (non connecté) ---------------------------- */
+.pm-landing { max-width: 1080px; margin: 0 auto; padding: 0 20px 56px; }
+.pm-hero { text-align: center; padding: 56px 0 32px; }
+.pm-kicker { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); background: var(--primary-10); padding: 6px 12px; border-radius: 999px; margin-bottom: 18px; }
+.pm-hero h1 { font-size: 34px; line-height: 1.15; max-width: 720px; margin: 0 auto 14px; letter-spacing: -0.01em; }
+.pm-hero p { font-size: 17px; color: var(--pm-muted); max-width: 560px; margin: 0 auto 26px; line-height: 1.5; }
+.pm-cta-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.pm-cta-row .btn { width: auto; padding: 12px 22px; }
+.pm-trust { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 36px 0 8px; }
+.pm-trust-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--pm-text-soft); background: var(--pm-surface); border: 1px solid var(--pm-border); border-radius: 10px; padding: 12px 14px; line-height: 1.45; }
+.pm-trust-item svg { flex-shrink: 0; color: var(--primary); }
+.pm-section { padding: 40px 0 8px; }
+.pm-section-head { text-align: center; max-width: 620px; margin: 0 auto 26px; }
+.pm-section-head h2 { font-size: 26px; margin-bottom: 8px; letter-spacing: -0.01em; }
+.pm-section-head p { color: var(--pm-muted); font-size: 15px; line-height: 1.5; }
+.pm-feature-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.pm-feature { background: var(--pm-surface); border: 1px solid var(--pm-border); border-radius: 12px; padding: 18px; }
+.pm-feature-icon { width: 36px; height: 36px; border-radius: 9px; background: var(--primary-10); color: var(--primary); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+.pm-feature h3 { font-family: var(--font-body); font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.pm-feature p { font-size: 13px; color: var(--pm-muted); line-height: 1.5; }
+.pm-steps { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.pm-step { background: var(--pm-surface); border: 1px solid var(--pm-border); border-radius: 12px; padding: 20px 18px 18px; }
+.pm-step-num { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 999px; background: var(--primary); color: #fff; font-weight: 700; font-size: 13px; margin-bottom: 12px; }
+.pm-step h3 { font-family: var(--font-body); font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.pm-step p { font-size: 13px; color: var(--pm-muted); line-height: 1.5; }
+.pm-audience { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.pm-audience-card { background: var(--pm-surface); border: 1px solid var(--pm-border); border-radius: 12px; padding: 22px; }
+.pm-audience-card h3 { font-family: var(--font-body); font-size: 16px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.pm-audience-card h3 svg { color: var(--primary); }
+.pm-audience-card p { font-size: 14px; color: var(--pm-muted); line-height: 1.55; margin-bottom: 14px; }
+.pm-audience-card .btn { width: auto; padding: 10px 16px; }
+.pm-final { text-align: center; background: var(--primary); color: #fff; border-radius: 16px; padding: 36px 20px; margin-top: 40px; }
+.pm-final h2 { font-size: 24px; margin-bottom: 8px; color: #fff; }
+.pm-final p { color: rgba(255, 255, 255, 0.8); margin-bottom: 18px; font-size: 15px; }
+.pm-final .btn { width: auto; padding: 12px 22px; background: #fff; color: var(--primary); }
+.pm-footer { text-align: center; color: var(--pm-muted); font-size: 12px; padding: 28px 0 0; display: flex; flex-direction: column; gap: 6px; }
+.pm-footer a { color: var(--pm-muted); }
+.pm-login-wrap { max-width: 440px; margin: 40px auto 0; }
+.pm-login-card { background: var(--pm-surface); border: 1px solid var(--pm-border); border-radius: 14px; padding: 26px 22px; box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06); }
+.pm-login-card h1 { font-size: 22px; margin-bottom: 6px; }
+.pm-login-card .pm-hint { color: var(--pm-muted); font-size: 13px; margin-bottom: 18px; line-height: 1.5; }
+.pm-back-link { background: none; border: none; padding: 0; color: var(--primary); font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 14px; font-family: var(--font-body); }
+.pm-inline-link { background: none; border: none; padding: 0; color: var(--primary); font-weight: 600; cursor: pointer; text-decoration: underline; font-size: inherit; font-family: inherit; }
+@media (min-width: 640px) {
+  .pm-trust { grid-template-columns: repeat(3, 1fr); }
+  .pm-feature-grid { grid-template-columns: repeat(2, 1fr); }
+  .pm-steps { grid-template-columns: repeat(3, 1fr); }
+  .pm-audience { grid-template-columns: repeat(2, 1fr); }
+  .pm-hero { padding: 72px 0 36px; }
+  .pm-hero h1 { font-size: 42px; }
+}
+@media (min-width: 1024px) {
+  .pm-feature-grid { grid-template-columns: repeat(4, 1fr); }
+}

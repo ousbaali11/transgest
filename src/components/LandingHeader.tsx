@@ -41,8 +41,13 @@ export default function LandingHeader({
   const router = useRouter();
   const [logoutBusy, setLogoutBusy] = useState(false);
   const advanced = uiTheme === "advanced";
-  const iconColor = advanced ? "#1A1A1E" : "#fff";
-  const iconBg = advanced ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.12)";
+  // "Premium" : même famille visuelle claire que "Avancée" (icônes sombres
+  // sur fond blanc — jamais l'icône blanche de la barre Classique, invisible
+  // sur fond clair), sans le dégradé optionnel propre à "Avancée".
+  const premium = uiTheme === "premium";
+  const light = advanced || premium;
+  const iconColor = light ? "#1A1A1E" : "#fff";
+  const iconBg = light ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.12)";
   const advancedBackground =
     advancedAccent === "blue" ? "linear-gradient(180deg, #E1EDFB 0%, #FBFDFF 100%)"
     : advancedAccent === "gray" ? "linear-gradient(180deg, #E9ECF0 0%, #FCFCFD 100%)"
@@ -65,8 +70,8 @@ export default function LandingHeader({
       dir="ltr"
       style={{
         padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: advanced ? advancedBackground : "var(--primary)",
-        borderBottom: advanced ? "1px solid #E7E7E9" : "none",
+        background: advanced ? advancedBackground : premium ? "#fff" : "var(--primary)",
+        borderBottom: advanced ? "1px solid #E7E7E9" : premium ? "1px solid #E4E7EE" : "none",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -76,10 +81,10 @@ export default function LandingHeader({
         ) : (
           <span style={{ fontSize: 26, lineHeight: 1 }}>{logoEmoji}</span>
         )}
-        <span style={{ color: advanced ? "#1A1A1E" : "#fff", fontWeight: 700, fontSize: 16, fontFamily: "var(--font-display)" }}>{appName}</span>
+        <span style={{ color: light ? "#1A1A1E" : "#fff", fontWeight: 700, fontSize: 16, fontFamily: "var(--font-display)" }}>{appName}</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <LanguageSwitcher current={locale} onLight={advanced} />
+        <LanguageSwitcher current={locale} onLight={light} />
         {logoutRedirectTo ? (
           <button
             onClick={logout}

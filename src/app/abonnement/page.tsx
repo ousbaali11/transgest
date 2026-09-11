@@ -8,6 +8,7 @@ import { getLocale } from "@/lib/get-locale";
 import { t } from "@/lib/i18n";
 import { isOrgActive, inactiveReason } from "@/lib/require-active-org";
 import LandingHeader from "@/components/LandingHeader";
+import { themeClass } from "@/lib/ui-theme";
 import SubscribeForm from "./SubscribeForm";
 
 export default async function AbonnementPage() {
@@ -43,9 +44,9 @@ export default async function AbonnementPage() {
 
   if (session.role === "DRIVER") {
     return (
-      <div className={settings.uiTheme === "advanced" ? "app-advanced" : ""} style={{ minHeight: "100vh" }}>
+      <div className={themeClass(settings.uiTheme)} style={{ minHeight: "100vh" }}>
         <LandingHeader appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} locale={locale} uiTheme={settings.uiTheme} logoutRedirectTo="/login" />
-        <div className="container">
+        <div className="container pm-narrow">
           <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>{t(locale, "subscription_inactive_title")}</h1>
           <div className="card" style={{ marginTop: 20, textAlign: "center" }}>
             <p className="muted">
@@ -58,9 +59,9 @@ export default async function AbonnementPage() {
   }
 
   return (
-    <div className={settings.uiTheme === "advanced" ? "app-advanced" : ""} style={{ minHeight: "100vh" }}>
+    <div className={themeClass(settings.uiTheme)} style={{ minHeight: "100vh" }}>
       <LandingHeader appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} locale={locale} uiTheme={settings.uiTheme} logoutRedirectTo="/login" />
-      <div className="container">
+      <div className="container pm-narrow">
         <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>
           {reason === "locked" ? t(locale, "account_locked_title") : reason === "expired" ? t(locale, "subscription_expired_title") : t(locale, "choose_plan_title")}
         </h1>

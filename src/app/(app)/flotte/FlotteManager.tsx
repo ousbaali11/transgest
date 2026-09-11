@@ -212,7 +212,8 @@ export default function FlotteManager({ initialTrucks, initialDrivers, locale }:
             className="btn btn-ghost"
             style={{ width: "100%", marginBottom: 12, fontSize: 13 }}
           >
-            + {t(locale, "add_myself_driver")}
+            {/* le libellé traduit commence déjà par "+" : ne pas le doubler */}
+            {t(locale, "add_myself_driver")}
           </button>
         )}
 

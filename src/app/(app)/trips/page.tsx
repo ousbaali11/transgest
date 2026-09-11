@@ -36,11 +36,12 @@ export default async function TripsPage() {
   const customFieldsPlain = JSON.parse(JSON.stringify(customFields));
 
   return (
-    <div className="container">
+    <div className="container pm-trips">
       <ScreenHeader title={tr(locale, "nav_trips")} />
 
       <NewTripForm trucks={trucksPlain} drivers={driversPlain} clients={clientsPlain} customFields={customFieldsPlain} lockedDriverId={currentDriverId} locale={locale} />
 
+      <div className="pm-trips-list">
       {trips.length === 0 ? (
         <p className="muted">{tr(locale, "trips_empty")}</p>
       ) : (
@@ -72,6 +73,7 @@ export default async function TripsPage() {
           );
         })
       )}
+      </div>
     </div>
   );
 }
