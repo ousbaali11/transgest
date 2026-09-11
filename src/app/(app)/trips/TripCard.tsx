@@ -64,9 +64,9 @@ export default function TripCard({
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) { setEditing(false); router.refresh(); }
-      else setError(data.error || "Impossible d'enregistrer les modifications.");
+      else setError(data.error || tr(locale, "save_error"));
     } catch {
-      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
+      setError(tr(locale, "server_unreachable"));
     } finally {
       setBusy(false);
     }
@@ -150,13 +150,15 @@ export default function TripCard({
         <span>{trip.marchandise || "—"}</span>
         <strong style={{ color: benefice >= 0 ? "#2e7d53" : "#c0392b" }}>{fmtDH(benefice)}</strong>
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+      {/* flexWrap : badge de facture + lien PDF + Modifier/Supprimer côte à côte
+          débordaient de la carte sur un écran de 375px de large. */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10, gap: 8, flexWrap: "wrap" }}>
         {invoice ? (
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999, background: invoice.status === "PAYEE" ? "#E4F3EA" : "#FDF1DF", color: invoice.status === "PAYEE" ? "#2E7D53" : "#B5791C" }}>
-              Facture #{invoice.number} — {invoice.status === "PAYEE" ? tr(locale, "invoice_paid") : tr(locale, "invoice_pending")}
+              {tr(locale, "invoice_prefix")} #{invoice.number} — {invoice.status === "PAYEE" ? tr(locale, "invoice_paid") : tr(locale, "invoice_pending")}
             </span>
-            <a href={`/api/invoices/${invoice.id}/pdf`} style={{ fontSize: 11 }}>PDF</a>
+            <a href={`/api/invoices/${invoice.id}/pdf`} style={{ fontSize: 11 }}>{tr(locale, "pdf_label")}</a>
           </span>
         ) : canInvoice ? (
           <button className="btn btn-ghost" style={{ width: "auto", padding: "4px 10px", fontSize: 12 }} disabled={busy} onClick={generateInvoice}>{tr(locale, "invoice_generate")}</button>

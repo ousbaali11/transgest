@@ -1,32 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireOrgSession, handleApiError } from "@/lib/guards";
 import { assertOrgActive } from "@/lib/require-active-org";
-
-export const createSchema = z.object({
-  tripId: z.string().optional().nullable(),
-  truckId: z.string().optional().nullable(),
-  driverId: z.string().optional().nullable(),
-  category: z.enum(["CARBURANT", "PEAGE", "AUTRES"]),
-  date: z.string().datetime(),
-  quantite: z.number().optional().nullable(),
-  unite: z.string().optional().nullable(),
-  prixUnitaire: z.number().optional().nullable(),
-  montant: z.number(),
-  notes: z.string().optional(),
-  customFields: z.record(z.any()).optional(),
-});
+import { assertDriverInOrg, assertTripUsableBy, assertTruckInOrg, driverScope } from "@/lib/org-refs";
+import { expenseSchema as createSchema } from "@/lib/schemas";
 
 export async function GET(req: NextRequest) {
   try {
     const session = await requireOrgSession();
-    await assertOrgActive(session.organizationId);
+    await assertOrgActive(session);
     const { searchParams } = new URL(req.url);
     const tripId = searchParams.get("tripId") || undefined;
 
+    // Même cloisonnement que la page Dépenses : un chauffeur ne reçoit que
+    // les dépenses qui le concernent (cette route renvoyait tout).
     const expenses = await prisma.expense.findMany({
-      where: { organizationId: session.organizationId, ...(tripId ? { tripId } : {}) },
+      where: { organizationId: session.organizationId, ...driverScope(session), ...(tripId ? { tripId } : {}) },
       orderBy: { date: "desc" },
     });
     return NextResponse.json(expenses);
@@ -38,11 +27,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await requireOrgSession();
-    await assertOrgActive(session.organizationId);
+    await assertOrgActive(session);
     const parsed = createSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 
     const driverId = session.role === "DRIVER" ? session.driverId : parsed.data.driverId;
+
+    await Promise.all([
+      assertTripUsableBy(session, parsed.data.tripId),
+      assertTruckInOrg(session.organizationId, parsed.data.truckId),
+      assertDriverInOrg(session.organizationId, driverId),
+    ]);
 
     const expense = await prisma.expense.create({
       data: {

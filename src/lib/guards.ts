@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { getSession, SessionPayload } from "./session";
+import type { SessionPayload } from "./session";
+import { getValidSession } from "./auth";
 import { getLocale } from "./get-locale";
 import { t } from "./i18n";
 
@@ -14,7 +15,7 @@ export class HttpError extends Error {
 
 /** À appeler en tête de chaque route API réservée aux propriétaires/chauffeurs (lecture, ou écriture de leurs propres voyages/dépenses). */
 export async function requireOrgSession() {
-  const session = await getSession();
+  const session = await getValidSession();
   if (!session || (session.role !== "OWNER" && session.role !== "DRIVER")) {
     throw new HttpError(401, t(getLocale(), "not_authenticated_error"));
   }
@@ -29,7 +30,7 @@ export async function requireOrgSession() {
  * "connecté mais pas autorisé".
  */
 export async function requireOwnerSession() {
-  const session = await getSession();
+  const session = await getValidSession();
   if (!session || session.role !== "OWNER") {
     const locale = getLocale();
     throw new HttpError(
@@ -42,7 +43,7 @@ export async function requireOwnerSession() {
 
 /** À appeler en tête de chaque route API réservée à l'administrateur de la plateforme. */
 export async function requireAdminSession() {
-  const session = await getSession();
+  const session = await getValidSession();
   if (!session || session.role !== "PLATFORM_ADMIN") {
     throw new HttpError(401, t(getLocale(), "not_authenticated_error"));
   }
@@ -66,6 +67,11 @@ export function handleApiError(e: unknown) {
     if (e.code === "P2002") {
       return NextResponse.json({ error: t(locale, "duplicate_value_error") }, { status: 409 });
     }
+  }
+  // Corps JSON absent ou malformé : c'est une requête invalide (400), pas
+  // une panne serveur (500).
+  if (e instanceof SyntaxError) {
+    return NextResponse.json({ error: t(getLocale(), "invalid_request_error") }, { status: 400 });
   }
   console.error(e);
   return NextResponse.json({ error: t(getLocale(), "server_error_generic") }, { status: 500 });

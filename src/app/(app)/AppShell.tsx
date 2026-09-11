@@ -61,7 +61,7 @@ export default function AppShell({
           )}
           <div>
             <div style={{ color: "#fff", fontWeight: 700, fontSize: 15, fontFamily: "var(--font-display)", lineHeight: 1.2 }}>{appName}</div>
-            <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>Gestion de flotte poids lourds</div>
+            <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>{t(locale, "app_tagline")}</div>
           </div>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -117,7 +117,7 @@ export default function AppShell({
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <strong style={{ fontFamily: "var(--font-display)", fontSize: 17 }}>{t(locale, "nav_more")}</strong>
-              <button onClick={() => setPlusOpen(false)} aria-label="Fermer" style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+              <button onClick={() => setPlusOpen(false)} aria-label={t(locale, "close_action")} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
                 <X size={20} color="var(--text)" />
               </button>
             </div>

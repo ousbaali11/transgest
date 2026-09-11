@@ -160,7 +160,7 @@ export default function SubscribeForm({
                   <button
                     className="btn"
                     aria-label={t(locale, "pay_with_paypal")}
-                    style={{ background: "#FFC439", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    style={{ background: "#FFC439", color: "#003087" /* .btn impose un texte blanc, invisible sur le jaune PayPal pendant l'état "…" */, display: "flex", alignItems: "center", justifyContent: "center" }}
                     disabled={busy !== null}
                     onClick={() => checkout("paypal", plan.key)}
                   >

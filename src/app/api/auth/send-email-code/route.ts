@@ -27,9 +27,10 @@ function getClientIp(req: NextRequest): string {
 
 export async function POST(req: NextRequest) {
   try {
+    const locale = getLocale();
     const parsed = bodySchema.safeParse(await req.json());
     if (!parsed.success) {
-      return NextResponse.json({ error: t(getLocale(), "invalid_email_error") }, { status: 400 });
+      return NextResponse.json({ error: t(locale, "invalid_email_error") }, { status: 400 });
     }
     const email = parsed.data.email.toLowerCase().trim();
     const ip = getClientIp(req);
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
     });
     if (recent) {
       return NextResponse.json(
-        { error: "Un code a déjà été envoyé, patientez quelques secondes.", code: "ALREADY_SENT" },
+        { error: t(locale, "code_already_sent_error"), code: "ALREADY_SENT" },
         { status: 429 }
       );
     }
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
         where: { ip, createdAt: { gt: new Date(Date.now() - IP_WINDOW_MS) } },
       });
       if (countFromIp >= IP_MAX_REQUESTS) {
-        return NextResponse.json({ error: t(getLocale(), "too_many_requests_ip_error") }, { status: 429 });
+        return NextResponse.json({ error: t(locale, "too_many_requests_ip_error") }, { status: 429 });
       }
     }
 
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
       const isDevError = process.env.NODE_ENV !== "production";
       const detail = emailError instanceof Error ? emailError.message : String(emailError);
       return NextResponse.json(
-        { error: isDevError ? `Échec d'envoi email : ${detail}` : "Impossible d'envoyer l'email. Réessayez dans quelques instants ou contactez le support." },
+        { error: isDevError ? `${t(locale, "email_send_failed_error")} (${detail})` : t(locale, "email_send_failed_error") },
         { status: 502 }
       );
     }

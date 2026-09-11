@@ -159,7 +159,10 @@ export default function FlotteManager({ initialTrucks, initialDrivers, locale }:
           {showDocs ? t(locale, "doc_deadlines_hide") : t(locale, "doc_deadlines_show")}
         </button>
         {showDocs && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
+          // auto-fit : trois champs date sur une seule ligne ne tenaient pas
+          // dans 375px (chaque champ date a une largeur minimale intrinsèque)
+          // — ils passent à la ligne quand la place manque.
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8, marginBottom: 8 }}>
             <label className="field" style={{ margin: 0 }}>
               <span className="field-label">{t(locale, "field_insurance")}</span>
               <input type="date" value={newTruck.assuranceExpiry} onChange={(e) => setNewTruck({ ...newTruck, assuranceExpiry: e.target.value })} />

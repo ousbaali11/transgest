@@ -12,7 +12,7 @@ export default async function ClientsPage() {
 
   return (
     <div className="container">
-      <ScreenHeader title={t(locale, "nav_clients")} backHref="/dashboard" />
+      <ScreenHeader title={t(locale, "nav_clients")} backHref="/dashboard" backLabel={t(locale, "back")} />
       <ClientsManager initialClients={JSON.parse(JSON.stringify(clients))} locale={locale} />
     </div>
   );

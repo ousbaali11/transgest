@@ -48,10 +48,10 @@ export default function NewTripForm({ trucks, drivers, clients, customFields = [
         setCustom({});
         router.refresh();
       } else {
-        setError(data.error || "Impossible d'enregistrer le voyage.");
+        setError(data.error || tr(locale, "save_error"));
       }
     } catch {
-      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
+      setError(tr(locale, "server_unreachable"));
     } finally {
       setBusy(false);
     }

@@ -73,6 +73,18 @@ export default function AppShellAdvanced({
     <nav style={{ flex: 1 }}>
       {NAV_ITEMS.map((item) => {
         const active = pathname.startsWith(item.href) && item.href !== "/api/export";
+        // L'export Excel est un téléchargement, pas une page : avec <Link>,
+        // Next.js le PRÉCHARGEAIT dès l'affichage du menu (requête vers
+        // /api/export à chaque rendu, donc génération d'un classeur complet
+        // pour rien). Un lien classique ne se déclenche qu'au clic.
+        if (item.href === "/api/export") {
+          return (
+            <a key={item.href} href={item.href} onClick={onNavigate} className="adv-sidebar-link">
+              <item.icon size={17} />
+              {item.label}
+            </a>
+          );
+        }
         return (
           <Link key={item.href} href={item.href} onClick={onNavigate} className={`adv-sidebar-link${active ? " active" : ""}`}>
             <item.icon size={17} />

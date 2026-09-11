@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/session";
+import { getValidSession } from "@/lib/auth";
 import { getPlatformSettings } from "@/lib/settings";
 import { getLocale } from "@/lib/get-locale";
 import AppShell from "./AppShell";
@@ -18,9 +18,10 @@ import AppShellAdvanced from "./AppShellAdvanced";
  * La vérification d'authentification/abonnement reste dans chaque page
  * (via requireActiveOrg()) — ce layout ne fait qu'une lecture légère de la
  * session pour savoir quoi afficher, sans dupliquer cette logique.
+ * getValidSession est mémoïsée : la page qui suit ne refait pas la requête.
  */
 export default async function AppGroupLayout({ children }: { children: React.ReactNode }) {
-  const session = await getSession();
+  const session = await getValidSession();
   const settings = await getPlatformSettings();
   const isOwner = !!session && "role" in session && session.role === "OWNER";
   const locale = getLocale();

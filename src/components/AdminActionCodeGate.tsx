@@ -90,12 +90,12 @@ export default function AdminActionCodeGate({
         <>
           {devCode && (
             <div className="card" style={{ background: "var(--primary-10)", border: "none", marginBottom: 10 }}>
-              <span style={{ fontSize: 13 }}>Mode développement — code : </span>
+              <span style={{ fontSize: 13 }}>{t(locale, "dev_mode_code")} </span>
               <strong>{devCode}</strong>
             </div>
           )}
           <label className="field">
-            <span className="field-label">Code de vérification</span>
+            <span className="field-label">{t(locale, "verification_code")}</span>
             <input type="tel" inputMode="numeric" maxLength={4} value={code} onChange={(e) => setCode(e.target.value)} placeholder="0000" style={{ maxWidth: 140 }} />
           </label>
           <button className="btn" style={{ width: "auto", padding: "8px 16px" }} disabled={busy || code.length < 4} onClick={verifyCode}>

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/session";
+import { getValidSession } from "@/lib/auth";
 import { getPlatformSettings } from "@/lib/settings";
 import AdminUsersTable from "./AdminUsersTable";
 import AdminSettingsPanel from "./AdminSettingsPanel";
@@ -10,7 +10,7 @@ import { getLocale } from "@/lib/get-locale";
 import { t } from "@/lib/i18n";
 
 export default async function AdminPage() {
-  const session = await getSession();
+  const session = await getValidSession();
   if (!session || session.role !== "PLATFORM_ADMIN") redirect("/admin/login");
   const locale = getLocale();
 

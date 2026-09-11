@@ -66,15 +66,15 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
         const res = await fetch(`/api/expenses/${editingId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
         const updated = await res.json().catch(() => ({}));
         if (res.ok) { setExpenses(expenses.map((e) => (e.id === editingId ? updated : e))); cancelEdit(); }
-        else setError(updated.error || "Impossible d'enregistrer la dépense.");
+        else setError(updated.error || tr(locale, "save_error"));
       } else {
         const res = await fetch("/api/expenses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
         const created = await res.json().catch(() => ({}));
         if (res.ok) { setExpenses([created, ...expenses]); cancelEdit(); }
-        else setError(created.error || "Impossible d'enregistrer la dépense.");
+        else setError(created.error || tr(locale, "save_error"));
       }
     } catch {
-      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
+      setError(tr(locale, "server_unreachable"));
     } finally {
       setBusy(false);
     }
@@ -82,9 +82,19 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
 
   async function remove(id: string) {
     setBusy(true);
+    setError("");
     try {
-      await fetch(`/api/expenses/${id}`, { method: "DELETE" });
-      setExpenses(expenses.filter((e) => e.id !== id));
+      // Ne retirer la ligne de l'écran que si le serveur a réellement
+      // supprimé : avant, un refus (403, session expirée...) faisait
+      // disparaître la dépense de la liste alors qu'elle existait toujours.
+      const res = await fetch(`/api/expenses/${id}`, { method: "DELETE" });
+      if (res.ok) setExpenses(expenses.filter((e) => e.id !== id));
+      else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || tr(locale, "error_generic"));
+      }
+    } catch {
+      setError(tr(locale, "server_unreachable_short"));
     } finally {
       setBusy(false);
       setConfirmingDeleteId(null);

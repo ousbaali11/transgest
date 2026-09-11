@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
-import { prisma } from "./prisma";
-import { getSession } from "./session";
+import { getValidSession, loadOrg } from "./auth";
 import { HttpError } from "./guards";
 import { getLocale } from "./get-locale";
 import { t } from "./i18n";
 import type { Organization } from "@prisma/client";
+import type { SessionPayload } from "./session";
 
 /**
  * Seule source de vérité pour "cette organisation a-t-elle un accès actif ?"
@@ -29,22 +29,32 @@ export function isOrgActive(org: Pick<Organization, "subscriptionStatus" | "curr
 }
 
 /**
+ * Raison pour laquelle un compte est bloqué, déduite de l'état RÉEL en base
+ * (jamais d'un paramètre d'URL figé) — partagée entre requireActiveOrg() et
+ * la page /abonnement pour qu'ils racontent toujours la même histoire.
+ */
+export function inactiveReason(org: Pick<Organization, "subscriptionStatus" | "lockedByAdmin">): "locked" | "expired" | "none" {
+  if (org.lockedByAdmin) return "locked";
+  return org.subscriptionStatus !== "NONE" ? "expired" : "none";
+}
+
+/**
  * À appeler en haut de chaque Server Component réservé aux propriétaires
  * (dashboard, voyages, dépenses…). Redirige vers /login si non authentifié,
  * ou vers /abonnement si l'abonnement de l'organisation n'est pas actif.
+ * Une seule requête au total (voir getValidSession / loadOrg).
  */
 export async function requireActiveOrg() {
-  const session = await getSession();
+  const session = await getValidSession();
   if (!session || (session.role !== "OWNER" && session.role !== "DRIVER")) {
     redirect("/login");
   }
-  const org = await prisma.organization.findUnique({ where: { id: session.organizationId } });
+  const org = await loadOrg(session);
   if (!org) redirect("/login");
 
   if (!isOrgActive(org)) {
-    if (org.lockedByAdmin) redirect("/abonnement?reason=locked");
-    const hadSubscriptionBefore = org.subscriptionStatus !== "NONE";
-    redirect(hadSubscriptionBefore ? "/abonnement?reason=expired" : "/abonnement");
+    const reason = inactiveReason(org);
+    redirect(reason === "none" ? "/abonnement" : `/abonnement?reason=${reason}`);
   }
 
   return { session, org };
@@ -57,12 +67,16 @@ export async function requireActiveOrg() {
  * à créer/modifier des données indéfiniment en appelant l'API directement,
  * même si les pages elles-mêmes le renvoient vers /abonnement.
  *
+ * Prend la session renvoyée par requireOrgSession()/requireOwnerSession()
+ * (et non un simple identifiant) pour réutiliser l'organisation déjà
+ * chargée avec elle : pas de seconde lecture en base.
+ *
  * Ne PAS appeler dans les routes qui gèrent l'abonnement lui-même
  * (subscribe, checkout, cancel, reactivate) : ce serait un verrou sans
  * issue, empêchant justement d'activer un abonnement.
  */
-export async function assertOrgActive(organizationId: string): Promise<void> {
-  const org = await prisma.organization.findUnique({ where: { id: organizationId } });
+export async function assertOrgActive(session: Extract<SessionPayload, { role: "OWNER" | "DRIVER" }>): Promise<void> {
+  const org = await loadOrg(session);
   if (!org || !isOrgActive(org)) {
     throw new HttpError(402, t(getLocale(), "subscription_inactive_error"));
   }

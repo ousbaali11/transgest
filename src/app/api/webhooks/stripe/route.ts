@@ -8,12 +8,33 @@ import { getStripe } from "@/lib/stripe";
  * abonnement résilié...) et met à jour l'organisation en conséquence.
  * C'est la SEULE source de vérité pour activer un abonnement payant — jamais
  * le clic du bouton côté client, qui ne prouve aucun paiement réel.
+ *
+ * Les réponses de cette route s'adressent au serveur Stripe (visibles dans
+ * son tableau de bord), pas à un utilisateur : elles restent en anglais.
  */
+
+/** Statut local dérivé du statut Stripe — NONE quand l'abonnement n'existe plus. */
+function mapStripeStatus(sub: Stripe.Subscription): "ACTIVE" | "CANCELING" | "PAST_DUE" | "NONE" {
+  switch (sub.status) {
+    case "active":
+    case "trialing":
+      return sub.cancel_at_period_end ? "CANCELING" : "ACTIVE";
+    case "canceled":
+    case "incomplete_expired":
+      return "NONE";
+    // past_due, unpaid, incomplete (premier paiement jamais abouti), paused :
+    // aucun de ces états ne doit donner accès — avant, tout statut inconnu
+    // retombait sur ACTIVE, y compris "incomplete".
+    default:
+      return "PAST_DUE";
+  }
+}
+
 export async function POST(req: NextRequest) {
   const sig = req.headers.get("stripe-signature");
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!sig || !webhookSecret) {
-    return NextResponse.json({ error: "Webhook Stripe non configuré" }, { status: 400 });
+    return NextResponse.json({ error: "Stripe webhook not configured" }, { status: 400 });
   }
 
   const body = await req.text();
@@ -24,7 +45,7 @@ export async function POST(req: NextRequest) {
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err) {
     console.error("Signature Stripe invalide :", err);
-    return NextResponse.json({ error: "Signature invalide" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
   try {
@@ -50,6 +71,7 @@ export async function POST(req: NextRequest) {
               grantedByAdmin: false,
               lockedByAdmin: false, // un vrai paiement lève automatiquement un verrou admin éventuel
               stripeSubscriptionId: sub.id,
+              paypalSubscriptionId: null, // un seul abonnement porté à la fois
               paymentProvider: "stripe",
             },
           });
@@ -62,23 +84,20 @@ export async function POST(req: NextRequest) {
         const organizationId = sub.metadata?.organizationId;
         if (organizationId) {
           // Ne jamais écraser un accès offert par l'admin avec l'état d'un
-          // abonnement Stripe encore actif en arrière-plan (ex: l'admin a
-          // offert un accès gratuit sans que l'ancien abonnement payant
-          // n'ait été annulé) — voir aussi /api/admin/grants qui annule
-          // désormais l'abonnement Stripe existant au moment de l'offre.
+          // abonnement Stripe encore actif en arrière-plan, ni appliquer
+          // l'état d'un ANCIEN abonnement (résilié lors d'une offre admin,
+          // remplacé depuis...) à l'organisation : seul l'abonnement
+          // actuellement rattaché compte.
           const org = await prisma.organization.findUnique({ where: { id: organizationId } });
-          if (org && !org.grantedByAdmin) {
-            const status: "ACTIVE" | "CANCELING" | "PAST_DUE" | "NONE" =
-              sub.status === "active" ? (sub.cancel_at_period_end ? "CANCELING" : "ACTIVE")
-              : sub.status === "past_due" || sub.status === "unpaid" ? "PAST_DUE"
-              : sub.status === "canceled" ? "NONE"
-              : "ACTIVE";
+          if (org && !org.grantedByAdmin && org.stripeSubscriptionId === sub.id) {
+            const status = mapStripeStatus(sub);
             await prisma.organization.update({
               where: { id: organizationId },
               data: {
                 subscriptionStatus: status,
                 currentPeriodEnd: new Date(sub.current_period_end * 1000),
                 cancelAtPeriodEnd: sub.cancel_at_period_end,
+                ...(status === "NONE" ? { stripeSubscriptionId: null } : {}),
               },
             });
           }
@@ -90,9 +109,11 @@ export async function POST(req: NextRequest) {
         const sub = event.data.object as Stripe.Subscription;
         const organizationId = sub.metadata?.organizationId;
         if (organizationId) {
-          // Ne jamais écraser un accès offert entre-temps par l'admin.
+          // Ne jamais écraser un accès offert entre-temps par l'admin, ni
+          // réagir à la suppression d'un abonnement qui n'est plus celui
+          // de l'organisation.
           const org = await prisma.organization.findUnique({ where: { id: organizationId } });
-          if (org && !org.grantedByAdmin) {
+          if (org && !org.grantedByAdmin && org.stripeSubscriptionId === sub.id) {
             await prisma.organization.update({
               where: { id: organizationId },
               data: { subscriptionStatus: "NONE", cancelAtPeriodEnd: false, stripeSubscriptionId: null },
@@ -115,7 +136,7 @@ export async function POST(req: NextRequest) {
           const organizationId = sub.metadata?.organizationId;
           if (organizationId) {
             const org = await prisma.organization.findUnique({ where: { id: organizationId } });
-            if (org && !org.grantedByAdmin) {
+            if (org && !org.grantedByAdmin && org.stripeSubscriptionId === sub.id) {
               await prisma.organization.update({ where: { id: organizationId }, data: { subscriptionStatus: "PAST_DUE" } });
             }
           }
@@ -128,7 +149,7 @@ export async function POST(req: NextRequest) {
     }
   } catch (e) {
     console.error("Erreur de traitement du webhook Stripe :", e);
-    return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

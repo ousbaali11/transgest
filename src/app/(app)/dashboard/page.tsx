@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Route, Wallet, Fuel, TrendingUp, BarChart3, Gauge, Receipt, Plus } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireActiveOrg } from "@/lib/require-active-org";
+import { driverScope } from "@/lib/org-refs";
 import { getLocale } from "@/lib/get-locale";
 import { t as tr, dateLocale, type Locale } from "@/lib/i18n";
 import RevenueChart from "@/components/RevenueChart";
@@ -15,15 +16,15 @@ function monthLabel(d: Date, locale: Locale) {
   return d.toLocaleDateString(dateLocale(locale), { month: "short", year: "2-digit" });
 }
 
-function docAlerts(trucks: { immat: string; assuranceExpiry: Date | null; visiteTechniqueExpiry: Date | null; vignetteExpiry: Date | null }[]) {
+function docAlerts(trucks: { immat: string; assuranceExpiry: Date | null; visiteTechniqueExpiry: Date | null; vignetteExpiry: Date | null }[], locale: Locale) {
   const today = new Date();
   const items: { truck: string; label: string; days: number }[] = [];
-  trucks.forEach((t) => {
-    ([["assuranceExpiry", "Assurance"], ["visiteTechniqueExpiry", "Visite technique"], ["vignetteExpiry", "Vignette"]] as const).forEach(([key, label]) => {
-      const date = t[key];
+  trucks.forEach((truck) => {
+    ([["assuranceExpiry", "field_insurance"], ["visiteTechniqueExpiry", "field_tech_inspection"], ["vignetteExpiry", "field_sticker"]] as const).forEach(([key, labelKey]) => {
+      const date = truck[key];
       if (!date) return;
       const days = Math.ceil((date.getTime() - today.getTime()) / 86400000);
-      if (days <= 30) items.push({ truck: t.immat, label, days });
+      if (days <= 30) items.push({ truck: truck.immat, label: tr(locale, labelKey), days });
     });
   });
   return items.sort((a, b) => a.days - b.days);
@@ -40,38 +41,37 @@ export default async function DashboardPage() {
   // Un chauffeur ne doit voir que SES propres chiffres (voyages qui lui
   // sont assignés OU qu'il a lui-même saisis), jamais le chiffre d'affaires
   // ou le classement de toute l'entreprise.
-  const driverTripScope = session.role === "DRIVER" ? { OR: [{ driverId: session.driverId }, { createdByUserId: session.userId }] } : {};
-  const driverExpenseScope = session.role === "DRIVER" ? { OR: [{ driverId: session.driverId }, { createdByUserId: session.userId }] } : {};
+  const scope = driverScope(session);
 
   const [trips6mo, expenses6mo, trucks, totalTripsCount, recentTrips] = await Promise.all([
     prisma.trip.findMany({
-      where: { organizationId: org.id, date: { gte: sixMonthsAgoStart }, ...driverTripScope },
+      where: { organizationId: org.id, date: { gte: sixMonthsAgoStart }, ...scope },
       include: { driver: true },
       orderBy: { date: "desc" },
     }),
-    prisma.expense.findMany({ where: { organizationId: org.id, date: { gte: sixMonthsAgoStart }, ...driverExpenseScope } }),
+    prisma.expense.findMany({ where: { organizationId: org.id, date: { gte: sixMonthsAgoStart }, ...scope } }),
     prisma.truck.findMany({ where: { organizationId: org.id } }),
-    prisma.trip.count({ where: { organizationId: org.id, ...driverTripScope } }),
+    prisma.trip.count({ where: { organizationId: org.id, ...scope } }),
     prisma.trip.findMany({
-      where: { organizationId: org.id, ...driverTripScope },
+      where: { organizationId: org.id, ...scope },
       include: { truck: true, driver: true },
       orderBy: { date: "desc" },
       take: 4,
     }),
   ]);
 
-  const monthTrips = trips6mo.filter((t) => t.date >= monthStart);
+  const monthTrips = trips6mo.filter((x) => x.date >= monthStart);
   const monthExpenses = expenses6mo.filter((e) => e.date >= monthStart);
 
-  const ca = monthTrips.reduce((s, t) => s + Number(t.prixTransport), 0);
+  const ca = monthTrips.reduce((s, x) => s + Number(x.prixTransport), 0);
   const dep = monthExpenses.reduce((s, e) => s + Number(e.montant), 0);
   const benefice = ca - dep;
-  const distanceMonth = monthTrips.reduce((s, t) => s + Math.max(0, (t.kmArrivee || 0) - (t.kmDepart || 0)), 0);
+  const distanceMonth = monthTrips.reduce((s, x) => s + Math.max(0, (x.kmArrivee || 0) - (x.kmDepart || 0)), 0);
   const carburantLMonth = monthExpenses.filter((e) => e.category === "CARBURANT").reduce((s, e) => s + (e.quantite || 0), 0);
   const facturesMonth = await prisma.invoice.count({
-    where: { organizationId: org.id, date: { gte: monthStart }, ...(session.role === "DRIVER" ? { trip: { OR: [{ driverId: session.driverId }, { createdByUserId: session.userId }] } } : {}) },
+    where: { organizationId: org.id, date: { gte: monthStart }, ...(session.role === "DRIVER" ? { trip: scope } : {}) },
   });
-  const alerts = docAlerts(trucks);
+  const alerts = docAlerts(trucks, locale);
 
   // Graphique CA vs Dépenses des 6 derniers mois
   const buckets: { key: string; label: string; ca: number; dep: number }[] = [];
@@ -79,24 +79,24 @@ export default async function DashboardPage() {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     buckets.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: monthLabel(d, locale), ca: 0, dep: 0 });
   }
-  trips6mo.forEach((t) => {
-    const key = `${t.date.getFullYear()}-${t.date.getMonth()}`;
-    const b = buckets.find((x) => x.key === key);
-    if (b) b.ca += Number(t.prixTransport);
+  trips6mo.forEach((x) => {
+    const key = `${x.date.getFullYear()}-${x.date.getMonth()}`;
+    const b = buckets.find((bk) => bk.key === key);
+    if (b) b.ca += Number(x.prixTransport);
   });
   expenses6mo.forEach((e) => {
     const key = `${e.date.getFullYear()}-${e.date.getMonth()}`;
-    const b = buckets.find((x) => x.key === key);
+    const b = buckets.find((bk) => bk.key === key);
     if (b) b.dep += Number(e.montant);
   });
 
   // Classement chauffeurs — ce mois
   const byDriver = new Map<string, { name: string; ca: number; dep: number; voyages: number }>();
-  monthTrips.forEach((t) => {
-    const key = t.driverId || "unassigned";
-    const name = t.driver?.name || "Non assigné";
+  monthTrips.forEach((x) => {
+    const key = x.driverId || "unassigned";
+    const name = x.driver?.name || tr(locale, "not_assigned");
     const cur = byDriver.get(key) || { name, ca: 0, dep: 0, voyages: 0 };
-    cur.ca += Number(t.prixTransport);
+    cur.ca += Number(x.prixTransport);
     cur.voyages += 1;
     byDriver.set(key, cur);
   });
@@ -111,6 +111,7 @@ export default async function DashboardPage() {
     .slice(0, 3);
 
   const hasData = totalTripsCount > 0;
+  const numberLocale = dateLocale(locale);
 
   return (
     <div className="container">
@@ -119,7 +120,7 @@ export default async function DashboardPage() {
 
       {isOwner && alerts.length > 0 && (
         <Link href="/flotte" className="card" style={{ display: "block", textDecoration: "none", background: "#FDF1DF", border: "1px solid #F0D9A8" }}>
-          <strong style={{ color: "#7A5314" }}>⚠ {alerts.length} document(s) à renouveler</strong>
+          <strong style={{ color: "#7A5314" }}>⚠ {tr(locale, "docs_to_renew").replace("{n}", String(alerts.length))}</strong>
           <div style={{ color: "#8A6A2E", fontSize: 13, marginTop: 4 }}>
             {alerts.slice(0, 2).map((a) => `${a.truck} · ${a.label}`).join(" — ")}{alerts.length > 2 ? "…" : ""}
           </div>
@@ -162,31 +163,31 @@ export default async function DashboardPage() {
           <strong>{tr(locale, "dashboard_revenue_vs_expenses")}</strong>
           <BarChart3 size={15} color="var(--muted)" />
         </div>
-        <RevenueChart data={buckets} />
+        <RevenueChart data={buckets} revenueLabel={tr(locale, "chart_revenue")} expensesLabel={tr(locale, "chart_expenses")} />
       </div>
 
       <div className="card">
-        <strong>Aperçu rapide</strong>
+        <strong>{tr(locale, "quick_overview")}</strong>
         <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <Gauge size={15} color="var(--primary)" />
             </div>
-            <span style={{ flex: 1, fontSize: 14 }}>Distance parcourue</span>
-            <strong style={{ fontSize: 14 }}>{distanceMonth.toLocaleString("fr-FR")} km</strong>
+            <span style={{ flex: 1, fontSize: 14 }}>{tr(locale, "distance_traveled")}</span>
+            <strong style={{ fontSize: 14 }}>{distanceMonth.toLocaleString(numberLocale)} km</strong>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <Fuel size={15} color="var(--primary)" />
             </div>
-            <span style={{ flex: 1, fontSize: 14 }}>Carburant consommé</span>
-            <strong style={{ fontSize: 14 }}>{carburantLMonth.toLocaleString("fr-FR")} L</strong>
+            <span style={{ flex: 1, fontSize: 14 }}>{tr(locale, "fuel_consumed")}</span>
+            <strong style={{ fontSize: 14 }}>{carburantLMonth.toLocaleString(numberLocale)} L</strong>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <Receipt size={15} color="var(--primary)" />
             </div>
-            <span style={{ flex: 1, fontSize: 14 }}>Factures émises</span>
+            <span style={{ flex: 1, fontSize: 14 }}>{tr(locale, "invoices_issued")}</span>
             <strong style={{ fontSize: 14 }}>{facturesMonth}</strong>
           </div>
         </div>
@@ -194,14 +195,14 @@ export default async function DashboardPage() {
 
       {isOwner && leaderboard.length > 0 && (
         <div className="card">
-          <strong>Classement chauffeurs — ce mois</strong>
+          <strong>{tr(locale, "driver_leaderboard")}</strong>
           <div style={{ marginTop: 10 }}>
             {leaderboard.map((d, i) => (
               <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0" }}>
                 <div style={{ width: 22, height: 22, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, background: i === 0 ? "var(--accent)" : "var(--primary-10)", color: i === 0 ? "#fff" : "var(--primary)" }}>{i + 1}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14 }}>{d.name}</div>
-                  <div className="muted" style={{ fontSize: 11 }}>{d.voyages} voyage(s)</div>
+                  <div className="muted" style={{ fontSize: 11 }}>{tr(locale, "trips_count").replace("{n}", String(d.voyages))}</div>
                 </div>
                 <strong style={{ color: d.benefice >= 0 ? "#2e7d53" : "#c0392b" }}>{fmtDH(d.benefice)}</strong>
               </div>
@@ -221,10 +222,7 @@ export default async function DashboardPage() {
             <Route size={22} color="var(--primary)" />
           </div>
           <strong style={{ display: "block", marginBottom: 6 }}>{tr(locale, "dashboard_no_trips")}</strong>
-          <p className="muted" style={{ marginBottom: 16 }}>
-            Ajoutez votre premier voyage pour commencer à suivre votre activité, ou chargez un exemple pour
-            explorer l&apos;application.
-          </p>
+          <p className="muted" style={{ marginBottom: 16 }}>{tr(locale, "dashboard_empty_hint")}</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <Link href="/trips" className="btn" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, textDecoration: "none" }}>
               <Plus size={15} /> {tr(locale, "dashboard_new_trip")}
@@ -233,13 +231,13 @@ export default async function DashboardPage() {
           </div>
         </div>
       ) : (
-        recentTrips.map((t) => (
-          <div key={t.id} className="card" style={{ display: "flex", justifyContent: "space-between" }}>
+        recentTrips.map((x) => (
+          <div key={x.id} className="card" style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontWeight: 600 }}>{t.depart} → {t.arrivee}</div>
-              <div className="muted">{t.date.toLocaleDateString(dateLocale(locale))} · {t.driver?.name || tr(locale, "not_assigned")}</div>
+              <div style={{ fontWeight: 600 }}>{x.depart} → {x.arrivee}</div>
+              <div className="muted">{x.date.toLocaleDateString(dateLocale(locale))} · {x.driver?.name || tr(locale, "not_assigned")}</div>
             </div>
-            <strong>{fmtDH(Number(t.prixTransport))}</strong>
+            <strong>{fmtDH(Number(x.prixTransport))}</strong>
           </div>
         ))
       )}

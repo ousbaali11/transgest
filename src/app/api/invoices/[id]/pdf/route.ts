@@ -4,23 +4,27 @@ import { requireOrgSession, handleApiError, HttpError } from "@/lib/guards";
 import { assertOrgActive } from "@/lib/require-active-org";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
 import { getPlatformSettings } from "@/lib/settings";
+import { tripConcernsSession } from "@/lib/org-refs";
+import { getLocale } from "@/lib/get-locale";
+import { t } from "@/lib/i18n";
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   try {
     const session = await requireOrgSession();
-    await assertOrgActive(session.organizationId);
+    await assertOrgActive(session);
+    const locale = getLocale();
 
     const invoice = await prisma.invoice.findUnique({
       where: { id: params.id },
       include: { client: true, trip: { include: { truck: true } } },
     });
     if (!invoice || invoice.organizationId !== session.organizationId) {
-      throw new HttpError(404, "Facture introuvable");
+      throw new HttpError(404, t(locale, "invoice_not_found_error"));
     }
-    // Un chauffeur ne peut télécharger que les factures des voyages qu'il a
-    // lui-même saisis — pas celles de ses collègues.
-    if (session.role === "DRIVER" && invoice.trip.driverId !== session.driverId && invoice.trip.createdByUserId !== session.userId) {
-      throw new HttpError(404, "Facture introuvable");
+    // Un chauffeur ne peut télécharger que les factures des voyages qui le
+    // concernent — pas celles de ses collègues.
+    if (!tripConcernsSession(session, invoice.trip)) {
+      throw new HttpError(404, t(locale, "invoice_not_found_error"));
     }
 
     const settings = await getPlatformSettings();
@@ -39,12 +43,12 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       truckImmat: invoice.trip.truck.immat,
       prixTransport: Number(invoice.trip.prixTransport),
       avance: Number(invoice.trip.avance),
-    });
+    }, locale);
 
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="facture-${invoice.number}.pdf"`,
+        "Content-Disposition": `attachment; filename="${t(locale, "pdf_filename")}-${invoice.number}.pdf"`,
       },
     });
   } catch (e) {

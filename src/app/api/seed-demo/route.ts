@@ -1,19 +1,30 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOwnerSession, handleApiError } from "@/lib/guards";
+import { assertOrgActive } from "@/lib/require-active-org";
+import { nextInvoiceNumber } from "@/lib/org-refs";
 
 /**
  * Génère un jeu de données d'exemple pour découvrir l'application sans
  * avoir à tout saisir à la main — reprend l'idée du prototype ("Charger
  * un exemple"). Toujours additif : n'efface jamais de données existantes.
+ * Les libellés (villes, marchandises) sont des données de démonstration
+ * marocaines, volontairement identiques quelle que soit la langue.
  */
 export async function POST() {
   try {
     const session = await requireOwnerSession();
+    // Un compte bloqué (verrouillé/expiré) ne doit pas pouvoir créer des
+    // données par cette porte alors que toutes les autres lui sont fermées.
+    await assertOrgActive(session);
     const organizationId = session.organizationId;
 
-    const truck = await prisma.truck.create({
-      data: { organizationId, immat: "12345-A-6", marque: "Mercedes", modele: "Actros", capacite: "40T" },
+    // L'immatriculation est unique par organisation : un second chargement
+    // de l'exemple réutilise le camion de démonstration au lieu d'échouer.
+    const truck = await prisma.truck.upsert({
+      where: { organizationId_immat: { organizationId, immat: "12345-A-6" } },
+      update: {},
+      create: { organizationId, immat: "12345-A-6", marque: "Mercedes", modele: "Actros", capacite: "40T" },
     });
 
     const driver = await prisma.driver.create({
@@ -70,13 +81,12 @@ export async function POST() {
 
       // Facture pour les deux voyages les plus récents, l'une payée, l'autre en attente.
       if (t === tripsData[0] || t === tripsData[1]) {
-        const count = await prisma.invoice.count({ where: { organizationId } });
         await prisma.invoice.create({
           data: {
             organizationId,
             tripId: trip.id,
             clientId: t.clientId,
-            number: `${today.getFullYear()}-${String(count + 1).padStart(4, "0")}`,
+            number: await nextInvoiceNumber(organizationId),
             date: t.date,
             status: t === tripsData[0] ? "PAYEE" : "EN_ATTENTE",
           },

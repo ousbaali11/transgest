@@ -20,7 +20,9 @@ type Row = {
 type Plan = { id: string; key: string; label: string };
 
 
-const STATUS_COLOR: Record<string, string> = { NONE: "#9CA3AF", ACTIVE: "#2E7D53", CANCELING: "#B5791C", EXPIRED: "#C0392B" };
+// PAST_DUE manquait : le badge "paiement en échec" héritait alors d'une
+// couleur au hasard selon le contexte.
+const STATUS_COLOR: Record<string, string> = { NONE: "#9CA3AF", ACTIVE: "#2E7D53", CANCELING: "#B5791C", PAST_DUE: "#C0392B", EXPIRED: "#C0392B" };
 
 function fmtDate(d: string | Date | null, locale: Locale) {
   if (!d) return null;
@@ -136,13 +138,14 @@ export default function AdminUsersTable({ rows, plans, locale }: { rows: Row[]; 
               {r.lockedByAdmin && (
                 <div style={{ fontSize: 11, fontWeight: 600, color: "#C0392B", marginTop: 4 }}>🔒 {t(locale, "account_locked_badge")}</div>
               )}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+              {/* flexWrap : texte "offert jusqu'au…" + deux boutons ne tenaient pas sur 375px */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6, gap: 6, flexWrap: "wrap" }}>
                 {r.grantedByAdmin ? (
                   <span style={{ fontSize: 11, color: "var(--primary)" }}>
                     {t(locale, "offered_gift")}{r.currentPeriodEnd ? ` ${t(locale, "offered_until")} ${fmtDate(r.currentPeriodEnd, locale)}` : ` ${t(locale, "offered_unlimited")}`}
                   </span>
                 ) : <span />}
-                <div style={{ display: "flex", gap: 6 }}>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   <button
                     className="btn"
                     style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: r.lockedByAdmin ? "#2E7D53" : "#FBE9E7", color: r.lockedByAdmin ? "#fff" : "#C0392B" }}

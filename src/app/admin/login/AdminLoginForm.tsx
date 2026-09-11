@@ -180,7 +180,7 @@ export default function AdminLoginForm({
           <p className="muted">{t(locale, "forgot_password_sent_desc")}</p>
           {devCode && (
             <div className="card" style={{ background: "var(--primary-10)", border: "none" }}>
-              <span style={{ fontSize: 13 }}>Mode développement — code : </span>
+              <span style={{ fontSize: 13 }}>{t(locale, "dev_mode_code")} </span>
               <strong>{devCode}</strong>
             </div>
           )}
@@ -189,7 +189,7 @@ export default function AdminLoginForm({
             <input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
           <label className="field">
-            <span className="field-label">Code de vérification</span>
+            <span className="field-label">{t(locale, "verification_code")}</span>
             <input type="tel" inputMode="numeric" autoComplete="one-time-code" maxLength={4} value={resetCode} onChange={(e) => setResetCode(e.target.value)} placeholder="0000" />
           </label>
           <label className="field">

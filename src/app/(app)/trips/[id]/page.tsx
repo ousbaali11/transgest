@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireActiveOrg } from "@/lib/require-active-org";
+import { tripConcernsSession } from "@/lib/org-refs";
 import ScreenHeader from "@/components/ScreenHeader";
 import { getLocale } from "@/lib/get-locale";
 import { t, dateLocale } from "@/lib/i18n";
@@ -11,14 +12,16 @@ function fmtDH(n: number) {
 }
 
 export default async function TripBenefitPage({ params }: { params: { id: string } }) {
-  const { org } = await requireActiveOrg();
+  const { org, session } = await requireActiveOrg();
   const locale = getLocale();
 
   const trip = await prisma.trip.findUnique({
     where: { id: params.id },
     include: { expenses: true, truck: true, driver: true, client: true, invoice: true },
   });
-  if (!trip || trip.organizationId !== org.id) notFound();
+  // Même cloisonnement que la liste : un chauffeur ne peut pas ouvrir, par
+  // son URL, le détail (prix, bénéfice) d'un voyage d'un collègue.
+  if (!trip || trip.organizationId !== org.id || !tripConcernsSession(session, trip)) notFound();
 
   const totalDep = trip.expenses.reduce((s, e) => s + Number(e.montant), 0);
   const prix = Number(trip.prixTransport);
@@ -29,7 +32,7 @@ export default async function TripBenefitPage({ params }: { params: { id: string
 
   return (
     <div className="container">
-      <ScreenHeader title={t(locale, "benefit_title")} backHref="/trips" />
+      <ScreenHeader title={t(locale, "benefit_title")} backHref="/trips" backLabel={t(locale, "back")} />
 
       <div className="card">
         <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0" }}>
@@ -52,7 +55,7 @@ export default async function TripBenefitPage({ params }: { params: { id: string
         <div style={{ marginTop: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: "1px solid var(--line)" }}>
             <span className="muted">{t(locale, "distance_traveled")}</span>
-            <span>{distance.toLocaleString("fr-FR")} km</span>
+            <span>{distance.toLocaleString(dateLocale(locale))} km</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: "1px solid var(--line)" }}>
             <span className="muted">{t(locale, "cost_per_km")}</span>

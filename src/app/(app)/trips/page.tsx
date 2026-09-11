@@ -3,6 +3,7 @@ import { requireActiveOrg } from "@/lib/require-active-org";
 import ScreenHeader from "@/components/ScreenHeader";
 import { getLocale } from "@/lib/get-locale";
 import { t as tr } from "@/lib/i18n";
+import { driverScope } from "@/lib/org-refs";
 import NewTripForm from "./NewTripForm";
 import TripCard from "./TripCard";
 
@@ -17,11 +18,8 @@ export default async function TripsPage() {
       // Un chauffeur voit les voyages qui le CONCERNENT : ceux qui lui sont
       // assignés (même saisis par le propriétaire) et ceux qu'il a
       // lui-même saisis — mais ne peut MODIFIER que ces derniers (voir
-      // assertAccess dans /api/trips/[id]).
-      where: {
-        organizationId: org.id,
-        ...(session.role === "DRIVER" ? { OR: [{ driverId: session.driverId }, { createdByUserId: session.userId }] } : {}),
-      },
+      // assertAccess dans /api/trips/[id]). Règle partagée : driverScope().
+      where: { organizationId: org.id, ...driverScope(session) },
       include: { truck: true, driver: true, client: true, expenses: true, invoice: true },
       orderBy: { date: "desc" },
       take: 50,

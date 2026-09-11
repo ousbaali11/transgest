@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     const settings = await getPlatformSettings();
     if (!settings.contactEmail) {
-      throw new HttpError(400, "Aucun email de contact configuré — cette vérification n'est pas nécessaire pour l'instant.");
+      throw new HttpError(400, t(getLocale(), "no_contact_email_error"));
     }
 
     const code = genCode();

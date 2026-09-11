@@ -3,24 +3,25 @@ import { requireActiveOrg } from "@/lib/require-active-org";
 import ScreenHeader from "@/components/ScreenHeader";
 import { getLocale } from "@/lib/get-locale";
 import { t } from "@/lib/i18n";
+import { driverScope } from "@/lib/org-refs";
 import ExpensesManager from "./ExpensesManager";
 
 export default async function ExpensesPage() {
   const { org, session } = await requireActiveOrg();
   const currentDriverId = session.role === "DRIVER" ? session.driverId : null;
   const locale = getLocale();
+  const scope = driverScope(session);
   const [expenses, trucks, drivers, trips, customFields] = await Promise.all([
     prisma.expense.findMany({
-      where: {
-        organizationId: org.id,
-        ...(session.role === "DRIVER" ? { OR: [{ driverId: session.driverId }, { createdByUserId: session.userId }] } : {}),
-      },
+      where: { organizationId: org.id, ...scope },
       orderBy: { date: "desc" },
       take: 100,
     }),
     prisma.truck.findMany({ where: { organizationId: org.id } }),
     prisma.driver.findMany({ where: { organizationId: org.id } }),
-    prisma.trip.findMany({ where: { organizationId: org.id }, orderBy: { date: "desc" }, take: 50 }),
+    // La liste "voyage lié" proposée à un chauffeur ne contient que SES
+    // voyages — elle affichait les trajets de toute l'entreprise.
+    prisma.trip.findMany({ where: { organizationId: org.id, ...scope }, orderBy: { date: "desc" }, take: 50 }),
     prisma.customFieldDefinition.findMany({ where: { organizationId: org.id, target: "EXPENSE" } }),
   ]);
 

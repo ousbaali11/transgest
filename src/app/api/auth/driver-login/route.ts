@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { signSession, setSessionCookie } from "@/lib/session";
+import { hashAccessCode } from "@/lib/auth";
 import { handleApiError } from "@/lib/guards";
 import { getLocale } from "@/lib/get-locale";
 import { t } from "@/lib/i18n";
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
     }
 
     const driver = await prisma.driver.findUnique({ where: { accessCode: code } });
-    if (!driver) {
+    if (!driver || !driver.accessCode) {
       if (ip !== "unknown") await prisma.driverLoginAttempt.create({ data: { ip } });
       return NextResponse.json({ error: t(getLocale(), "driver_incorrect_code_error") }, { status: 401 });
     }
@@ -56,6 +57,9 @@ export async function POST(req: NextRequest) {
 
     const token = await signSession({
       role: "DRIVER", userId: user.id, organizationId: user.organizationId, driverId: driver.id, driverName: driver.name,
+      // Empreinte du code utilisé : régénérer le code invalide cette session
+      // à la requête suivante (voir getValidSession).
+      codeHash: hashAccessCode(driver.accessCode),
     });
     setSessionCookie(token);
 

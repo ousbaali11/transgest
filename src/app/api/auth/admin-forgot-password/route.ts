@@ -38,6 +38,16 @@ export async function POST(req: NextRequest) {
     const email = parsed.data.email.toLowerCase().trim();
     const ip = getClientIp(req);
 
+    // Même délai minimal entre deux codes pour une même adresse que pour la
+    // connexion propriétaire : sans lui, la boîte de l'admin pouvait être
+    // inondée de codes (5 par IP et par quart d'heure, sans limite par email).
+    const recent = await prisma.adminResetCode.findFirst({
+      where: { email, createdAt: { gt: new Date(Date.now() - 30_000) } },
+    });
+    if (recent) {
+      return NextResponse.json({ error: t(getLocale(), "code_already_sent_error") }, { status: 429 });
+    }
+
     if (ip !== "unknown") {
       const countFromIp = await prisma.adminResetCode.count({
         where: { ip, createdAt: { gt: new Date(Date.now() - IP_WINDOW_MS) } },

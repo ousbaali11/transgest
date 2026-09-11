@@ -1,20 +1,22 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/session";
+import { getValidSession, loadOrg } from "@/lib/auth";
 import { getPlatformSettings } from "@/lib/settings";
 import { currencyForCountry, countryFromHeaders } from "@/lib/currency";
 import { getLocale } from "@/lib/get-locale";
 import { t } from "@/lib/i18n";
-import { isOrgActive } from "@/lib/require-active-org";
+import { isOrgActive, inactiveReason } from "@/lib/require-active-org";
 import LandingHeader from "@/components/LandingHeader";
 import SubscribeForm from "./SubscribeForm";
 
-export default async function AbonnementPage({ searchParams }: { searchParams: { reason?: string } }) {
-  const session = await getSession();
+export default async function AbonnementPage() {
+  const session = await getValidSession();
   if (!session || (session.role !== "OWNER" && session.role !== "DRIVER")) redirect("/login");
 
-  const org = await prisma.organization.findUnique({ where: { id: session.organizationId } });
+  // Organisation déjà rapportée avec la session pour un chauffeur (jointure) :
+  // pas de seconde lecture.
+  const org = await loadOrg(session);
   if (!org) redirect("/login");
 
   // Sans cette vérification, la page se contentait d'afficher "verrouillé"
@@ -25,6 +27,10 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
   // vrai rechargement complet. Ici, on revérifie l'état réel à chaque
   // chargement et on renvoie vers le tableau de bord si tout est en ordre.
   if (isOrgActive(org)) redirect("/dashboard");
+  // Le titre suit lui aussi l'état RÉEL (verrou levé mais abonnement
+  // expiré, par exemple), et non le ?reason= de l'URL, qui peut être
+  // périmé ou forgé.
+  const reason = inactiveReason(org);
 
   const settings = await getPlatformSettings();
   const plans = await prisma.plan.findMany({ where: { visible: true } });
@@ -56,12 +62,12 @@ export default async function AbonnementPage({ searchParams }: { searchParams: {
       <LandingHeader appName={settings.appName} logoEmoji={settings.logoEmoji} logoType={settings.logoType} logoImage={settings.logoImage} locale={locale} uiTheme={settings.uiTheme} logoutRedirectTo="/login" />
       <div className="container">
         <h1 style={{ fontSize: 20, marginTop: 24, marginBottom: 4, textAlign: "center" }}>
-          {searchParams.reason === "locked" ? t(locale, "account_locked_title") : searchParams.reason === "expired" ? t(locale, "subscription_expired_title") : t(locale, "choose_plan_title")}
+          {reason === "locked" ? t(locale, "account_locked_title") : reason === "expired" ? t(locale, "subscription_expired_title") : t(locale, "choose_plan_title")}
         </h1>
         <p className="muted" style={{ textAlign: "center", marginBottom: 24 }}>
-          {searchParams.reason === "locked"
+          {reason === "locked"
             ? t(locale, "account_locked_desc")
-            : searchParams.reason === "expired"
+            : reason === "expired"
             ? t(locale, "subscription_expired_desc")
             : t(locale, "choose_plan_desc")}
         </p>

@@ -1,5 +1,6 @@
 import React from "react";
 import { Document, Page, Text, View, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
+import { t, type Locale } from "./i18n";
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 11, fontFamily: "Helvetica", color: "#1B2430" },
@@ -24,6 +25,18 @@ const styles = StyleSheet.create({
   footer: { position: "absolute", bottom: 30, left: 40, right: 40, fontSize: 8, color: "#9CA3AF", textAlign: "center" },
 });
 
+/**
+ * La police embarquée par défaut (Helvetica) ne contient aucun glyphe
+ * arabe : un PDF "en darija" afficherait des carrés. Le document est donc
+ * rendu en anglais quand la langue choisie est l'anglais, en français dans
+ * tous les autres cas — une facture reste de toute façon un document
+ * administratif rédigé en français au Maroc.
+ */
+type PdfLocale = "fr" | "en";
+function pdfLocale(locale: Locale): PdfLocale {
+  return locale === "en" ? "en" : "fr";
+}
+
 function fmtDH(n: number) {
   // toLocaleString dépend des données ICU disponibles dans l'environnement Node
   // au moment du rendu PDF, ce qui peut donner un séparateur incorrect selon
@@ -34,7 +47,11 @@ function fmtDH(n: number) {
   return `${n < 0 ? "-" : ""}${withSpaces},${dec} DH`;
 }
 function fmtDate(d: Date) {
-  return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  // Même principe que fmtDH : formatage manuel (JJ/MM/AAAA, identique en
+  // français et en anglais britannique), indépendant des données ICU.
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dd}/${mm}/${d.getFullYear()}`;
 }
 
 export type InvoicePdfData = {
@@ -53,48 +70,49 @@ export type InvoicePdfData = {
   avance: number;
 };
 
-function InvoiceDocument({ data }: { data: InvoicePdfData }) {
+function InvoiceDocument({ data, locale }: { data: InvoicePdfData; locale: PdfLocale }) {
   const solde = data.prixTransport - data.avance;
+  const tr = (key: Parameters<typeof t>[1]) => t(locale, key);
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.headerRow}>
           <Text style={styles.appName}>{data.appName}</Text>
           <View>
-            <Text style={styles.invoiceTitle}>FACTURE</Text>
-            <Text style={styles.invoiceMeta}>N° {data.number}</Text>
+            <Text style={styles.invoiceTitle}>{tr("pdf_invoice")}</Text>
+            <Text style={styles.invoiceMeta}>{tr("pdf_number")} {data.number}</Text>
             <Text style={styles.invoiceMeta}>{fmtDate(data.date)}</Text>
             <Text style={[styles.statusBadge, { color: data.status === "PAYEE" ? "#2E7D53" : "#B5791C" }]}>
-              {data.status === "PAYEE" ? "PAYÉE" : "EN ATTENTE"}
+              {data.status === "PAYEE" ? tr("pdf_paid") : tr("pdf_pending")}
             </Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Facturé à</Text>
-          <Text style={styles.clientName}>{data.client?.name || "Client non renseigné"}</Text>
+          <Text style={styles.sectionLabel}>{tr("pdf_billed_to")}</Text>
+          <Text style={styles.clientName}>{data.client?.name || tr("pdf_no_client")}</Text>
           {data.client?.address && <Text style={styles.clientLine}>{data.client.address}</Text>}
           {data.client?.phone && <Text style={styles.clientLine}>{data.client.phone}</Text>}
           {data.client?.email && <Text style={styles.clientLine}>{data.client.email}</Text>}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Détails du voyage</Text>
+          <Text style={styles.sectionLabel}>{tr("pdf_trip_details")}</Text>
           <View style={styles.table}>
             <View style={styles.tableRow}>
-              <Text style={styles.tableLabel}>Départ</Text>
+              <Text style={styles.tableLabel}>{tr("pdf_departure")}</Text>
               <Text style={styles.tableValue}>{data.depart}</Text>
             </View>
             <View style={styles.tableRow}>
-              <Text style={styles.tableLabel}>Arrivée</Text>
+              <Text style={styles.tableLabel}>{tr("pdf_arrival")}</Text>
               <Text style={styles.tableValue}>{data.arrivee}</Text>
             </View>
             <View style={styles.tableRow}>
-              <Text style={styles.tableLabel}>Camion</Text>
+              <Text style={styles.tableLabel}>{tr("pdf_truck")}</Text>
               <Text style={styles.tableValue}>{data.truckImmat}</Text>
             </View>
             <View style={styles.tableRow}>
-              <Text style={styles.tableLabel}>Marchandise</Text>
+              <Text style={styles.tableLabel}>{tr("pdf_goods")}</Text>
               <Text style={styles.tableValue}>{data.marchandise || "—"}{data.quantite ? ` (${data.quantite} ${data.unite || ""})` : ""}</Text>
             </View>
           </View>
@@ -102,25 +120,27 @@ function InvoiceDocument({ data }: { data: InvoicePdfData }) {
 
         <View style={styles.totalsBox}>
           <View style={styles.totalsRow}>
-            <Text style={styles.totalsLabel}>Prix du transport</Text>
+            <Text style={styles.totalsLabel}>{tr("pdf_transport_price")}</Text>
             <Text>{fmtDH(data.prixTransport)}</Text>
           </View>
           <View style={styles.totalsRow}>
-            <Text style={styles.totalsLabel}>Avance reçue</Text>
+            <Text style={styles.totalsLabel}>{tr("pdf_advance")}</Text>
             <Text>{fmtDH(data.avance)}</Text>
           </View>
           <View style={styles.totalsRowFinal}>
-            <Text style={styles.totalsLabel}>Solde dû</Text>
+            <Text style={styles.totalsLabel}>{tr("pdf_balance_due")}</Text>
             <Text style={styles.totalsValueFinal}>{fmtDH(solde)}</Text>
           </View>
         </View>
 
-        <Text style={styles.footer}>Généré par {data.appName} le {fmtDate(new Date())}</Text>
+        <Text style={styles.footer}>
+          {tr("pdf_generated_by").replace("{app}", data.appName).replace("{date}", fmtDate(new Date()))}
+        </Text>
       </Page>
     </Document>
   );
 }
 
-export async function renderInvoicePdf(data: InvoicePdfData): Promise<Buffer> {
-  return renderToBuffer(<InvoiceDocument data={data} />) as unknown as Promise<Buffer>;
+export async function renderInvoicePdf(data: InvoicePdfData, locale: Locale): Promise<Buffer> {
+  return renderToBuffer(<InvoiceDocument data={data} locale={pdfLocale(locale)} />) as unknown as Promise<Buffer>;
 }

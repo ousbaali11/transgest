@@ -45,7 +45,7 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
 
   return (
     <div className="container">
-      <ScreenHeader title={tr(locale, "client_title")} backHref="/clients" />
+      <ScreenHeader title={tr(locale, "client_title")} backHref="/clients" backLabel={tr(locale, "back")} />
 
       <div className="card">
         <strong style={{ fontSize: 16 }}>{client.name}</strong>

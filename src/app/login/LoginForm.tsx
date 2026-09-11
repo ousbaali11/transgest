@@ -47,7 +47,7 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, uiT
 
   async function sendEmailCode() {
     setError("");
-    if (!email.includes("@")) { setError("Adresse email invalide"); return; }
+    if (!email.includes("@")) { setError(t(locale, "invalid_email_error")); return; }
     setBusy(true);
     try {
       const res = await fetch("/api/auth/send-email-code", {
@@ -59,7 +59,7 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, uiT
       try {
         data = await res.json();
       } catch {
-        setError("Réponse inattendue du serveur. Réessayez.");
+        setError(t(locale, "unexpected_server_response"));
         return;
       }
       if (!res.ok) {
@@ -67,14 +67,14 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, uiT
           setOwnerStep("code");
           return;
         }
-        setError(data.error || "Erreur");
+        setError(data.error || t(locale, "error_generic"));
         return;
       }
       setLastSentEmail(email);
       setDevCode(data.devCode || null);
       setOwnerStep("code");
     } catch {
-      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
+      setError(t(locale, "server_unreachable"));
     } finally {
       setBusy(false);
     }
@@ -93,14 +93,14 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, uiT
       try {
         data = await res.json();
       } catch {
-        setError("Réponse inattendue du serveur. Réessayez.");
+        setError(t(locale, "unexpected_server_response"));
         return;
       }
-      if (!res.ok) { setError(data.error || "Code incorrect"); return; }
+      if (!res.ok) { setError(data.error || t(locale, "incorrect_code_error")); return; }
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
+      setError(t(locale, "server_unreachable"));
     } finally {
       setBusy(false);
     }
@@ -115,7 +115,7 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, uiT
   async function driverLogin() {
     setError("");
     const cleaned = driverCode.replace(/\s+/g, "");
-    if (cleaned.length !== 8) { setError("Le code doit contenir 8 caractères."); return; }
+    if (cleaned.length !== 8) { setError(t(locale, "driver_code_length_error")); return; }
     setBusy(true);
     try {
       const res = await fetch("/api/auth/driver-login", {
@@ -127,14 +127,14 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, uiT
       try {
         data = await res.json();
       } catch {
-        setError("Réponse inattendue du serveur. Réessayez.");
+        setError(t(locale, "unexpected_server_response"));
         return;
       }
-      if (!res.ok) { setError(data.error || "Code incorrect"); return; }
+      if (!res.ok) { setError(data.error || t(locale, "incorrect_code_error")); return; }
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.");
+      setError(t(locale, "server_unreachable"));
     } finally {
       setBusy(false);
     }
@@ -202,19 +202,19 @@ export default function LoginForm({ appName, logoEmoji, logoType, logoImage, uiT
           {role === "owner" && ownerStep === "code" && (
             <>
               <p className="muted">
-                Code envoyé à {email}.{" "}
+                {t(locale, "code_sent_to")} {email}.{" "}
                 <button type="button" onClick={editEmail} style={{ background: "none", border: "none", padding: 0, color: "var(--primary)", fontWeight: 600, cursor: "pointer", textDecoration: "underline", fontSize: "inherit" }}>
                   {t(locale, "edit")}
                 </button>
               </p>
               {devCode && (
                 <div className="card" style={{ background: "var(--primary-10)", border: "none" }}>
-                  <span style={{ fontSize: 13 }}>Mode développement — code : </span>
+                  <span style={{ fontSize: 13 }}>{t(locale, "dev_mode_code")} </span>
                   <strong>{devCode}</strong>
                 </div>
               )}
               <label className="field">
-                <span className="field-label">Code de vérification</span>
+                <span className="field-label">{t(locale, "verification_code")}</span>
                 <input type="tel" inputMode="numeric" autoComplete="one-time-code" maxLength={4} value={emailCode} onChange={(e) => setEmailCode(e.target.value)} placeholder="0000" />
               </label>
               {error && <p className="error-text">{error}</p>}

@@ -60,7 +60,7 @@ export default function ClientTabs({ trips, invoices, locale }: { trips: Trip[];
             <div style={{ textAlign: "right" }}>
               <strong>{fmtDH(inv.montant)}</strong>
               <div>
-                <a href={`/api/invoices/${inv.id}/pdf`} style={{ fontSize: 12 }}>PDF</a>
+                <a href={`/api/invoices/${inv.id}/pdf`} style={{ fontSize: 12 }}>{tr(locale, "pdf_label")}</a>
               </div>
             </div>
           </div>

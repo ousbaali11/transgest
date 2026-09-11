@@ -8,7 +8,7 @@ function fmtDH(n: number) {
   return n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DH";
 }
 
-export default function RevenueChart({ data }: { data: Point[] }) {
+export default function RevenueChart({ data, revenueLabel, expensesLabel }: { data: Point[]; revenueLabel: string; expensesLabel: string }) {
   return (
     <div style={{ height: 160 }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -17,8 +17,8 @@ export default function RevenueChart({ data }: { data: Point[] }) {
           <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--muted)" }} axisLine={false} tickLine={false} />
           <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} axisLine={false} tickLine={false} />
           <Tooltip formatter={(v: number) => fmtDH(v)} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-          <Bar dataKey="ca" fill="var(--primary)" radius={[3, 3, 0, 0]} name="CA" />
-          <Bar dataKey="dep" fill="var(--accent)" radius={[3, 3, 0, 0]} name="Dépenses" />
+          <Bar dataKey="ca" fill="var(--primary)" radius={[3, 3, 0, 0]} name={revenueLabel} />
+          <Bar dataKey="dep" fill="var(--accent)" radius={[3, 3, 0, 0]} name={expensesLabel} />
         </BarChart>
       </ResponsiveContainer>
     </div>

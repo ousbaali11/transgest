@@ -87,12 +87,12 @@ export default function AdminSubscriptionsPanel({
         {error && <p className="error-text" style={{ marginBottom: 8 }}>{error}</p>}
         {plans.map((p) => (
           <div key={p.id} style={{ padding: "8px 0", borderTop: "1px solid var(--line)", marginTop: 8 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <div>
                 <div style={{ fontWeight: 600 }}>{p.label} {p.priceMAD ? `— ${p.priceMAD} DH/${t(locale, "per_month")}` : `— ${t(locale, "free_label")}`}</div>
                 <div className="muted" style={{ fontSize: 12 }}>{t(locale, "visible_label")} : {p.visible ? t(locale, "yes_label") : t(locale, "no_label")} {forcedPlanId === p.id && `· ${t(locale, "forced_for_all")}`}</div>
               </div>
-              <div style={{ display: "flex", gap: 6 }}>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 <button className="btn" style={{ width: "auto", padding: "4px 10px", fontSize: 11, background: "#F1F1EF", color: "var(--text)" }} onClick={() => togglePlanVisible(p)}>
                   {p.visible ? t(locale, "hide") : t(locale, "show_action")}
                 </button>

@@ -4,7 +4,7 @@ import "./globals.css";
 import RegisterServiceWorker from "./RegisterServiceWorker";
 import { getPlatformSettings } from "@/lib/settings";
 import { getLocale } from "@/lib/get-locale";
-import { localeInfo } from "@/lib/i18n";
+import { localeInfo, t } from "@/lib/i18n";
 
 /**
  * Le titre d'onglet suit le nom d'application choisi dans Admin > Marque
@@ -16,9 +16,10 @@ import { localeInfo } from "@/lib/i18n";
  */
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPlatformSettings();
+  const locale = getLocale();
   return {
-    title: `${settings.appName} — Gestion de flotte poids lourds`,
-    description: "Voyages, dépenses et factures pour propriétaires de camions.",
+    title: `${settings.appName} — ${t(locale, "app_tagline")}`,
+    description: t(locale, "app_description"),
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",
@@ -45,6 +46,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     "--primary": settings.themePrimary,
     "--primary-10": `${settings.themePrimary}1a`,
     "--accent": settings.themeAccent,
+    // Flèche "retour" des en-têtes d'écran : pointe vers le début de la
+    // ligne, donc retournée en darija (sens droite → gauche).
+    "--back-arrow-flip": localeInfo[locale].dir === "rtl" ? "scaleX(-1)" : "none",
   } as CSSProperties;
 
   return (

@@ -20,7 +20,7 @@ export default async function ReglagesPage() {
 
   return (
     <div className="container">
-      <ScreenHeader title={t(locale, "nav_settings")} backHref="/dashboard" />
+      <ScreenHeader title={t(locale, "nav_settings")} backHref="/dashboard" backLabel={t(locale, "back")} />
 
       {isOwner ? (
         <div className="card">
