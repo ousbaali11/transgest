@@ -28,7 +28,7 @@ export default function NewTripForm({ trucks, drivers, clients, customFields = [
   const [busy, setBusy] = useState(false);
   const [f, setF] = useState({
     truckId: trucks[0]?.id || "", driverId: lockedDriverId || "", clientId: "",
-    depart: "", arrivee: "", kmDepart: "", kmArrivee: "",
+    depart: "", arrivee: "", distanceKm: "",
     prixTransport: "", avance: "", marchandise: "",
   });
   const [custom, setCustom] = useState<Record<string, string>>({});
@@ -48,8 +48,7 @@ export default function NewTripForm({ trucks, drivers, clients, customFields = [
           date: new Date().toISOString(),
           depart: f.depart,
           arrivee: f.arrivee,
-          kmDepart: f.kmDepart ? Number(f.kmDepart) : null,
-          kmArrivee: f.kmArrivee ? Number(f.kmArrivee) : null,
+          distanceKm: f.distanceKm ? Number(f.distanceKm) : null,
           marchandise: f.marchandise,
           prixTransport: Number(f.prixTransport) || 0,
           avance: Number(f.avance) || 0,
@@ -59,7 +58,7 @@ export default function NewTripForm({ trucks, drivers, clients, customFields = [
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setOpen(false);
-        setF({ truckId: trucks[0]?.id || "", driverId: lockedDriverId || "", clientId: "", depart: "", arrivee: "", kmDepart: "", kmArrivee: "", prixTransport: "", avance: "", marchandise: "" });
+        setF({ truckId: trucks[0]?.id || "", driverId: lockedDriverId || "", clientId: "", depart: "", arrivee: "", distanceKm: "", prixTransport: "", avance: "", marchandise: "" });
         setCustom({});
         router.refresh();
       } else {
@@ -89,8 +88,7 @@ export default function NewTripForm({ trucks, drivers, clients, customFields = [
         </select>
         <input placeholder={tr(locale, "field_departure")} value={f.depart} onChange={(e) => setF({ ...f, depart: e.target.value })} />
         <input placeholder={tr(locale, "field_destination")} value={f.arrivee} onChange={(e) => setF({ ...f, arrivee: e.target.value })} />
-        <input type="number" placeholder={tr(locale, "field_km_departure")} value={f.kmDepart} onChange={(e) => setF({ ...f, kmDepart: e.target.value })} />
-        <input type="number" placeholder={tr(locale, "field_km_arrival")} value={f.kmArrivee} onChange={(e) => setF({ ...f, kmArrivee: e.target.value })} />
+        <input type="number" min={0} placeholder={tr(locale, "field_distance_km")} value={f.distanceKm} onChange={(e) => setF({ ...f, distanceKm: e.target.value })} />
         <select value={f.clientId} onChange={(e) => setF({ ...f, clientId: e.target.value })}>
           <option value="">{tr(locale, "field_no_client")}</option>
           {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}

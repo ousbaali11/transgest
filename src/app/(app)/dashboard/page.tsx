@@ -66,8 +66,10 @@ export default async function DashboardPage() {
   const ca = monthTrips.reduce((s, x) => s + Number(x.prixTransport), 0);
   const dep = monthExpenses.reduce((s, e) => s + Number(e.montant), 0);
   const benefice = ca - dep;
-  const distanceMonth = monthTrips.reduce((s, x) => s + Math.max(0, (x.kmArrivee || 0) - (x.kmDepart || 0)), 0);
-  const carburantLMonth = monthExpenses.filter((e) => e.category === "CARBURANT").reduce((s, e) => s + (e.quantite || 0), 0);
+  const distanceMonth = monthTrips.reduce((s, x) => s + (x.distanceKm || 0), 0);
+  // Le carburant se saisit désormais en somme totale (plus de litres) :
+  // l'indicateur "carburant consommé (L)" devient "dépenses carburant (DH)".
+  const carburantMonth = monthExpenses.filter((e) => e.category === "CARBURANT").reduce((s, e) => s + Number(e.montant), 0);
   const facturesMonth = await prisma.invoice.count({
     where: { organizationId: org.id, date: { gte: monthStart }, ...(session.role === "DRIVER" ? { trip: scope } : {}) },
   });
@@ -183,8 +185,8 @@ export default async function DashboardPage() {
             <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <Fuel size={15} color="var(--primary)" />
             </div>
-            <span style={{ flex: 1, fontSize: 14 }}>{tr(locale, "fuel_consumed")}</span>
-            <strong style={{ fontSize: 14 }}>{carburantLMonth.toLocaleString(numberLocale)} L</strong>
+            <span style={{ flex: 1, fontSize: 14 }}>{tr(locale, "fuel_spend")}</span>
+            <strong style={{ fontSize: 14 }}>{fmtDH(carburantMonth)}</strong>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>

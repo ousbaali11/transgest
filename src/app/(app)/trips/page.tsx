@@ -54,7 +54,7 @@ export default async function TripsPage() {
               trip={JSON.parse(JSON.stringify({
                 id: t.id, date: t.date, depart: t.depart, arrivee: t.arrivee, marchandise: t.marchandise,
                 truckId: t.truckId, driverId: t.driverId, clientId: t.clientId,
-                kmDepart: t.kmDepart, kmArrivee: t.kmArrivee, createdByUserId: t.createdByUserId,
+                distanceKm: t.distanceKm, createdByUserId: t.createdByUserId,
                 prixTransport: Number(t.prixTransport), avance: Number(t.avance), customFields: t.customFields,
               }))}
               benefice={benefice}

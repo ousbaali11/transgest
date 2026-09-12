@@ -296,8 +296,10 @@ model Trip {
   date            DateTime
   depart          String
   arrivee         String
-  kmDepart        Int?
-  kmArrivee       Int?
+  // Kilométrage total du trajet, saisi directement (a remplacé les deux
+  // relevés compteur kmDepart/kmArrivee — voir la migration
+  // single_fuel_amount_and_distance, qui a converti l'existant).
+  distanceKm      Int?
   marchandise     String?
   quantite        Float?
   unite           String?
@@ -336,9 +338,10 @@ model Expense {
   driverId        String?
   category        ExpenseCategory
   date            DateTime
-  quantite        Float?
-  unite           String?
-  prixUnitaire    Decimal?        @db.Decimal(10, 2)
+  // Somme totale payée, saisie directement pour toutes les catégories —
+  // y compris le carburant, qui se saisissait avant en litres × prix au
+  // litre (champs quantite/unite/prixUnitaire supprimés par la migration
+  // single_fuel_amount_and_distance).
   montant         Decimal         @default(0) @db.Decimal(12, 2)
   notes           String?
   customFields    Json            @default("{}")

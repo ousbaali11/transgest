@@ -26,7 +26,7 @@ export default async function TripBenefitPage({ params }: { params: { id: string
   const totalDep = trip.expenses.reduce((s, e) => s + Number(e.montant), 0);
   const prix = Number(trip.prixTransport);
   const benefice = prix - totalDep;
-  const distance = Math.max(0, (trip.kmArrivee || 0) - (trip.kmDepart || 0));
+  const distance = trip.distanceKm || 0;
   const coutParKm = distance ? totalDep / distance : 0;
   const beneficeParKm = distance ? benefice / distance : 0;
 

@@ -61,12 +61,22 @@ const BASE_COLUMNS: { key: ColKey; label: TKey }[] = [
 ];
 
 /**
+ * Langue du classeur : TOUJOURS le français, quelle que soit la langue
+ * choisie sur le site (décision produit : le rapport est destiné au
+ * comptable / aux documents officiels). Les clés xl_* restent traduites
+ * dans le dictionnaire, mais seule la version française est utilisée ici.
+ * Ne pas réintroduire de paramètre de langue.
+ */
+const EXPORT_LOCALE: Locale = "fr";
+
+/**
  * Génère le classeur Excel complet d'une organisation : un onglet par
  * chauffeur (voyages, dépenses, formules Excel natives, colorié), plus un
- * onglet "Global" avec les totaux par chauffeur et par camion — dans la
- * langue choisie par l'utilisateur.
+ * onglet "Global" avec les totaux par chauffeur et par camion — en
+ * français (voir EXPORT_LOCALE).
  */
-export async function buildOrganizationWorkbook(organizationId: string, appName: string, locale: Locale): Promise<Buffer> {
+export async function buildOrganizationWorkbook(organizationId: string, appName: string): Promise<Buffer> {
+  const locale = EXPORT_LOCALE;
   const tr = (key: TKey) => t(locale, key);
   const [trucks, drivers, clients, trips, expenses, customFieldDefs] = await Promise.all([
     prisma.truck.findMany({ where: { organizationId } }),
@@ -141,7 +151,7 @@ export async function buildOrganizationWorkbook(organizationId: string, appName:
     const firstData = headerRowIdx + 1;
     driverTrips.forEach((trip, i) => {
       const costs = tripCosts(trip.id);
-      const distance = (trip.kmArrivee || 0) - (trip.kmDepart || 0);
+      const distance = trip.distanceKm || 0;
       const cf = (trip.customFields as Record<string, string | number>) || {};
       const prix = Number(trip.prixTransport);
       const avance = Number(trip.avance);
@@ -212,7 +222,7 @@ export async function buildOrganizationWorkbook(organizationId: string, appName:
 
     const ca = driverTrips.reduce((s, x) => s + Number(x.prixTransport), 0);
     const dep = driverTrips.reduce((s, x) => s + tripCosts(x.id).total, 0);
-    const km = driverTrips.reduce((s, x) => s + Math.max(0, (x.kmArrivee || 0) - (x.kmDepart || 0)), 0);
+    const km = driverTrips.reduce((s, x) => s + (x.distanceKm || 0), 0);
     driverSummaries.push({ driver: dName, truck: primaryTruck?.immat || "—", voyages: driverTrips.length, ca, dep, km });
   });
 
@@ -224,7 +234,7 @@ export async function buildOrganizationWorkbook(organizationId: string, appName:
     return { truck: truckName(id), voyages: tTrips.length, ca, dep };
   });
 
-  buildGlobalSheet(wb, appName, locale, driverSummaries, truckSummaries);
+  buildGlobalSheet(wb, appName, driverSummaries, truckSummaries);
 
   const arrayBuffer = await wb.xlsx.writeBuffer();
   return Buffer.from(arrayBuffer);
@@ -233,10 +243,10 @@ export async function buildOrganizationWorkbook(organizationId: string, appName:
 function buildGlobalSheet(
   wb: ExcelJS.Workbook,
   appName: string,
-  locale: Locale,
   driverSummaries: { driver: string; truck: string; voyages: number; ca: number; dep: number; km: number }[],
   truckSummaries: { truck: string; voyages: number; ca: number; dep: number }[]
 ) {
+  const locale = EXPORT_LOCALE;
   const tr = (key: TKey) => t(locale, key);
   const sheet = wb.addWorksheet(tr("xl_global_sheet"));
   const sum = (arr: Array<Record<string, unknown>>, key: string) => arr.reduce((s, x) => s + (Number(x[key]) || 0), 0);

@@ -58,14 +58,14 @@ async function main() {
       data: {
         organizationId: org.id, truckId: truck1.id, driverId: driver1.id, clientId: client1.id,
         date: new Date(), depart: "Fès", arrivee: "Casablanca",
-        kmDepart: 125400, kmArrivee: 125850,
+        distanceKm: 450,
         marchandise: "Produits agricoles", quantite: 12, unite: "Tonnes",
         prixTransport: 5000, avance: 5000,
       },
     });
     await prisma.expense.createMany({
       data: [
-        { organizationId: org.id, tripId: trip1.id, truckId: truck1.id, driverId: driver1.id, category: ExpenseCategory.CARBURANT, date: trip1.date, quantite: 150, unite: "L", prixUnitaire: 13, montant: 1950 },
+        { organizationId: org.id, tripId: trip1.id, truckId: truck1.id, driverId: driver1.id, category: ExpenseCategory.CARBURANT, date: trip1.date, montant: 1950 },
         { organizationId: org.id, tripId: trip1.id, truckId: truck1.id, driverId: driver1.id, category: ExpenseCategory.PEAGE, date: trip1.date, montant: 300 },
       ],
     });

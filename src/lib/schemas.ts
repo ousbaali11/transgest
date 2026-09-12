@@ -19,8 +19,9 @@ export const tripSchema = z.object({
   date: z.string().datetime(),
   depart: z.string().min(1),
   arrivee: z.string().min(1),
-  kmDepart: z.number().optional().nullable(),
-  kmArrivee: z.number().optional().nullable(),
+  // Kilométrage total du trajet, saisi directement (plus de relevés
+  // compteur départ/arrivée).
+  distanceKm: z.number().int().nonnegative().optional().nullable(),
   marchandise: z.string().optional(),
   quantite: z.number().optional().nullable(),
   unite: z.string().optional().nullable(),
@@ -36,10 +37,9 @@ export const expenseSchema = z.object({
   driverId: z.string().optional().nullable(),
   category: z.enum(["CARBURANT", "PEAGE", "AUTRES"]),
   date: z.string().datetime(),
-  quantite: z.number().optional().nullable(),
-  unite: z.string().optional().nullable(),
-  prixUnitaire: z.number().optional().nullable(),
-  montant: z.number(),
+  // Somme totale payée, pour toutes les catégories (le carburant n'a plus
+  // de litres × prix au litre).
+  montant: z.number().nonnegative(),
   notes: z.string().optional(),
   customFields: customFieldsSchema.optional(),
 });

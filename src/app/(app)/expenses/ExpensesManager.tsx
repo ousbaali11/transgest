@@ -5,7 +5,7 @@ import { t as tr, dateLocale, type Locale } from "@/lib/i18n";
 
 type Expense = {
   id: string; category: "CARBURANT" | "PEAGE" | "AUTRES"; date: string; montant: number;
-  quantite: number | null; unite: string | null; prixUnitaire: number | null; notes: string | null;
+  notes: string | null;
   truckId: string | null; driverId: string | null; tripId: string | null; createdByUserId: string | null; customFields: Record<string, string> | null;
 };
 type Option = { id: string; name?: string; immat?: string };
@@ -16,7 +16,9 @@ function fmtDH(n: number) {
   return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DH";
 }
 
-const emptyForm = (trucks: Option[], lockedDriverId: string | null) => ({ tripId: "", truckId: trucks[0]?.id || "", driverId: lockedDriverId || "", quantite: "", prixUnitaire: "", montant: "", notes: "" });
+// Une seule somme totale payée, quelle que soit la catégorie — le carburant
+// ne se saisit plus en litres × prix au litre.
+const emptyForm = (trucks: Option[], lockedDriverId: string | null) => ({ tripId: "", truckId: trucks[0]?.id || "", driverId: lockedDriverId || "", montant: "", notes: "" });
 
 export default function ExpensesManager({ initialExpenses, trucks, drivers, trips, customFields = [], currentDriverId = null, currentUserId = null, locale }: { initialExpenses: Expense[]; trucks: Option[]; drivers: Option[]; trips: Trip[]; customFields?: CustomFieldDef[]; currentDriverId?: string | null; currentUserId?: string | null; locale: Locale }) {
   const isDriverViewer = currentDriverId !== null;
@@ -29,14 +31,11 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  const auto = category === "CARBURANT" && f.quantite && f.prixUnitaire ? Number(f.quantite) * Number(f.prixUnitaire) : null;
-
   function startEdit(e: Expense) {
     setEditingId(e.id);
     setCategory(e.category);
     setF({
       tripId: e.tripId || "", truckId: e.truckId || trucks[0]?.id || "", driverId: e.driverId || "",
-      quantite: e.quantite?.toString() || "", prixUnitaire: e.prixUnitaire?.toString() || "",
       montant: e.montant.toString(), notes: e.notes || "",
     });
     setCustom(e.customFields || {});
@@ -52,13 +51,10 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
     setBusy(true);
     setError("");
     try {
-      const montant = category === "CARBURANT" ? (auto ?? Number(f.montant) ?? 0) : Number(f.montant) || 0;
+      const montant = Number(f.montant) || 0;
       const payload = {
         category, date: new Date().toISOString(),
         tripId: f.tripId || null, truckId: f.truckId || null, driverId: f.driverId || null,
-        quantite: f.quantite ? Number(f.quantite) : null,
-        unite: category === "CARBURANT" ? "L" : null,
-        prixUnitaire: f.prixUnitaire ? Number(f.prixUnitaire) : null,
         montant, notes: f.notes, customFields: custom,
       };
 
@@ -132,15 +128,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
           </select>
         </div>
 
-        {category === "CARBURANT" ? (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
-            <input type="number" placeholder={tr(locale, "field_quantity_l")} value={f.quantite} onChange={(e) => setF({ ...f, quantite: e.target.value })} />
-            <input type="number" placeholder={tr(locale, "field_unit_price")} value={f.prixUnitaire} onChange={(e) => setF({ ...f, prixUnitaire: e.target.value })} />
-          </div>
-        ) : (
-          <input type="number" placeholder={tr(locale, "field_amount")} value={f.montant} onChange={(e) => setF({ ...f, montant: e.target.value })} style={{ marginBottom: 8 }} />
-        )}
-        {auto !== null && <p className="muted" style={{ marginBottom: 8 }}>{tr(locale, "total_expense_label")}{fmtDH(auto)}</p>}
+        <input type="number" min={0} placeholder={tr(locale, "field_amount")} value={f.montant} onChange={(e) => setF({ ...f, montant: e.target.value })} style={{ marginBottom: 8 }} />
         <input placeholder={tr(locale, "field_notes")} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} style={{ marginBottom: 8 }} />
 
         {customFields.length > 0 && (
@@ -168,7 +156,7 @@ export default function ExpensesManager({ initialExpenses, trucks, drivers, trip
                 <div style={{ fontWeight: 600 }}>
                   {e.category === "CARBURANT" ? tr(locale, "category_fuel") : e.category === "PEAGE" ? tr(locale, "category_toll") : tr(locale, "category_other")}
                 </div>
-                <div className="muted">{new Date(e.date).toLocaleDateString(dateLocale(locale))}{e.quantite ? ` · ${e.quantite} ${e.unite}` : ""}</div>
+                <div className="muted">{new Date(e.date).toLocaleDateString(dateLocale(locale))}</div>
               </div>
               <strong>{fmtDH(e.montant)}</strong>
             </div>

@@ -41,11 +41,11 @@ export async function POST() {
     const daysAgo = (n: number) => new Date(today.getTime() - n * 86400000);
 
     const tripsData = [
-      { depart: "Fès", arrivee: "Casablanca", prixTransport: 5000, avance: 2000, kmDepart: 125400, kmArrivee: 125850, marchandise: "Produits agricoles", quantite: 12, unite: "Tonnes", clientId: clientAlWafa.id, date: daysAgo(2), fuel: 1950, peage: 300, autres: 250 },
-      { depart: "Marrakech", arrivee: "Agadir", prixTransport: 4200, avance: 4200, kmDepart: 88000, kmArrivee: 88260, marchandise: "Matériaux de construction", quantite: 18, unite: "Tonnes", clientId: clientTransMaroc.id, date: daysAgo(12), fuel: 1400, peage: 180, autres: 0 },
-      { depart: "Fès", arrivee: "Tanger", prixTransport: 6000, avance: 6000, kmDepart: 63000, kmArrivee: 63310, marchandise: "Équipements industriels", quantite: 9, unite: "Tonnes", clientId: clientAlWafa.id, date: daysAgo(28), fuel: 1750, peage: 220, autres: 100 },
-      { depart: "Rabat", arrivee: "Marrakech", prixTransport: 3800, avance: 0, kmDepart: 42000, kmArrivee: 42245, marchandise: "Textile", quantite: 6, unite: "Tonnes", clientId: clientAtlas.id, date: daysAgo(55), fuel: 1200, peage: 150, autres: 0 },
-      { depart: "Casablanca", arrivee: "Oujda", prixTransport: 4500, avance: 4500, kmDepart: 15000, kmArrivee: 15520, marchandise: "Produits agricoles", quantite: 14, unite: "Tonnes", clientId: clientTransMaroc.id, date: daysAgo(80), fuel: 1900, peage: 260, autres: 80 },
+      { depart: "Fès", arrivee: "Casablanca", prixTransport: 5000, avance: 2000, distanceKm: 450, marchandise: "Produits agricoles", quantite: 12, unite: "Tonnes", clientId: clientAlWafa.id, date: daysAgo(2), fuel: 1950, peage: 300, autres: 250 },
+      { depart: "Marrakech", arrivee: "Agadir", prixTransport: 4200, avance: 4200, distanceKm: 260, marchandise: "Matériaux de construction", quantite: 18, unite: "Tonnes", clientId: clientTransMaroc.id, date: daysAgo(12), fuel: 1400, peage: 180, autres: 0 },
+      { depart: "Fès", arrivee: "Tanger", prixTransport: 6000, avance: 6000, distanceKm: 310, marchandise: "Équipements industriels", quantite: 9, unite: "Tonnes", clientId: clientAlWafa.id, date: daysAgo(28), fuel: 1750, peage: 220, autres: 100 },
+      { depart: "Rabat", arrivee: "Marrakech", prixTransport: 3800, avance: 0, distanceKm: 245, marchandise: "Textile", quantite: 6, unite: "Tonnes", clientId: clientAtlas.id, date: daysAgo(55), fuel: 1200, peage: 150, autres: 0 },
+      { depart: "Casablanca", arrivee: "Oujda", prixTransport: 4500, avance: 4500, distanceKm: 520, marchandise: "Produits agricoles", quantite: 14, unite: "Tonnes", clientId: clientTransMaroc.id, date: daysAgo(80), fuel: 1900, peage: 260, autres: 80 },
     ];
 
     for (const t of tripsData) {
@@ -58,8 +58,7 @@ export async function POST() {
           date: t.date,
           depart: t.depart,
           arrivee: t.arrivee,
-          kmDepart: t.kmDepart,
-          kmArrivee: t.kmArrivee,
+          distanceKm: t.distanceKm,
           marchandise: t.marchandise,
           quantite: t.quantite,
           unite: t.unite,
@@ -70,7 +69,7 @@ export async function POST() {
       });
 
       await prisma.expense.create({
-        data: { organizationId, tripId: trip.id, truckId: truck.id, driverId: driver.id, category: "CARBURANT", date: t.date, quantite: Math.round(t.fuel / 13), unite: "L", prixUnitaire: 13, montant: t.fuel, createdByUserId: session.userId },
+        data: { organizationId, tripId: trip.id, truckId: truck.id, driverId: driver.id, category: "CARBURANT", date: t.date, montant: t.fuel, createdByUserId: session.userId },
       });
       if (t.peage > 0) {
         await prisma.expense.create({ data: { organizationId, tripId: trip.id, truckId: truck.id, driverId: driver.id, category: "PEAGE", date: t.date, montant: t.peage, createdByUserId: session.userId } });
