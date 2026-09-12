@@ -7,11 +7,12 @@
 --    le faisait déjà) quand les deux relevés étaient renseignés.
 --
 -- 2. Dépense : une seule somme totale ("montant", colonne déjà existante)
---    au lieu de litres × prix au litre pour le carburant. Les dépenses
---    carburant dont le montant n'avait pas été calculé (0) mais qui
---    portaient litres et prix au litre sont complétées par le produit
---    des deux ; un montant déjà renseigné est conservé tel quel, c'est la
---    valeur réellement enregistrée.
+--    au lieu de quantité × prix unitaire. Toute dépense — quelle que soit
+--    sa catégorie, l'API acceptait ces champs partout même si seul le
+--    carburant les proposait à l'écran — dont le montant n'avait pas été
+--    calculé (0) mais qui portait quantité et prix unitaire est complétée
+--    par le produit des deux ; un montant déjà renseigné est conservé tel
+--    quel, c'est la valeur réellement enregistrée.
 
 -- 1. Voyages ------------------------------------------------------------
 ALTER TABLE "Trip" ADD COLUMN "distanceKm" INTEGER;
@@ -26,8 +27,7 @@ DROP COLUMN "kmArrivee";
 -- 2. Dépenses -----------------------------------------------------------
 UPDATE "Expense"
 SET "montant" = ROUND(("quantite" * "prixUnitaire")::numeric, 2)
-WHERE "category" = 'CARBURANT'
-  AND "montant" = 0
+WHERE "montant" = 0
   AND "quantite" IS NOT NULL
   AND "prixUnitaire" IS NOT NULL;
 
