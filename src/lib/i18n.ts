@@ -286,6 +286,27 @@ const dict = {
   offer_this_subscription: { fr: "Offrir cet abonnement", en: "Offer this subscription", ary: "هدي هاد الاشتراك" },
   revoke_offered_subscription: { fr: "Retirer l'abonnement offert", en: "Remove offered subscription", ary: "حيد الاشتراك المهدى" },
 
+  // Admin — suppression complète d'un compte
+  delete_account: { fr: "Supprimer", en: "Delete", ary: "مسح" },
+  delete_account_title: { fr: "Supprimer ce compte", en: "Delete this account", ary: "مسح هاد الكونط" },
+  delete_account_warning: { fr: "Action irréversible : toutes les données de ce compte seront définitivement effacées, en une seule fois.", en: "Irreversible: all data of this account will be permanently erased, all at once.", ary: "ما يمكنش ترجع فيها: گاع المعطيات ديال هاد الكونط غادي تتمسح نهائيا، دفعة وحدة." },
+  delete_account_no_owner: { fr: "Aucun utilisateur propriétaire (compte orphelin)", en: "No owner user (orphaned account)", ary: "ماكاين حتى مالك (كونط يتيم)" },
+  delete_account_summary_title: { fr: "Ce qui sera supprimé :", en: "What will be deleted:", ary: "اللي غادي يتمسح:" },
+  delete_account_item_trips: { fr: "voyage(s)", en: "trip(s)", ary: "سفرية" },
+  delete_account_item_expenses: { fr: "dépense(s)", en: "expense(s)", ary: "مصروف" },
+  delete_account_item_invoices: { fr: "facture(s)", en: "invoice(s)", ary: "فاكتورة" },
+  delete_account_item_trucks: { fr: "camion(s)", en: "truck(s)", ary: "كاميو" },
+  delete_account_item_drivers: { fr: "chauffeur(s)", en: "driver(s)", ary: "شيفور" },
+  delete_account_item_clients: { fr: "client(s)", en: "client(s)", ary: "زبون" },
+  delete_account_item_custom_fields: { fr: "colonne(s) personnalisée(s)", en: "custom field(s)", ary: "عمود خاص" },
+  delete_account_item_users: { fr: "compte(s) de connexion (propriétaire et chauffeurs)", en: "login account(s) (owner and drivers)", ary: "كونط ديال الدخول (المالك والشوافر)" },
+  delete_account_subscription_note: { fr: "L'abonnement Stripe/PayPal en cours sera résilié chez le prestataire avant la suppression. S'il refuse, rien n'est supprimé.", en: "The current Stripe/PayPal subscription will be cancelled with the provider before deletion. If it refuses, nothing is deleted.", ary: "الاشتراك Stripe/PayPal الحالي غادي يتفسخ عند المزود قبل المسح. إلا رفض، ما كيتمسح والو." },
+  delete_account_contact_note: { fr: "Les demandes de contact envoyées par ce compte sont conservées.", en: "Contact requests sent by this account are kept.", ary: "طلبات التواصل اللي صيفطها هاد الكونط كتبقى." },
+  delete_account_type_word: { fr: "Tapez {word} pour confirmer", en: "Type {word} to confirm", ary: "كتب {word} باش تأكد" },
+  delete_account_keyword: { fr: "SUPPRIMER", en: "DELETE", ary: "SUPPRIMER" },
+  delete_account_confirm: { fr: "Supprimer définitivement", en: "Delete permanently", ary: "مسح نهائي" },
+  delete_account_done: { fr: "Compte supprimé.", en: "Account deleted.", ary: "الكونط تمسح." },
+
   // Admin — réglages (marque, thème, abonnements, paiement, sécurité)
   brand_title: { fr: "Marque", en: "Brand", ary: "الماركة" },
   app_name_field: { fr: "Nom de l'application", en: "App name", ary: "سمية التطبيق" },

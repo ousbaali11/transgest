@@ -23,12 +23,17 @@ function providerFailure(context: string, e: unknown): never {
  * continuerait à être réellement facturé en plus de son accès offert.
  * Échec silencieux et journalisé si le prestataire n'est pas configuré ou
  * l'abonnement déjà résilié : ça ne doit jamais bloquer l'offre elle-même.
+ *
+ * `failHard` (suppression d'un compte par l'admin) : l'inverse — un refus du
+ * prestataire lève une erreur 502 et l'appelant n'efface rien, plutôt que
+ * de supprimer un compte dont l'abonnement continuerait à être facturé.
  */
-export async function cancelProviderSubscriptionNow(org: ProviderIds): Promise<void> {
+export async function cancelProviderSubscriptionNow(org: ProviderIds, { failHard = false }: { failHard?: boolean } = {}): Promise<void> {
   if (org.stripeSubscriptionId) {
     try {
       await getStripe().subscriptions.cancel(org.stripeSubscriptionId);
     } catch (e) {
+      if (failHard) providerFailure("annulation Stripe", e);
       console.error("Échec d'annulation de l'abonnement Stripe existant :", e);
     }
   }
@@ -39,6 +44,7 @@ export async function cancelProviderSubscriptionNow(org: ProviderIds): Promise<v
         body: { reason: "Access granted by the administrator" },
       });
     } catch (e) {
+      if (failHard) providerFailure("annulation PayPal", e);
       console.error("Échec d'annulation de l'abonnement PayPal existant :", e);
     }
   }
